@@ -1,4 +1,4 @@
-name = "pals"
+name = "pals_julia"
 uuid = "05302d2e-dc94-4a43-8277-9ca7ef3c80e8"  
 authors = ["Alex He <adh236@cornell.edu>"]
 version = "0.1.0"

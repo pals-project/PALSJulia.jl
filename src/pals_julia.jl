@@ -6,9 +6,9 @@ A Julia wrapper around yaml-cpp's YAML::Node.
 Represents a YAML document node that can be a scalar, map, or sequence.
 
 """
-
+module pals_julia
 const LIBYAML = joinpath(@__DIR__, "..", "..", "pals-cpp", "build", "libyaml_c_wrapper.dylib")
-
+#julia precompilation failing, can tell julia to skip precompilation for this part
 # Opaque handle type
 mutable struct YAMLNode
     handle::Ptr{Cvoid}
@@ -21,6 +21,49 @@ mutable struct YAMLNode
         finalizer(delete_node, node)
         return node
     end
+end
+
+struct LatticesHandle
+    original::Ptr{Cvoid}
+    included::Ptr{Cvoid}
+    expanded::Ptr{Cvoid}
+end
+
+# The user-facing Julia struct holding the safe wrappers
+struct Lattices
+    original::YAMLNode
+    included::YAMLNode
+    expanded::YAMLNode
+end
+
+"""
+    get_lattices(filename::String, lattice_name::String="") -> Lattices
+
+Parses a lattice file and returns the original, included, and expanded lattice nodes.
+"""
+function get_lattices(filename::String, lattice_name::String="")
+    # Check if file exists first to prevent segfaults
+    if !isfile(filename)
+        error("File not found: $filename")
+    end
+
+    # Call the C library. It returns the struct by value.
+    handles = @ccall LIBYAML.get_lattices(
+        filename::Cstring, 
+        lattice_name::Cstring
+    )::LatticesHandle
+
+    # Check for NULL pointers just in case parsing failed completely
+    if handles.original == C_NULL || handles.included == C_NULL || handles.expanded == C_NULL
+        error("Failed to parse or expand the lattice file: $filename")
+    end
+
+    # Wrap the raw C pointers in your safe Julia objects
+    return Lattices(
+        YAMLNode(handles.original),
+        YAMLNode(handles.included),
+        YAMLNode(handles.expanded)
+    )
 end
 
 # === CREATION ===
@@ -216,7 +259,7 @@ Write a YAML node to a file with emitter control.
 - `flow_maps`: Use flow style {key: value} for maps (default: false)
 - `flow_seqs`: Use flow style [item1, item2] for sequences (default: false)
 """
-function write_yaml(node::YAMLNode, filename::String; 
+function write_yaml_formatted(node::YAMLNode, filename::String; 
                    indent::Int=2, 
                    flow_maps::Bool=false,
                    flow_seqs::Bool=false)
@@ -312,4 +355,6 @@ end
 function yaml_expand(node::YAMLNode)
     handle = @ccall LIBYAML.lattice_expand(node.handle::Ptr{Cvoid})::Ptr{Cvoid}
     return YAMLNode(handle)
+end
+
 end
