@@ -1,10 +1,12 @@
 using Documenter
 
 push!(LOAD_PATH, "../src/")
-include("../src/pals.jl")
+import Pkg
+Pkg.activate(joinpath(@__DIR__, ".."))
+import pals_julia as pj
 
 makedocs(
-    sitename = "pals.jl",
+    sitename = "pals_julia.jl",
     authors = "Alex He",
     format = Documenter.HTMLWriter.HTML(
         prettyurls = get(ENV, "CI", nothing) == "true",  # Use pretty URLs on CI

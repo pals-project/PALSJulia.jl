@@ -1,17 +1,19 @@
-# pals.jl
+# pals_julia.jl
 
-Documentation for pals.jl.
+Documentation for pals_julia.jl.
 
 ## Installation
 ```julia
 # Install from local directory
 using Pkg
-Pkg.add(path="/path/to/pals.jl")
+Pkg.add(path="/path/to/pals_julia.jl")
 ```
 
 ## Quick Example
 ```julia
-using pals.jl
+import Pkg
+Pkg.activate(joinpath(@__DIR__, ".."))
+import pals_julia as pj
 
 # Parse YAML
 config = parse_yaml("""
