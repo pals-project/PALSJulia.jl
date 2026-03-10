@@ -1,6 +1,4 @@
 using Documenter
-import Pkg
-Pkg.activate(joinpath(@__DIR__, ".."))
 import pals_julia
 
 makedocs(
