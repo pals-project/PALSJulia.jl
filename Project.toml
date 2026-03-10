@@ -1,10 +1,11 @@
-name = "pals"
+name = "pals_julia"
 uuid = "05302d2e-dc94-4a43-8277-9ca7ef3c80e8"  
 authors = ["Alex He <adh236@cornell.edu>"]
 version = "0.1.0"
 
 [deps]
 Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 
 [compat]
 julia = "1.6"
