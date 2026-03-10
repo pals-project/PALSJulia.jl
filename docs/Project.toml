@@ -1,5 +1,7 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+pals_julia = "05302d2e-dc94-4a43-8277-9ca7ef3c80e8"  
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 
 [compat]
 Documenter = "1.4.1"
