@@ -352,9 +352,4 @@ function clone(node::YAMLNode)
     return YAMLNode(handle)
 end
 
-function yaml_expand(node::YAMLNode)
-    handle = @ccall LIBYAML.lattice_expand(node.handle::Ptr{Cvoid})::Ptr{Cvoid}
-    return YAMLNode(handle)
-end
-
 end
