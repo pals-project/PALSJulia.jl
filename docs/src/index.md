@@ -2,6 +2,10 @@
 
 Documentation for pals_julia.jl.
 
+```@autodocs
+Modules = [pals_julia]
+```
+
 ## Installation
 ```julia
 # Install from local directory
