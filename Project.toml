@@ -1,13 +1,15 @@
 name = "pals_julia"
-uuid = "05302d2e-dc94-4a43-8277-9ca7ef3c80e8"  
-authors = ["Alex He <adh236@cornell.edu>"]
+uuid = "05302d2e-dc94-4a43-8277-9ca7ef3c80e8"
 version = "0.1.0"
+authors = ["Alex He <adh236@cornell.edu>"]
 
 [deps]
+Beamlines = "5bb90b03-0719-46b8-8ce4-1ef3afd3cd4b"
 Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 
 [compat]
+Beamlines = "0.8.12"
 julia = "1.6"
 
 [extras]

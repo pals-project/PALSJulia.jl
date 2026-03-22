@@ -149,6 +149,29 @@ function Base.haskey(node::YAMLNode, key::String)
     @ccall LIBYAML.has_key(node.handle::Ptr{Cvoid}, key::Cstring)::Bool
 end
 
+function Base.keys(node::YAMLNode)
+    if !is_map(node)
+        return String[]
+    end
+    
+    count = Ref{Cint}(0)
+    keys_ptr = @ccall LIBYAML.get_keys(node.handle::Ptr{Cvoid}, count::Ref{Cint})::Ptr{Ptr{Cchar}}
+    
+    if keys_ptr == C_NULL
+        return String[]
+    end
+    
+    keys_array = String[]
+    for i in 1:count[]
+        key_ptr = unsafe_load(keys_ptr, i)
+        push!(keys_array, unsafe_string(key_ptr))
+    end
+    
+    @ccall LIBYAML.yaml_free_keys(keys_ptr::Ptr{Ptr{Cchar}}, count[]::Cint)::Cvoid
+    
+    return keys_array
+end
+
 function Base.length(node::YAMLNode)
     @ccall LIBYAML.size(node.handle::Ptr{Cvoid})::Cint
 end
