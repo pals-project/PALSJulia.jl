@@ -1,6 +1,6 @@
 # Translation Notes
 
-## ACKickerP (Not in SciBmad)?
+## ACKickerP --> None
 
 ## ApertureP --> ApertureParams
 - x_min --> x1_limit
@@ -8,7 +8,7 @@
 - x_width and x_center:
     - x1_limit = x_center - x_width / 2
     - x2_limit = x_center + x_width / 2
-
+- Note: Either both min and max are defined, or width and center are defined, not both.
 - y_min --> y1_limit
 - y_may --> y2_limit
 - y_width and y_center:
@@ -38,19 +38,19 @@
 ## BeamBeamP --> Not in SciBmad yet
 
 ## BendP --> BendParams
-- rho_ref -> none
-- bend_field_ref -> none
+- rho_ref -> caluclated
+- bend_field_ref -> calculated
 - e1 --> e1
 - e2 --> e2
-- e1_rect --> calculated?
-- e2_rect --> calcualted?
+- e1_rect --> calculated
+- e2_rect --> calcualted
 - edge1_int --> edge1_int
 - edge2_int --> edge2_int
 - g_ref --> g_ref
-- h1 --> calculated?
-- h2 --> calculated?
-- L_chord --> calculated?
-- L_sagitta --> calculated?
+- h1 --> not in scibmad
+- h2 --> not in scibmad
+- L_chord --> calculated
+- L_sagitta --> calculated
 - tilt_ref --> tilt_ref
 
 ## BodyShiftP --> AlignmentParams
@@ -63,11 +63,11 @@
 
 ## ElectricMultipoleP --> Not in SciBmad yet
 
-## FloorP --> Calculated?
+## FloorP --> Calculated
 
-## FloorShiftP --> Calculated?
+## FloorShiftP --> Set in floor shift element (to be added to scibmad)
 
-## ForkP --> Needs to be Implemented
+## ForkP --> Needs to be Implemented in scibmad
 
 ## GirderP In Contruction
 
@@ -76,19 +76,38 @@
 - [BK][ns]NL? --> [BK][ns]NL?
 - BnN(L) --> BnN(L)
 
-## MetaP --> Working on it 
-- see misc.jl
+## MetaP --> MetaParams
+- alias --> alias
+- ID --> none
+- label --> label
+- description --> description
+
+## ParticleP --> Create new bunch
 
 ## PatchP --> PatchParams
 - x_offset --> x_offset
 - y_offset --> y_offset
 - z_offset --> z_offset
+- t_offset --> dt (not in PALS yet)
 - x_rot --> x_rot
 - y_rot --> y_rot
 - z_rot --> z_rot
 - flexible --> none
-- ref_coords --> ??
+- ref_coords --> none
 - user_sets_length --> none
+
+## ReferenceP --> Beamline Properties
+- species_ref --> species_ref
+- pc_ref --> pc_ref
+- E_tot_ref --> E_ref
+- time_ref --> none
+- location --> none
+
+## ReferenceChangeP --> Beamline Properties
+- extra_dtime_ref --> none
+- dE_ref --> dE_ref
+- E_tot_ref --> E_ref
+- species_ref --> species_ref
 
 ## RFP --> RFParams
 - frequency --> rate, rate_meaning = false
@@ -101,7 +120,7 @@
 - cavity_type --> traveling_wave
     - STANDING_WAVE --> false
     - TRAVELING_WAVE --> true
-- n_cell --> none
+- num_cells --> tracking_method = SaganCavity(num_cells)
 - zero_phase --> zero_phase
     - ACCELERATING --> Accelerating
     - BELOW_TRANSITION --> BelowTransition
@@ -111,17 +130,8 @@
 - Ksol --> Ksol
 - Bsol --> Bsol
 
-## TrackingP --> UniversalParams.tracking_method?
+## TrackingP --> UniversalParams.tracking_method
 
 ## TODO
-- ReferenceP
-- ReferenceChangeP
-- InitialParticleP
 
 ## Questions/Comments
-- What is angle_ref in BendP, what are the one's that need translation and what are independent
-- BendP: error in docs for g_ref, rho_ref
-- SciBmad MapParams?
-- SciBmad FourPotentialParams
-- PatchP: Scibmad has dt
-- RFP: Scibmad has is_crabcavity (is this just rf cavity with length = 0?)
