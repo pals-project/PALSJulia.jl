@@ -172,8 +172,45 @@ function Base.keys(node::YAMLNode)
     return keys_array
 end
 
+function Base.values(node::YAMLNode)
+    if !is_map(node)
+        return []
+    end
+    return [node[key] for key in keys(node)]
+end
+
 function Base.length(node::YAMLNode)
     @ccall LIBYAML.size(node.handle::Ptr{Cvoid})::Cint
+end
+
+# Make YAMLNode iterable for both sequences and maps
+function Base.iterate(node::YAMLNode, state=1)
+    if is_sequence(node)
+        if state > length(node)
+            return nothing
+        end
+        return (node[state], state + 1)
+        
+    elseif is_map(node)
+        key_list = keys(node)
+        if state > length(key_list)
+            return nothing
+        end
+        key = key_list[state]
+        return ((key, node[key]), state + 1)
+        
+    else
+        return nothing
+    end
+end
+
+# Add eachindex support
+function Base.eachindex(node::YAMLNode)
+    if is_sequence(node) || is_map(node)
+        return 1:length(node)
+    else
+        return 1:0
+    end
 end
 
 # === CONVERT TO JULIA TYPES ===
