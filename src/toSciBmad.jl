@@ -363,7 +363,7 @@ function main()
     open("../lattice_files/convert_out.jl", "w") do io
         ele_str     = ""
         bl_str      = ""
-        lattice_str = ""
+        branch_str = ""
         for ele in facility
             props = ele[keys(ele)[1]]
             if haskey(props, "kind")
@@ -371,13 +371,13 @@ function main()
                 if kind == "BeginningEle"
                     _, particle_str = make_init_str(ele)
                     write(io, particle_str * "\n\n")
-                elseif kind == "Lattice"
+                elseif kind == "Branch"
                     branches = props["branches"]
                     for bl in branches
-                        lattice_str *= "$(String(bl)),"
+                        branch_str *= "$(String(bl)),"
                     end
                     name        = keys(ele)[1]
-                    lattice_str = "$name = [$lattice_str]"
+                    branch_str = "$name = [$branch_str]"
                 elseif kind == "BeamLine"
                     bl_str *= make_bl_str(ele) * "\n"
                 else
@@ -387,7 +387,7 @@ function main()
         end
         write(io, "@elements begin\n$(ele_str)end\n\n")
         write(io, bl_str)
-        write(io, lattice_str)
+        write(io, branch_str)
     end
 end
 

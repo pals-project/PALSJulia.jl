@@ -132,6 +132,10 @@
 
 ## TrackingP --> UniversalParams.tracking_method
 
+## Lattices
+- Beamlines --> Beamlines
+- To be added: Lattices in PALS --> Lattices
+
 ## TODO
 - translating expression
 - names of fundamental constants
