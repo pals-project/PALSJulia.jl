@@ -133,5 +133,9 @@
 ## TrackingP --> UniversalParams.tracking_method
 
 ## TODO
+- translating expression
+- names of fundamental constants
+- names of functions (tan)
+- sinc --> sincu
 
 ## Questions/Comments

@@ -2,6 +2,12 @@
 
 pals-julia is a parser for the Particle Accelerator Lattice Standard ([PALS](https://github.com/campa-consortium/pals)) for the Julia language. 
 
+`get_lattices.jl` is the main program that will read lattices, perform lattice expansion, and print to terminal. See the README for pals-cpp for more information. 
+
+`toSciBmad.jl` translates lattices in PALS format to SciBmad format. Notes on the translation are in `docs/translation_notes.md`.
+
+Place lattices files in `/lattice_files`.
+
 ## Status
 
 2026-2-24: In initial development.
