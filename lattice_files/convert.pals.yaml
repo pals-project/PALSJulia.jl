@@ -176,6 +176,19 @@ PALS:
     - ring: 
         kind: BeamLine
         line:
+          - beg:
+              kind: BeginningEle
+              length: 0
+              ReferenceP:
+                species_ref: electron
+                pc_ref: 3E6
+              ParticleP:
+                x: 1
+                y: 2
+                z: 3
+                px: 4
+                py: 5
+                pz: 6
           - marker1
           - ap1
           - drift1
@@ -196,3 +209,7 @@ PALS:
           - rfcav2
           - rfcav3  
           - beambeam1
+    - lat: 
+        kind: Lattice
+        branches: 
+          - ring

@@ -1,60 +1,73 @@
-# read in lattice, get elements and put in dictionary, put in lattice
 import Pkg
 Pkg.activate(joinpath(@__DIR__, ".."))
 import pals_julia as pj
 using Beamlines
 
-# takes in a BeginningEle
 function make_init_str(ele::pj.YAMLNode)
-    props = ele[keys(ele)[1]] 
+    props = ele[keys(ele)[1]]
     ref_str, particle_str = "", ""
     for key in keys(props)
-        if String(key) == "ReferenceP"
+        if key == "ReferenceP"
             referenceP = props["ReferenceP"]
             ref_str = ""
             for k in keys(referenceP)
-                k = String(k)
                 if k == "species_ref"
                     ref_str *= "species_ref = $(String(referenceP[k])),"
                 elseif k == "pc_ref"
                     ref_str *= "pc_ref = $(String(referenceP[k])),"
                 elseif k == "E_tot_ref"
-                    ref_str *= "E_ref = $(String(referenceP[k])),";
+                    ref_str *= "E_ref = $(String(referenceP[k])),"
                 elseif k == "time_ref" || k == "location"
                     println("$k not supported yet")
                 end
             end
-        elseif String(key) == "ParticleP"
+        elseif key == "ParticleP"
             println("particle")
             particleP = props["ParticleP"]
             particle_str = ""
             for k in keys(particleP)
-                k = String(k)
-                val = "$(String(particleP[k]))"
+                val = String(particleP[k])
                 if k == "x"
-                    particle_str *= "xi = [$val]\n"
+                    particle_str *= "x = $val\n"
                 elseif k == "y"
-                    particle_str *= "yi = [$val]\n"
+                    particle_str *= "y = $val\n"
                 elseif k == "z"
-                    particle_str *= "zi = [$val]\n"
+                    particle_str *= "z = $val\n"
                 elseif k == "px"
-                    particle_str *= "pxi = [$val]\n"
+                    particle_str *= "px = $val\n"
                 elseif k == "py"
-                    particle_str *= "pyi = [$val]\n"
+                    particle_str *= "py = $val\n"
                 elseif k == "pz"
-                    particle_str *= "pzi = [$val]\n"
+                    particle_str *= "pz = $val\n"
                 end
             end
-            particle_str *= "v = [ xi pxi py pyi zi pzi ]"
+            particle_str *= "v = [ x px y py z pz ]"
         end
     end
     return ref_str, particle_str
 end
 
+function make_bl_str(ele::pj.YAMLNode)
+    props = ele[keys(ele)[1]]
+    line = props["line"]
+    line_str = ""
+    ref_str, _ = make_init_str(line[1])
+    for i in 2:length(line)
+        line_ele = line[i]
+        if pj.is_scalar(line_ele)
+            line_str *= "$(String(line_ele)),"
+        elseif pj.is_map(line_ele)
+            name = keys(line_ele)[1]
+            line_str *= "$name,"
+        end
+    end
+    return "$(keys(ele)[1]) = Beamline([$line_str], $ref_str)"
+end
+
 function make_ele_str(ele::pj.YAMLNode)
-    props = ele[keys(ele)[1]] 
+    props = ele[keys(ele)[1]]
     paramString = ""
-    
+
     for key in keys(props)
         if key == "kind"
             paramString *= "kind = $(String(props["kind"])),"
@@ -64,8 +77,8 @@ function make_ele_str(ele::pj.YAMLNode)
             println("ACKickerP not yet supported")
         elseif key == "ApertureP"
             apertureP = props["ApertureP"]
-            has_xmin = pj.haskey(apertureP, "x_min"); has_xmax = pj.haskey(apertureP, "x_max")
-            has_xwidth = pj.haskey(apertureP, "x_width"); has_xcen = pj.haskey(apertureP, "x_center")
+            has_xmin   = haskey(apertureP, "x_min");   has_xmax  = haskey(apertureP, "x_max")
+            has_xwidth = haskey(apertureP, "x_width");  has_xcen  = haskey(apertureP, "x_center")
             if (has_xmin || has_xmax) && (has_xwidth || has_xcen)
                 println("Either min and max should be defined or width and center, not both.")
             elseif (has_xmin && !has_xmax) || (has_xmax && !has_xmin)
@@ -76,13 +89,13 @@ function make_ele_str(ele::pj.YAMLNode)
             elseif (has_xwidth && !has_xcen) || (has_xcen && !has_xwidth)
                 println("Both width and center need to be defined.")
             else
-                width = Float64(apertureP["x_width"])
+                width  = Float64(apertureP["x_width"])
                 center = Float64(apertureP["x_center"])
                 paramString *= "x1_limit = $(center - width / 2),"
                 paramString *= "x2_limit = $(center + width / 2),"
             end
-            has_ymin = pj.haskey(apertureP, "y_min"); has_ymax = pj.haskey(apertureP, "y_max")
-            has_ywidth = pj.haskey(apertureP, "y_width"); has_ycen = pj.haskey(apertureP, "y_center")
+            has_ymin   = haskey(apertureP, "y_min");   has_ymax  = haskey(apertureP, "y_max")
+            has_ywidth = haskey(apertureP, "y_width");  has_ycen  = haskey(apertureP, "y_center")
             if (has_ymin || has_ymax) && (has_ywidth || has_ycen)
                 println("Either min and max should be defined or width and center, not both.")
             elseif (has_ymin && !has_ymax) || (has_ymax && !has_ymin)
@@ -93,7 +106,7 @@ function make_ele_str(ele::pj.YAMLNode)
             elseif (has_ywidth && !has_ycen) || (has_ycen && !has_ywidth)
                 println("Both width and center need to be defined.")
             else
-                width = Float64(apertureP["y_width"])
+                width  = Float64(apertureP["y_width"])
                 center = Float64(apertureP["y_center"])
                 paramString *= "y1_limit = $(center - width / 2),"
                 paramString *= "y2_limit = $(center + width / 2),"
@@ -224,7 +237,7 @@ function make_ele_str(ele::pj.YAMLNode)
         elseif key == "MagneticMultipoleP"
             mmP = props["MagneticMultipoleP"]
             for mmkey in keys(mmP)
-                paramString *= "$(mmkey) = $(String(mmP[mmkey])),"
+                paramString *= "$mmkey = $(String(mmP[mmkey])),"
             end
         elseif key == "MetaP"
             metaP = props["MetaP"]
@@ -268,10 +281,8 @@ function make_ele_str(ele::pj.YAMLNode)
             if String(props["kind"]) == "CrabCavity"
                 paramString *= "is_crabcavity = true,"
             end
-            
             num_cells = 0
-            L_active = 0.0
-            
+            L_active  = 0.0
             for rfkey in keys(rfP)
                 if rfkey == "frequency"
                     paramString *= "rate = $(String(rfP["frequency"])),"
@@ -284,7 +295,7 @@ function make_ele_str(ele::pj.YAMLNode)
                 elseif rfkey == "gradient"
                     println("gradient not yet supported")
                 elseif rfkey == "phase"
-                    paramString *= "phi0 = $(2*π*Float64(rfP["phase"])),"
+                    paramString *= "phi0 = $(2 * π * Float64(rfP["phase"])),"
                 elseif rfkey == "multipass_phase"
                     println("multipass_phase not yet supported")
                 elseif rfkey == "cavity_type"
@@ -304,16 +315,14 @@ function make_ele_str(ele::pj.YAMLNode)
                     end
                 end
             end
-            
-            if !pj.haskey(rfP, "frequency") && !pj.haskey(rfP, "harmon")
+            if !haskey(rfP, "frequency") && !haskey(rfP, "harmon")
                 paramString *= "rate_meaning = -1,"
             end
-            
             paramString *= "tracking_method = SaganCavity(num_cells = $num_cells, L_active = $L_active),"
         elseif key == "SolenoidP"
             solP = props["SolenoidP"]
             for skey in keys(solP)
-                paramString *= "$(skey) = $(String(solP[skey])),"
+                paramString *= "$skey = $(String(solP[skey])),"
             end
         elseif key == "TrackingP"
             trackingP = props["TrackingP"]
@@ -344,48 +353,41 @@ function make_ele_str(ele::pj.YAMLNode)
             end
         end
     end
-    
+
     return "$(keys(ele)[1]) = LineElement($paramString)"
 end
 
-#function to create string 
-#function to take string output to file or eval
-
 function main()
-    # lats = pj.get_lattices("../lattice_files/convert.pals.yaml", "lat1")
-    file = pj.parse_file("../lattice_files/convert.pals.yaml")
+    file     = pj.parse_file("../lattice_files/convert.pals.yaml")
     facility = file["PALS"]["facility"]
     open("../lattice_files/convert_out.jl", "w") do io
-        ref_str, particle_str = "", ""
+        ele_str     = ""
+        bl_str      = ""
+        lattice_str = ""
         for ele in facility
-            # ele is a map with a single entry mapping the name of the ele to its params.
-            # keys(ele) is [name], keys(ele)[1] is name
-            # ele[keys(ele)[1]] is all the element's parameters
             props = ele[keys(ele)[1]]
-            if pj.haskey(props, "kind")
+            if haskey(props, "kind")
                 kind = String(props["kind"])
                 if kind == "BeginningEle"
-                    ref_str, particle_str = make_init_str(ele)
-                    write(io, particle_str * "\n")
-                elseif kind == "BeamLine"
-                    line = props["line"]
-                    line_str = ""
-                    for line_ele in line
-                        if pj.is_scalar(line_ele)
-                            line_str *= "$(String(line_ele)),"
-                        elseif pj.is_map(line_ele)
-                            name = String(keys(line_ele)[1])
-                            line_str *= "$name,"
-                            write(io, make_ele_str(line_ele) * "\n")
-                        end
+                    _, particle_str = make_init_str(ele)
+                    write(io, particle_str * "\n\n")
+                elseif kind == "Lattice"
+                    branches = props["branches"]
+                    for bl in branches
+                        lattice_str *= "$(String(bl)),"
                     end
-                    beamline_str = "Beamline([$line_str], $ref_str)"
-                    write(io, beamline_str * "\n")
+                    name        = keys(ele)[1]
+                    lattice_str = "$name = [$lattice_str]"
+                elseif kind == "BeamLine"
+                    bl_str *= make_bl_str(ele) * "\n"
                 else
-                    write(io, make_ele_str(ele) * "\n")
-                end 
+                    ele_str *= make_ele_str(ele) * "\n"
+                end
             end
         end
+        write(io, "@elements begin\n$(ele_str)end\n\n")
+        write(io, bl_str)
+        write(io, lattice_str)
     end
 end
 
