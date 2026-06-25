@@ -1,0 +1,879 @@
+!======================================================================
+parameter[geometry] = open
+
+parameter[p0c] = 2.16005801671522903E+009
+parameter[particle] = proton
+
+!======================================================================
+! Element definitions 
+
+btastart: Marker,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dhf6a: SBend,
+	L = 1.25000000000000000E+000,
+	g = -5.71919999999999998E-002,
+	e2 = -7.14899999999999980E-002,
+	B0 = -0.07149,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+drf6a: Drift,
+	L = 3.94999999999999796E-002,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dhf6b: SBend,
+	L = 1.32689999999999997E+000,
+	g = -4.47283141156078062E-002,
+	e1 = -3.32399999999999987E-002,
+	e2 = -7.14899999999999980E-002,
+	B0 = -0.05935000000000001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+drf6b: Drift,
+	L = 4.06399999999999983E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+pueh001: Instrument,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dr001: Drift,
+	L = 1.25180000000000025E+000,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+mw006: Marker,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dr006: Drift,
+	L = 4.32599999999999929E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dv007: Kicker,
+	L = 2.28599999999999998E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dr007: Drift,
+	L = 1.60600000000000021E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+qv1: Quadrupole,
+	L = 5.58799999999999963E-001,
+	B1 = -0.3038694433812434,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+drq1: Drift,
+	L = 4.03150000000000286E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dh1a: SBend,
+	L = 2.66653672973886480E-001,
+	g = 6.81858224461081158E-002,
+	e1 = 9.09100000000000012E-003,
+	e2 = 9.09100000000000012E-003,
+	B0 = 0.018181999999999997,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dh1b: SBend,
+	L = 2.66653672973886480E-001,
+	g = 6.81858224461081158E-002,
+	e1 = 9.09100000000000012E-003,
+	e2 = 9.09100000000000012E-003,
+	B0 = 0.018181999999999997,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+drd1: Drift,
+	L = 3.53953999999999991E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+qh2a: Quadrupole,
+	L = 5.58799999999999963E-001,
+	B1 = 0.5863484526126835,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+drq2a: Drift,
+	L = 1.41195999999999655E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+qh2b: Quadrupole,
+	L = 5.58799999999999963E-001,
+	B1 = 0.5863484526126835,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+drq2b: Drift,
+	L = 4.59900000000000087E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+xf019: Marker,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dr019: Drift,
+	L = 3.25699999999999323E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+qv3: Quadrupole,
+	L = 5.58799999999999963E-001,
+	B1 = -0.7941722916116809,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+drq3: Drift,
+	L = 3.70600000000000374E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+foil024: Marker,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dr024a: Drift,
+	L = 1.21000000000003466E-002,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dv030: Kicker,
+	L = 2.43799999999999989E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dr024b: Drift,
+	L = 6.88099999999999490E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+qh4: Quadrupole,
+	L = 5.58799999999999963E-001,
+	B1 = 0.7710978788314443,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+drq4: Drift,
+	L = 4.86175000000001134E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dh2: SBend,
+	L = 2.42384999999999984E+000,
+	g = 1.13744662417228803E-001,
+	e1 = 5.05800000000000000E-002,
+	e2 = 5.05800000000000000E-002,
+	B0 = 0.2757,
+	B1 = 0.00047420400000000004,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+drd2: Drift,
+	L = 4.71424999999999095E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+qv5: Quadrupole,
+	L = 4.98499999999999999E-001,
+	B1 = -0.006657384565057978,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+drq5: Drift,
+	L = 1.18349999999999983E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+puev046: Instrument,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dr046: Drift,
+	L = 8.64675000000002303E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dh3: SBend,
+	L = 2.42384999999999984E+000,
+	g = 1.13744662417228803E-001,
+	e1 = 5.05800000000000000E-002,
+	e2 = 5.05800000000000000E-002,
+	B0 = 0.2757,
+	B1 = 0.00047420400000000004,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+drd3: Drift,
+	L = 4.89724999999997301E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+qh6: Quadrupole,
+	L = 4.98499999999999999E-001,
+	B1 = 0.4857141484297326,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+drq6: Drift,
+	L = 4.71450000000000813E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+xf059: Marker,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dr059: Drift,
+	L = 4.69899999999999096E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+mw060: Marker,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dr060: Drift,
+	L = 4.60150000000002279E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+qv7: Quadrupole,
+	L = 4.98499999999999999E-001,
+	B1 = -0.4324535580622369,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+drq7y: Drift,
+	L = 4.25075000000000003E+000,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+mk077: Marker,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+drq7z: Drift,
+	L = 4.25075000000000003E+000,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+qh8: Quadrupole,
+	L = 4.98499999999999999E-001,
+	B1 = 0.15893573543211983,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+drq8: Drift,
+	L = 7.34099999999999975E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dh4a: SBend,
+	L = 2.66650810302187846E-001,
+	g = 3.20269043635076911E-002,
+	e1 = 4.27000000000000036E-003,
+	e2 = 4.27000000000000036E-003,
+	B0 = 0.008539999999999999,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dh4b: SBend,
+	L = 2.66650810302187846E-001,
+	g = 3.20269043635076911E-002,
+	e1 = 4.27000000000000036E-003,
+	e2 = 4.27000000000000036E-003,
+	B0 = 0.008539999999999999,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+drd4: Drift,
+	L = 1.80789999999999873E+000,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+qv9: Quadrupole,
+	L = 4.98499999999999999E-001,
+	B1 = -0.3951005358921412,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+drq9a: Drift,
+	L = 6.70250000000003010E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dv120: Kicker,
+	L = 2.43799999999999989E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+drq9b: Drift,
+	L = 1.56704999999999495E+000,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+qh10: Quadrupole,
+	L = 4.98499999999999999E-001,
+	B1 = 0.34610583510087456,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+drq10: Drift,
+	L = 5.03015000000000256E+000,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+mw125: Marker,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dr125: Drift,
+	L = 4.30499999999998662E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dh127: Kicker,
+	L = 2.43799999999999989E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dr127: Drift,
+	L = 2.96399999999998054E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+puev129: Instrument,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dr129: Drift,
+	L = 1.18349999999999983E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+qv11: Quadrupole,
+	L = 4.98499999999999999E-001,
+	B1 = -0.1830406372696607,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+drq11: Drift,
+	L = 3.01295000000000002E+000,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+mk139: Marker,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dr139: Drift,
+	L = 5.52500000000001990E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dr141: Drift,
+	L = 4.18200000000001848E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+pueh143: Instrument,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dr143: Drift,
+	L = 1.18349999999999983E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+qh12: Quadrupole,
+	L = 4.98499999999999999E-001,
+	B1 = 0.2427183759792474,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+drq12: Drift,
+	L = 3.78024999999999878E+000,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+mk156: Marker,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dr156: Drift,
+	L = 4.30600000000001981E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dh158: Kicker,
+	L = 2.43799999999999989E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dr158: Drift,
+	L = 2.96399999999998054E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+puev160: Instrument,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dr160: Drift,
+	L = 1.18349999999999983E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+qv13: Quadrupole,
+	L = 4.98499999999999999E-001,
+	B1 = -0.49328818586523404,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+drq13: Drift,
+	L = 5.96950000000003200E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+mw166: Marker,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dr166: Drift,
+	L = 5.52399999999998670E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dr168: Drift,
+	L = 4.18299999999998062E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+pueh170: Instrument,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dr170: Drift,
+	L = 1.18349999999999983E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+qh14: Quadrupole,
+	L = 4.98499999999999999E-001,
+	B1 = 0.3733714106129355,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+drq14: Drift,
+	L = 5.06749999999998257E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dh5a: SBend,
+	L = 6.22928612672511539E-001,
+	g = -1.13006528465579306E-001,
+	e1 = -3.51974999999999996E-002,
+	e2 = -3.51974999999999996E-002,
+	B0 = -0.070395,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dh5b: SBend,
+	L = 6.22928612672511539E-001,
+	g = -1.13006528465579306E-001,
+	e1 = -3.51974999999999996E-002,
+	e2 = -3.51974999999999996E-002,
+	B0 = -0.070395,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+drd5: Drift,
+	L = 4.51600000000000779E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dv181: Kicker,
+	L = 2.43799999999999989E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dr181: Drift,
+	L = 3.79799999999999582E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+xf183: Marker,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dr183: Drift,
+	L = 5.25500000000003520E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+qv15: Quadrupole,
+	L = 5.58799999999999963E-001,
+	B1 = -0.4019658812779824,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+m1: Drift,
+	L = 2.26060000000000016E+000,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+l20sptm1: SBend,
+	L = 1.23095438501483279E+000,
+	g = 4.45711073195769816E-002,
+	e1 = 2.74324999999999986E-002,
+	e2 = 2.74324999999999986E-002,
+	B0 = 0.054865000000000004,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+l20sptm2: SBend,
+	L = 1.23095438501483279E+000,
+	g = 4.45711073195769816E-002,
+	e1 = 2.74324999999999986E-002,
+	e2 = 2.74324999999999986E-002,
+	B0 = 0.054865000000000004,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+mm_a01bf: SBend,
+	L = 2.00664618248814230E+000,
+	g = -1.17122296422273627E-002,
+	e1 = -1.17511504499999992E-002,
+	e2 = -1.17511504499999992E-002,
+	B0 = -0.0235023009,
+	B2 = 0.01014629606508936,
+	B1 = 0.09733152987096852,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+d2s: Drift,
+	L = 6.09514655999999988E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+mm_a02bf: SBend,
+	L = 2.00664618248814230E+000,
+	g = -1.17122296422273627E-002,
+	e1 = -1.17511504499999992E-002,
+	e2 = -1.17511504499999992E-002,
+	B0 = -0.0235023009,
+	B2 = 0.01014629606508936,
+	B1 = 0.09733152987096852,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dpue: Drift,
+	L = 2.86999999999999977E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+pue_a02: Instrument,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dhca02: Kicker,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dvca02: Kicker,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+d2tx: Drift,
+	L = 3.22485191999999976E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+mm_a03cd: SBend,
+	L = 2.38767780201331314E+000,
+	g = -1.17122296301534548E-002,
+	e1 = -1.39825153500000004E-002,
+	e2 = -1.39825153500000004E-002,
+	B0 = -0.0279650307,
+	B2 = 0.010453989532367314,
+	B1 = -0.11611973355359825,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dsq: Drift,
+	L = 3.71047356000000050E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+qhfv: Quadrupole,
+	L = 3.90880000000000005E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+qpol: Quadrupole,
+	L = 3.90880000000000005E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+mm_a04cd: SBend,
+	L = 2.38767780201331314E+000,
+	g = -1.17122296301534548E-002,
+	e1 = -1.39825153500000004E-002,
+	e2 = -1.39825153500000004E-002,
+	B0 = -0.0279650307,
+	B2 = 0.010453989532367314,
+	B1 = -0.11611973355359825,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+pue_a04: Instrument,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+d2lx: Drift,
+	L = 3.22454712000000032E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+mm_a05af: SBend,
+	L = 2.38767780201331314E+000,
+	g = -1.17122296301534548E-002,
+	e1 = -1.39825153500000004E-002,
+	e2 = -1.39825153500000004E-002,
+	B0 = -0.0279650307,
+	B2 = 0.010414365982918717,
+	B1 = 0.11628446126404626,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+d2h_a05: Drift,
+	L = 2.61927356000000056E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+kckra05: SBend,
+	L = 1.00000037500009853E+000,
+	g = 2.99999887500012642E-003,
+	e1 = 1.50000000000000003E-003,
+	e2 = 1.50000000000000003E-003,
+	B0 = 0.003,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+mm_a06af: SBend,
+	L = 2.38767780201331314E+000,
+	g = -1.17122296301534548E-002,
+	e1 = -1.39825153500000004E-002,
+	e2 = -1.39825153500000004E-002,
+	B0 = -0.0279650307,
+	B2 = 0.010414365982918717,
+	B1 = 0.11628446126404626,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+d2l: Drift,
+	L = 6.09454712000000010E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+mm_a07cd: SBend,
+	L = 2.38767780201331314E+000,
+	g = -1.17122296301534548E-002,
+	e1 = -1.39825153500000004E-002,
+	e2 = -1.39825153500000004E-002,
+	B0 = -0.0279650307,
+	B2 = 0.010453989532367314,
+	B1 = -0.11611973355359825,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dss: Drift,
+	L = 4.34427356000000042E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+sxv: Sextupole,
+	L = 6.55000000000000027E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+mm_a08cd: SBend,
+	L = 2.38767780201331314E+000,
+	g = -1.17122296301534548E-002,
+	e1 = -1.39825153500000004E-002,
+	e2 = -1.39825153500000004E-002,
+	B0 = -0.0279650307,
+	B2 = 0.010453989532367314,
+	B1 = -0.11611973355359825,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+pue_a08: Instrument,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dhca08: Kicker,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dvca08: Kicker,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+mm_a09bf: SBend,
+	L = 2.00664618248814230E+000,
+	g = -1.17122296422273627E-002,
+	e1 = -1.17511504499999992E-002,
+	e2 = -1.17511504499999992E-002,
+	B0 = -0.0235023009,
+	B2 = 0.01014629606508936,
+	B1 = 0.09733152987096852,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+mm_a10bf: SBend,
+	L = 2.00664618248814230E+000,
+	g = -1.17122296422273627E-002,
+	e1 = -1.17511504499999992E-002,
+	e2 = -1.17511504499999992E-002,
+	B0 = -0.0235023009,
+	B2 = 0.01014629606508936,
+	B1 = 0.09733152987096852,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+d10: Drift,
+	L = 1.52383921800000000E+000,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+mm_a11bd: SBend,
+	L = 2.00664618248814230E+000,
+	g = -1.17122296422273627E-002,
+	e1 = -1.17511504499999992E-002,
+	e2 = -1.17511504499999992E-002,
+	B0 = -0.0235023009,
+	B2 = 0.010036630205495056,
+	B1 = -0.09716159670916273,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+mm_a12bd: SBend,
+	L = 2.00664618248814230E+000,
+	g = -1.17122296422273627E-002,
+	e1 = -1.17511504499999992E-002,
+	e2 = -1.17511504499999992E-002,
+	B0 = -0.0235023009,
+	B2 = 0.010036630205495056,
+	B1 = -0.09716159670916273,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+pue_a12: Instrument,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dhca12: Kicker,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+dvca12: Kicker,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+mm_a13cf: SBend,
+	L = 2.38767780201331314E+000,
+	g = -1.17122296301534548E-002,
+	e1 = -1.39825153500000004E-002,
+	e2 = -1.39825153500000004E-002,
+	B0 = -0.0279650307,
+	B2 = 0.010559836766226637,
+	B1 = 0.11638147410385251,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+sxh: Sextupole,
+	L = 6.55000000000000027E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+mm_a14cf: SBend,
+	L = 2.38767780201331314E+000,
+	g = -1.17122296301534548E-002,
+	e1 = -1.39825153500000004E-002,
+	e2 = -1.39825153500000004E-002,
+	B0 = -0.0279650307,
+	B2 = 0.010559836766226637,
+	B1 = 0.11638147410385251,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+pue_a14: Instrument,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+mm_a15ad: SBend,
+	L = 2.38767780201331314E+000,
+	g = -1.17122296301534548E-002,
+	e1 = -1.39825153500000004E-002,
+	e2 = -1.39825153500000004E-002,
+	B0 = -0.0279650307,
+	B2 = 0.010278543445273082,
+	B1 = -0.11606456350252004,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+d2h: Drift,
+	L = 7.61927356000000056E-001,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+mwa15: Marker,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+end_b0: Marker,
+	aperture_type = rectangular,
+	aperture_at = exit_end
+
+!======================================================================
+! Beamline definitions 
+
+bta_line: line = (
+	btastart, dhf6a, drf6a, dhf6b, drf6b, pueh001, dr001, mw006, 
+	dr006, dv007, dr007, qv1, drq1, dh1a, dh1b, drd1, qh2a, drq2a, qh2b, 
+	drq2b, xf019, dr019, qv3, drq3, foil024, dr024a, dv030, dr024b, qh4, 
+	drq4, dh2, drd2, qv5, drq5, puev046, dr046, dh3, drd3, qh6, drq6, 
+	xf059, dr059, mw060, dr060, qv7, drq7y, mk077, drq7z, qh8, drq8, dh4a, 
+	dh4b, drd4, qv9, drq9a, dv120, drq9b, qh10, drq10, mw125, dr125, dh127, 
+	dr127, puev129, dr129, qv11, drq11, mk139, dr139, dr141, pueh143, 
+	dr143, qh12, drq12, mk156, dr156, dh158, dr158, puev160, dr160, qv13, 
+	drq13, mw166, dr166, dr168, pueh170, dr170, qh14, drq14, dh5a, dh5b, 
+	drd5, dv181, dr181, xf183, dr183, qv15, m1, l20sptm1, l20sptm2, 
+	mm_a01bf, d2s, mm_a02bf, dpue, pue_a02, dhca02, dvca02, d2tx, mm_a03cd, 
+	dsq, qhfv, qpol, dsq, mm_a04cd, dpue, pue_a04, d2lx, mm_a05af, d2h_a05, 
+	kckra05, d2h_a05, mm_a06af, d2l, mm_a07cd, dss, sxv, dss, mm_a08cd, 
+	dpue, pue_a08, dhca08, dvca08, d2tx, mm_a09bf, d2s, mm_a10bf, d10, d10, 
+	mm_a11bd, d2s, mm_a12bd, dpue, pue_a12, dhca12, dvca12, d2tx, mm_a13cf, 
+	dss, sxh, dss, mm_a14cf, dpue, pue_a14, d2lx, mm_a15ad, d2h, mwa15, 
+	end_b0
+	)
+
+!======================================================================
+! Branch structure 
+
+use, bta_line 
