@@ -40,7 +40,7 @@ struct YAMLNode
   id::Csize_t      # node id within the tree
 end
 
-# Raw C struct returned by get_lattices — three tree handles by value.
+# Raw C struct returned by read_pals_file — three tree handles by value.
 struct LatticesHandle
   original::Ptr{Cvoid}
   included::Ptr{Cvoid}
@@ -63,15 +63,15 @@ function _root_node(handle::Ptr{Cvoid})
   return YAMLNode(tree, root_id)
 end
 
-# ─── get_lattices ────────────────────────────────────────────────────────────
+# ─── read_pals_file ──────────────────────────────────────────────────────────
 
 """
-    get_lattices(filename, lattice_name="") -> Lattices
+    read_pals_file(filename, lattice_name="") -> Lattices
 
 Parse a lattice file and return original, included, and expanded views.
 All three are freed independently when their `YAMLNode`s are GC'd.
 """
-function get_lattices(filename::String, lattice_name::String="")
+function read_pals_file(filename::String, lattice_name::String="")
   isfile(filename) || error("File not found: $filename")
   handles = @ccall LIBYAML.get_lattices(
     filename::Cstring,
