@@ -17,10 +17,10 @@ function toBmad(file_dir::String)
       if haskey(props, "kind")
         pals_kind = String(props["kind"])
         if pals_kind == "BeginningEle"
-          ref_str, particle_str = ele_to_bmad_str(ele)
+          ref_str, particle_str = _ele_to_bmad_str(ele)
         elseif pals_kind == "BeamLine"
           bl_name = node_key(ele[1])
-          bl_str = make_line_str(ele)
+          bl_str = _make_line_str(ele)
           push!(beamlines, bl_str)
           bl_str = ((length(bl_str) < 80) ? bl_str : ("\n\t" * bl_str * "\n\t"))
           full_bl_str *= "$bl_name: line = ($(bl_str))"
@@ -100,7 +100,7 @@ function toBmad(file_dir::String)
             lattice_str = lattice_str[1:idx-1] * lattice_str[idx+1:end]
           end
         else
-          ele_str *= make_bmad_ele_str(ele) * "\n"
+          ele_str *= _make_bmad_ele_str(ele) * "\n"
         end
       end
     end
@@ -122,7 +122,7 @@ end
 
 #---------------------------------------------------------------------------------------------------
 
-function ele_to_bmad_str(ele::YAMLNode)
+function _ele_to_bmad_str(ele::YAMLNode)
   props = ele[1]
   ref_str, particle_str = "", ""
   for key in keys(props)
@@ -168,7 +168,7 @@ function ele_to_bmad_str(ele::YAMLNode)
   return ref_str, particle_str
 end
 
-function make_line_str(ele::YAMLNode)
+function _make_line_str(ele::YAMLNode)
   props = ele[1]
   line = props["line"]
   l_line = length(line)
@@ -203,7 +203,7 @@ function make_line_str(ele::YAMLNode)
   return line_str
 end
 
-function bmad_kind(ele_kind::String)
+function _bmad_kind(ele_kind::String)
   # Magnets and RF Cavities
   if      ele_kind == "ACKicker";         return ("AC_Kicker", nothing)
   elseif  ele_kind == "RBend";            return (ele_kind, nothing)
@@ -291,7 +291,7 @@ function ABRepresentation(full::FullRepresentation)
 end
 
 # Selection layer: ele_kind -> the specific representation type it uses.
-function KindMap(ele_kind)
+function _KindMap(ele_kind)
   if ele_kind in ("SBend", "RBend", "Quadrupole", "Sextupole", "Octupole", 
           "Multipole", "Solenoid", "Kicker", "Wiggler",
           "RFCavity", "CrabCavity")
@@ -304,7 +304,7 @@ function KindMap(ele_kind)
 end
 
 # Filling layer: parse raw multipole data into the FullRepresentation slots.
-function fill_multipoles!(full::FullRepresentation, mmP, name)
+function _fill_multipoles!(full::FullRepresentation, mmP, name)
   for mmkey in keys(mmP)
     order = parse(Int, filter(isdigit, mmkey))
     if startswith(mmkey, "tilt")
@@ -324,7 +324,7 @@ function fill_multipoles!(full::FullRepresentation, mmP, name)
 end
 
 # Emission layer: each representation builds its own eleString fragment.
-function mp_key(rep::ABRepresentation)
+function _mp_key(rep::ABRepresentation)
   mpString = ""
   _keys = keys(rep.A)
   isempty(_keys) && return mpString
@@ -339,7 +339,7 @@ function mp_key(rep::ABRepresentation)
   return mpString
 end
 
-function mp_key(rep::FullRepresentation)
+function _mp_key(rep::FullRepresentation)
   mpString = ""
   _keys = keys(rep.normalized)
   isempty(_keys) && return mpString
@@ -358,7 +358,7 @@ end
 
 
 
-function make_bmad_ele_str(ele::YAMLNode)
+function _make_bmad_ele_str(ele::YAMLNode)
   props = ele[1]
   eleString = node_key(ele[1]) * ": "
 
@@ -368,7 +368,7 @@ function make_bmad_ele_str(ele::YAMLNode)
   else
     println("Translating ele $(node_key(props))")
 
-    ele_kind_bmad, args = bmad_kind(ele_kind)
+    ele_kind_bmad, args = _bmad_kind(ele_kind)
 
     eleString *= ele_kind_bmad
     if isnothing(args)
@@ -585,7 +585,7 @@ function make_bmad_ele_str(ele::YAMLNode)
       full = FullRepresentation()
       full.L = haskey(props, "length") ? Float64(props["length"]) : 1.0
 
-      fill_multipoles!(full, mmP, node_key(ele[1]))
+      _fill_multipoles!(full, mmP, node_key(ele[1]))
 
       if all(values(full.normalized))
         # eleString *= "\tfield_master = F,\n" # (Default)
@@ -595,8 +595,8 @@ function make_bmad_ele_str(ele::YAMLNode)
         error("$(node_key(props)): Multipoles of one element must be all normalized or all unnormalized.")
       end
 
-      rep = KindMap(ele_kind)(full)   # pick the element-specific representation, then down-convert
-      eleString *= mp_key(rep)
+      rep = _KindMap(ele_kind)(full)   # pick the element-specific representation, then down-convert
+      eleString *= _mp_key(rep)
 
     elseif key == "MetaP"
       # metaP = props["MetaP"]

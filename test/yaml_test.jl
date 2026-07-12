@@ -1,6 +1,15 @@
 using Test
 using PALSJulia
 
+# yaml_wrapper.jl symbols are not exported, so bring the ones used here into scope.
+using PALSJulia: YAMLTree, YAMLNode, create_empty_tree,
+  is_map, is_sequence, is_scalar,
+  parse_string, parse_file,
+  add_map!, add_sequence!, add_scalar!,
+  set_scalar!, remove!,
+  to_yaml_string, write_yaml,
+  deep_copy_node!, deep_copy_children!
+
 @testset "YAML Wrapper Tests" begin
 
   @testset "Node Creation" begin
