@@ -1,3 +1,12 @@
+"""
+    toBmad(file_dir::String)
+
+Translate a PALS lattice file into a Bmad lattice file.
+
+Read the PALS-YAML file at `file_dir`, walk the `PALS/facility` element list, and write the
+corresponding Bmad description to `<file_dir stem>_out.bmad`: reference and particle-start
+parameters, element definitions, beamline (`line`) definitions, and the branch (`use`) structure.
+"""
 function toBmad(file_dir::String)
   in_path  = file_dir
   out_path = first(splitext(in_path)) * "_out.bmad"
@@ -121,7 +130,15 @@ function toBmad(file_dir::String)
 end
 
 #---------------------------------------------------------------------------------------------------
+"""
+    _ele_to_bmad_str(ele::YAMLNode)
 
+Translate a `BeginningEle` element into Bmad global parameter strings.
+
+Return `(ref_str, particle_str)` where `ref_str` holds `parameter[...]` settings from the
+element's `ReferenceP` (species and energy) and `particle_str` holds `particle_start[...]`
+settings from its `ParticleP` (initial phase-space coordinates).
+"""
 function _ele_to_bmad_str(ele::YAMLNode)
   props = ele[1]
   ref_str, particle_str = "", ""
@@ -168,6 +185,15 @@ function _ele_to_bmad_str(ele::YAMLNode)
   return ref_str, particle_str
 end
 
+#---------------------------------------------------------------------------------------------------
+"""
+    _make_line_str(ele::YAMLNode)
+
+Build the comma-separated element list for a `BeamLine` element.
+
+Return the body of a Bmad `line = (...)` definition, expanding each member to its name and
+wrapping the text with tab-indented continuation lines to keep rows under ~80 columns.
+"""
 function _make_line_str(ele::YAMLNode)
   props = ele[1]
   line = props["line"]
@@ -203,6 +229,15 @@ function _make_line_str(ele::YAMLNode)
   return line_str
 end
 
+#---------------------------------------------------------------------------------------------------
+"""
+    _bmad_kind(ele_kind::String)
+
+Map a PALS element kind to its Bmad counterpart.
+
+Return `(bmad_kind, args)` where `bmad_kind` is the Bmad element-type name for the PALS
+`ele_kind`. Kinds with no Bmad equivalent (e.g. `UnionEle`, `Feedback`) raise an error.
+"""
 function _bmad_kind(ele_kind::String)
   # Magnets and RF Cavities
   if      ele_kind == "ACKicker";         return ("AC_Kicker", nothing)
@@ -255,10 +290,32 @@ function _bmad_kind(ele_kind::String)
   end
 end
 
+#---------------------------------------------------------------------------------------------------
+"""
+    MultipoleRepresentation
+
+Abstract supertype for the multipole representations used during PALS-to-Bmad translation.
+
+Concrete subtypes are [`FullRepresentation`](@ref) (the raw, over-parametrized form read
+from PALS-YAML) and [`ABRepresentation`](@ref) (the element-specific A/B field integrals).
+"""
 abstract type MultipoleRepresentation end
 
-# Raw, over-parametrized form: filled directly from PALS-YAML, then down-converted to
-# whichever element-specific representation the element kind requires.
+#---------------------------------------------------------------------------------------------------
+"""
+    FullRepresentation <: MultipoleRepresentation
+
+Raw, over-parametrized multipole form filled directly from PALS-YAML.
+
+Holds, keyed by multipole order, whether each coefficient is `normalized` (K vs. B) and
+`integrated` (field integral vs. field strength), its `magnitude` (normal/skew pair), and its
+`tilt`, together with the element length `L`. It is down-converted to whichever
+element-specific representation the element kind requires.
+
+    FullRepresentation()
+
+Construct an empty representation with unit length `L`.
+"""
 mutable struct FullRepresentation <: MultipoleRepresentation
   normalized::Dict{Int,Bool}
   integrated::Dict{Int,Bool}
@@ -269,13 +326,29 @@ end
 FullRepresentation() = FullRepresentation(Dict(), Dict(), Dict(), Dict(), 1.0)
 FullRepresentation(full::FullRepresentation) = full   # identity down-convert
 
-# Element-specific form: only the final A/B field integrals.
+#---------------------------------------------------------------------------------------------------
+"""
+    ABRepresentation <: MultipoleRepresentation
+
+Element-specific multipole form: only the final A/B field integrals.
+
+`A` and `B` map each multipole order to its skew and normal field integral, respectively.
+Built from a [`FullRepresentation`](@ref) via [`ABRepresentation(::FullRepresentation)`](@ref).
+"""
 struct ABRepresentation <: MultipoleRepresentation
   A::Dict{Int,Float64}
   B::Dict{Int,Float64}
 end
 
-# Down-convert the raw form to A/B field integrals.
+#---------------------------------------------------------------------------------------------------
+"""
+    ABRepresentation(full::FullRepresentation)
+
+Down-convert a `FullRepresentation` to A/B field integrals.
+
+Combine each multipole's magnitude, length, and tilt into complex field integrals and store
+their imaginary/real parts as the `A`/`B` coefficient dictionaries.
+"""
 function ABRepresentation(full::FullRepresentation)
   A = Dict{Int,Float64}()
   B = Dict{Int,Float64}()
@@ -290,7 +363,15 @@ function ABRepresentation(full::FullRepresentation)
   return ABRepresentation(A, B)
 end
 
-# Selection layer: ele_kind -> the specific representation type it uses.
+#---------------------------------------------------------------------------------------------------
+"""
+    _KindMap(ele_kind)
+
+Return the multipole representation type used for a given element kind.
+
+Elements that carry field multipoles map to `ABRepresentation`; kinds that have no multipole
+attributes, or are unrecognized, raise an error.
+"""
 function _KindMap(ele_kind)
   if ele_kind in ("SBend", "RBend", "Quadrupole", "Sextupole", "Octupole", 
           "Multipole", "Solenoid", "Kicker", "Wiggler",
@@ -303,7 +384,15 @@ function _KindMap(ele_kind)
   end
 end
 
-# Filling layer: parse raw multipole data into the FullRepresentation slots.
+#---------------------------------------------------------------------------------------------------
+"""
+    _fill_multipoles!(full::FullRepresentation, mmP, name)
+
+Populate `full` from a PALS `MagneticMultipoleP` map.
+
+Parse each key of `mmP` into a multipole order and store its magnitude, `normalized`,
+`integrated`, and `tilt` attributes in `full`; `name` is used in error messages. Return `full`.
+"""
 function _fill_multipoles!(full::FullRepresentation, mmP, name)
   for mmkey in keys(mmP)
     order = parse(Int, filter(isdigit, mmkey))
@@ -323,7 +412,14 @@ function _fill_multipoles!(full::FullRepresentation, mmP, name)
   return full
 end
 
-# Emission layer: each representation builds its own eleString fragment.
+#---------------------------------------------------------------------------------------------------
+"""
+    _mp_key(rep::ABRepresentation)
+
+Return the Bmad attribute fragment for A/B field-integral multipoles.
+
+Emit tab-indented `An`/`Bn` assignments for each nonzero coefficient in `rep`.
+"""
 function _mp_key(rep::ABRepresentation)
   mpString = ""
   _keys = keys(rep.A)
@@ -339,6 +435,14 @@ function _mp_key(rep::ABRepresentation)
   return mpString
 end
 
+#---------------------------------------------------------------------------------------------------
+"""
+    _mp_key(rep::FullRepresentation)
+
+Return the Bmad attribute fragment for the raw multipole representation.
+
+Emit tab-indented `Kn...L`, `Kn...SL`, and tilt assignments for each multipole in `rep`.
+"""
 function _mp_key(rep::FullRepresentation)
   mpString = ""
   _keys = keys(rep.normalized)
@@ -358,6 +462,17 @@ end
 
 
 
+#---------------------------------------------------------------------------------------------------
+"""
+    _make_bmad_ele_str(ele::YAMLNode)
+
+Translate a single PALS element into its Bmad definition string.
+
+Dispatch on the element `kind` and its parameter groups (aperture, bend, body shift,
+multipoles, patch, RF, solenoid, reference change, ...) to build a
+`name: type, attr = val, ...` Bmad element definition. Unsupported parameter groups emit a
+message or raise an error.
+"""
 function _make_bmad_ele_str(ele::YAMLNode)
   props = ele[1]
   eleString = node_key(ele[1]) * ": "
