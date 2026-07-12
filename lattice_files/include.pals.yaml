@@ -1,5 +1,10 @@
-- line:
-    - first: 1
-    - second: 2
-    - third: 3
-    - include: "include2.pals.yaml"
+- thingB:
+    kind: Sextupole
+
+- inc_line:
+    kind: Beamline
+    line:
+      - ele_1: 1
+      - second: 2
+      - third: 3
+      - include: "include2.pals.yaml"
