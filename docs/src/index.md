@@ -42,7 +42,7 @@ sidebar).
 import PALSJulia as pj
 
 # Read a lattice file and expand it.
-lat = pj.get_lattices("ex.pals.yaml")
+lat = pj.read_pals_file("ex.pals.yaml")
 
 println(pj.to_yaml_string(lat.expanded))   # the expanded lattice as YAML
 

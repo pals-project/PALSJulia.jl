@@ -17,6 +17,6 @@ include("yaml_wrapper.jl")
 include("toBmad.jl")
 include("toSciBmad.jl")
 
-export toBmad, toSciBmad
+export read_pals_file, toBmad, toSciBmad
 
 end 
