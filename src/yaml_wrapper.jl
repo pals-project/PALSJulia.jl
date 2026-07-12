@@ -326,15 +326,16 @@ end
 #---------------------------------------------------------------------------------------------------
 
 """
-    add_scalar!(parent, value; key=nothing, index=END) -> YAMLNode
+    add_scalar!(parent, value; key=nothing, index=nothing) -> YAMLNode
 
-Add a scalar child to `parent`.  Pass `key` for MAP parents; omit (or pass
-`nothing`) for sequence elements.  `index` is 1-based; use `END` to append.
+Add a scalar child to `parent`.  Pass `key` for MAP parents; omit it (or pass
+`nothing`) for sequence elements.  `index` selects the 1-based position among
+`parent`'s existing children; the default `index=nothing` appends at the end.
 """
 function add_scalar!(parent::YAMLNode, value::String;
                      key::Union{String,Nothing}=nothing,
-                     index::Integer=END)
-  c_index = index == END ? END : Csize_t(index - 1)
+                     index::Union{Integer,Nothing}=nothing)
+  c_index = index === nothing ? YAML_NULL_ID : Csize_t(index - 1)
   id = if key === nothing
     @ccall LIBYAML.add_scalar(
       parent.tree.handle::Ptr{Cvoid}, parent.id::Csize_t,
@@ -351,14 +352,17 @@ end
 #---------------------------------------------------------------------------------------------------
 
 """
-    add_map!(parent; key=nothing, index=END) -> YAMLNode
+    add_map!(parent; key=nothing, index=nothing) -> YAMLNode
 
-Add an empty MAP child to `parent`.
+Add an empty MAP child to `parent`.  Pass `key` for MAP parents; omit it (or
+pass `nothing`) for sequence elements.  `index` selects the 1-based position
+among `parent`'s existing children; the default `index=nothing` appends at the
+end.
 """
 function add_map!(parent::YAMLNode;
                   key::Union{String,Nothing}=nothing,
-                  index::Integer=END)
-  c_index = index == END ? END : Csize_t(index - 1)
+                  index::Union{Integer,Nothing}=nothing)
+  c_index = index === nothing ? YAML_NULL_ID : Csize_t(index - 1)
   id = if key === nothing
     @ccall LIBYAML.add_map(
       parent.tree.handle::Ptr{Cvoid}, parent.id::Csize_t,
@@ -375,14 +379,17 @@ end
 #---------------------------------------------------------------------------------------------------
 
 """
-    add_sequence!(parent; key=nothing, index=END) -> YAMLNode
+    add_sequence!(parent; key=nothing, index=nothing) -> YAMLNode
 
-Add an empty sequence child to `parent`.
+Add an empty sequence child to `parent`.  Pass `key` for MAP parents; omit it
+(or pass `nothing`) for sequence elements.  `index` selects the 1-based position
+among `parent`'s existing children; the default `index=nothing` appends at the
+end.
 """
 function add_sequence!(parent::YAMLNode;
                        key::Union{String,Nothing}=nothing,
-                       index::Integer=END)
-  c_index = index == END ? END : Csize_t(index - 1)
+                       index::Union{Integer,Nothing}=nothing)
+  c_index = index === nothing ? YAML_NULL_ID : Csize_t(index - 1)
   id = if key === nothing
     @ccall LIBYAML.add_sequence(
       parent.tree.handle::Ptr{Cvoid}, parent.id::Csize_t,
@@ -413,7 +420,7 @@ function Base.setindex!(node::YAMLNode, value::String, key::String)
   else
     @ccall LIBYAML.add_scalar(
       node.tree.handle::Ptr{Cvoid}, node.id::Csize_t,
-      key::Cstring, value::Cstring, END::Csize_t)::Csize_t
+      key::Cstring, value::Cstring, YAML_NULL_ID::Csize_t)::Csize_t
   end
 end
 
@@ -478,13 +485,14 @@ end
 #---------------------------------------------------------------------------------------------------
 
 """
-    deep_copy_children!(dst, src; index=END)
+    deep_copy_children!(dst, src; index=nothing)
 
-Copy all children of `src` into `dst` at position `index` (1-based, `END` to
-append).  Works across different trees.
+Copy all children of `src` into `dst` at the 1-based position `index` among
+`dst`'s existing children; the default `index=nothing` appends them at the end.
+Works across different trees.
 """
-function deep_copy_children!(dst::YAMLNode, src::YAMLNode; index::Integer=END)
-  c_index = index == END ? END : Csize_t(index - 1)
+function deep_copy_children!(dst::YAMLNode, src::YAMLNode; index::Union{Integer,Nothing}=nothing)
+  c_index = index === nothing ? YAML_NULL_ID : Csize_t(index - 1)
   @ccall LIBYAML.deep_copy_children(
     dst.tree.handle::Ptr{Cvoid}, dst.id::Csize_t,
     src.tree.handle::Ptr{Cvoid}, src.id::Csize_t,
