@@ -73,16 +73,38 @@ end
 
 # ─── type checks ─────────────────────────────────────────────────────────────
 
+"""
+    is_map(node) -> Bool
+
+Return `true` if `node` is a MAP (a collection of key/value pairs), `false`
+otherwise.  A node is exactly one of MAP, sequence, or scalar; use this to
+decide before accessing children by key.
+"""
 is_map(node::YAMLNode) =
   @ccall LIBYAML.is_map(node.tree.handle::Ptr{Cvoid}, node.id::Csize_t)::Bool
 
 #---------------------------------------------------------------------------------------------------
 
+"""
+    is_sequence(node) -> Bool
+
+Return `true` if `node` is a sequence (an ordered list of elements), `false`
+otherwise.  A node is exactly one of MAP, sequence, or scalar; use this to
+decide before accessing children by index.
+"""
 is_sequence(node::YAMLNode) =
   @ccall LIBYAML.is_sequence(node.tree.handle::Ptr{Cvoid}, node.id::Csize_t)::Bool
 
 #---------------------------------------------------------------------------------------------------
 
+"""
+    is_scalar(node) -> Bool
+
+Return `true` if `node` is a scalar (a leaf holding a single string, number, or
+boolean value), `false` otherwise.  A node is exactly one of MAP, sequence, or
+scalar; scalar nodes have no children and their value is read with `String`,
+`Int`, `Float64`, or `Bool`.
+"""
 is_scalar(node::YAMLNode) =
   @ccall LIBYAML.is_scalar(node.tree.handle::Ptr{Cvoid}, node.id::Csize_t)::Bool
 
@@ -102,7 +124,14 @@ end
 
 #---------------------------------------------------------------------------------------------------
 
-"""Look up a direct child of a MAP node by key."""
+"""
+    node[key] -> YAMLNode
+
+Look up a direct child of a MAP `node` by its string `key` and return that
+child node.  Only direct children are searched (the lookup is not recursive).
+Throws an error if no child has the given key; call `haskey(node, key)` first
+if the key may be absent.
+"""
 function Base.getindex(node::YAMLNode, key::String)
   id = @ccall LIBYAML.get_child_by_key(
     node.tree.handle::Ptr{Cvoid}, node.id::Csize_t, key::Cstring)::Csize_t
@@ -112,7 +141,13 @@ end
 
 #---------------------------------------------------------------------------------------------------
 
-"""Return the nth child (1-based) of a MAP or sequence node."""
+"""
+    node[index] -> YAMLNode
+
+Return the `index`-th direct child of a MAP or sequence `node`.  Indexing is
+1-based, matching Julia convention (the underlying C API is 0-based).  Throws
+an error if `index` is out of bounds.
+"""
 function Base.getindex(node::YAMLNode, index::Int)
   id = @ccall LIBYAML.get_child_by_index(
     node.tree.handle::Ptr{Cvoid}, node.id::Csize_t, Csize_t(index - 1)::Csize_t)::Csize_t
@@ -122,7 +157,13 @@ end
 
 #---------------------------------------------------------------------------------------------------
 
-"""Return true if the MAP node has a child with the given key."""
+"""
+    haskey(node, key) -> Bool
+
+Return `true` if the MAP `node` has a direct child stored under the string
+`key`, `false` otherwise.  Only direct children are checked; the search is not
+recursive.  Useful as a guard before `node[key]`, which errors on a missing key.
+"""
 function Base.haskey(node::YAMLNode, key::String)
   id = @ccall LIBYAML.get_child_by_key(
     node.tree.handle::Ptr{Cvoid}, node.id::Csize_t, key::Cstring)::Csize_t
@@ -131,14 +172,26 @@ end
 
 #---------------------------------------------------------------------------------------------------
 
-"""Return the number of direct children."""
+"""
+    length(node) -> Int
+
+Return the number of direct children of `node`: the number of key/value pairs
+in a MAP, or the number of elements in a sequence.  Scalar nodes report 0.
+Only direct children are counted (the count is not recursive).
+"""
 function Base.length(node::YAMLNode)
   Int(@ccall LIBYAML.get_size(node.tree.handle::Ptr{Cvoid}, node.id::Csize_t)::Csize_t)
 end
 
 #---------------------------------------------------------------------------------------------------
 
-"""Return all keys of a MAP node as a `Vector{String}`."""
+"""
+    keys(node) -> Vector{String}
+
+Return the keys of a MAP `node`, in document order, as a `Vector{String}`.
+Returns an empty vector for sequence or scalar nodes.  Pair with `node[key]` to
+retrieve each value, or iterate the node directly to get `(key, value)` pairs.
+"""
 function Base.keys(node::YAMLNode)
   is_map(node) || return String[]
   n = length(node)
@@ -158,7 +211,13 @@ end
 
 #---------------------------------------------------------------------------------------------------
 
-"""Return the key of this node as a String, or nothing if the node has no key."""
+"""
+    node_key(node) -> Union{String,Nothing}
+
+Return the key under which `node` is stored in its parent MAP, as a `String`,
+or `nothing` if `node` has no key.  Sequence elements and the tree root have no
+key and return `nothing`.
+"""
 function node_key(node::YAMLNode)
   ptr = @ccall LIBYAML.get_node_key(
     node.tree.handle::Ptr{Cvoid}, node.id::Csize_t)::Cstring
@@ -170,7 +229,13 @@ end
 
 #---------------------------------------------------------------------------------------------------
 
-"""Iterate: sequences yield `YAMLNode` elements; maps yield `(key, YAMLNode)` pairs."""
+"""
+    iterate(node[, state])
+
+Iterate over the children of `node`, enabling `for` loops, comprehensions, and
+`collect`.  Sequences yield successive `YAMLNode` elements; maps yield
+`(key, YAMLNode)` pairs (with `key::String`).  Scalar nodes yield nothing.
+"""
 function Base.iterate(node::YAMLNode, state=1)
   if is_sequence(node)
     state > length(node) && return nothing
@@ -191,7 +256,13 @@ Base.eachindex(node::YAMLNode) = (is_sequence(node) || is_map(node)) ? (1:length
 
 # ─── reading values ───────────────────────────────────────────────────────────
 
-"""Return the scalar value as a `String`."""
+"""
+    String(node) -> String
+
+Return the scalar value of `node` as a `String`.  Throws an error if `node` is
+not a scalar (i.e. it is a MAP or sequence); guard with `is_scalar(node)` if
+unsure.  This is the raw text; use `Int`, `Float64`, or `Bool` for typed values.
+"""
 function Base.String(node::YAMLNode)
   ptr = @ccall LIBYAML.as_string(
     node.tree.handle::Ptr{Cvoid}, node.id::Csize_t)::Cstring
@@ -203,17 +274,32 @@ end
 
 #---------------------------------------------------------------------------------------------------
 
-"""Parse the scalar value as an `Int`."""
+"""
+    Int(node) -> Int
+
+Parse the scalar value of `node` as an `Int`.  Throws if `node` is not a scalar
+or if its text is not a valid integer.
+"""
 Base.Int(node::YAMLNode)     = parse(Int,     String(node))
 
 #---------------------------------------------------------------------------------------------------
 
-"""Parse the scalar value as a `Float64`."""
+"""
+    Float64(node) -> Float64
+
+Parse the scalar value of `node` as a `Float64`.  Throws if `node` is not a
+scalar or if its text is not a valid floating-point number.
+"""
 Base.Float64(node::YAMLNode) = parse(Float64, String(node))
 
 #---------------------------------------------------------------------------------------------------
 
-"""Parse the scalar value as a `Bool` (accepts `true`/`false`)."""
+"""
+    Bool(node) -> Bool
+
+Parse the scalar value of `node` as a `Bool`.  Accepts exactly the text
+`"true"` or `"false"`; any other value (or a non-scalar node) throws an error.
+"""
 function Base.Bool(node::YAMLNode)
   s = String(node)
   s == "true"  && return true
@@ -333,7 +419,13 @@ end
 
 #---------------------------------------------------------------------------------------------------
 
-"""Set or replace the scalar value of a node."""
+"""
+    set_scalar!(node, value)
+
+Set or replace the scalar value of `node` with the string `value`.  Operates on
+an existing node in place; to set a value by key within a MAP (adding the key if
+absent), use `node[key] = value` instead.
+"""
 function set_scalar!(node::YAMLNode, value::String)
   @ccall LIBYAML.set_scalar(
     node.tree.handle::Ptr{Cvoid}, node.id::Csize_t, value::Cstring)::Cvoid
@@ -341,7 +433,13 @@ end
 
 #---------------------------------------------------------------------------------------------------
 
-"""Set or replace the key of a node."""
+"""
+    set_key!(node, key)
+
+Set or replace the key under which `node` is stored in its parent MAP to the
+string `key`.  Only meaningful for nodes that live inside a MAP; sequence
+elements are keyless.
+"""
 function set_key!(node::YAMLNode, key::String)
   @ccall LIBYAML.set_node_key(
     node.tree.handle::Ptr{Cvoid}, node.id::Csize_t, key::Cstring)::Cvoid
@@ -349,7 +447,13 @@ end
 
 #---------------------------------------------------------------------------------------------------
 
-"""Remove this node and all its descendants from the tree."""
+"""
+    remove!(node)
+
+Remove `node`, together with all of its descendants, from its parent.  After
+removal the `YAMLNode` handle is stale and must not be used again.  Intended for
+non-root nodes; the root has no parent to be removed from.
+"""
 function remove!(node::YAMLNode)
   parent_id = @ccall LIBYAML.get_parent(
     node.tree.handle::Ptr{Cvoid}, node.id::Csize_t)::Csize_t
