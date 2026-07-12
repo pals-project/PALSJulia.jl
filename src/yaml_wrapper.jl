@@ -1,10 +1,3 @@
-const LIBYAML = joinpath(@__DIR__, "..", "..", "pals-cpp", "build", "libyaml_c_wrapper.dylib")
-
-# ─── constants matching the C header ────────────────────────────────────────
-# Both map to (size_t)-1 in C.
-const YAML_NULL_ID = typemax(Csize_t)
-const END          = typemax(Csize_t)
-
 # ─── internal helpers ────────────────────────────────────────────────────────
 
 # Wrap a tree handle and return a node pointing to its root.
