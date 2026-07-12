@@ -1,13 +1,13 @@
 <!doctype html>
 <html class="no-js" lang="en" data-content_root="./">
-  <head><meta charset="utf-8">
+  <head>
+<meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Installation" href="guide/installation.html">
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="#">
 
     <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
-        <title>pals-julia</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
+<meta name="robots" content="noindex" />
+<title>Search - pals-julia</title><link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
     <link rel="stylesheet" type="text/css" href="_static/custom.css?v=e95d4d7f" />
@@ -162,7 +162,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="#"><div class="brand">pals-julia</div></a>
+      <a href="index.html"><div class="brand">pals-julia</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -173,7 +173,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
         <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
       </label>
     </div>
@@ -181,11 +181,11 @@
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><a class="sidebar-brand" href="#">
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
   <span class="sidebar-brand-text">pals-julia</span>
   
-</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+</a><form class="sidebar-search-container" method="get" action="#" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
   <input type="hidden" name="check_keywords" value="yes">
   <input type="hidden" name="area" value="default">
@@ -221,17 +221,7 @@
           <span>Back to top</span>
         </a>
         <div class="content-icon-container">
-          <div class="view-this-page">
-  <a class="muted-link" href="https://github.com/pals-project/pals-julia/blob/main/docs/src/index.md?plain=true" title="View this page">
-    <svg><use href="#svg-eye"></use></svg>
-    <span class="visually-hidden">View this page</span>
-  </a>
-</div><div class="edit-this-page">
-  <a class="muted-link" href="https://github.com/pals-project/pals-julia/edit/main/docs/src/index.md" rel="edit" title="Edit this page">
-    <svg><use href="#svg-pencil"></use></svg>
-    <span class="visually-hidden">Edit this page</span>
-  </a>
-</div><div class="theme-toggle-container theme-toggle-content">
+          <div class="theme-toggle-container theme-toggle-content">
             <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
               <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
               <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
@@ -239,75 +229,29 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
             <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section class="tex2jax_ignore mathjax_ignore" id="pals-julia">
-<h1>pals-julia<a class="headerlink" href="#pals-julia" title="Link to this heading">¶</a></h1>
-<p><strong>pals-julia</strong> is a Julia parser for the Particle Accelerator Lattice Standard
-(<a class="reference external" href="https://github.com/campa-consortium/pals">PALS</a>). It reads PALS-format lattice
-files, performs lattice expansion, and translates lattices into
-<a class="reference external" href="https://github.com/bmad-sim/SciBmad.jl">SciBmad</a> and
-<a class="reference external" href="https://www.classe.cornell.edu/bmad/">Bmad</a> formats.</p>
-<p>Under the hood, the package is a thin Julia wrapper around the
-<code class="docutils literal notranslate"><span class="pre">yaml_c_wrapper</span></code> C library (a <a class="reference external" href="https://github.com/biojppm/rapidyaml">rapidyaml</a>
-backend) shipped with
-<a class="reference external" href="https://github.com/pals-project/pals-cpp">pals-cpp</a>. A parsed document is a
-tree of <code class="docutils literal notranslate"><span class="pre">YAMLNode</span></code> values that you index and mutate with familiar Julia idioms
-(<code class="docutils literal notranslate"><span class="pre">node[&quot;key&quot;]</span></code>, <code class="docutils literal notranslate"><span class="pre">node[i]</span></code>, <code class="docutils literal notranslate"><span class="pre">haskey</span></code>, <code class="docutils literal notranslate"><span class="pre">keys</span></code>, <code class="docutils literal notranslate"><span class="pre">length</span></code>, iteration).</p>
-<div class="toctree-wrapper compound">
+          
+<noscript>
+<div class="admonition error">
+  <p class="admonition-title">Error</p>
+  <p>
+    Please activate JavaScript to enable the search functionality.
+  </p>
 </div>
-<section id="what-it-does">
-<h2>What it does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<ol class="arabic simple">
-<li><p><strong>Parse</strong> PALS-format YAML into a <code class="docutils literal notranslate"><span class="pre">YAMLNode</span></code> tree, or build one from
-scratch — see <a class="reference internal" href="guide/parsing.html"><span class="std std-doc">Parsing and writing YAML</span></a>.</p></li>
-<li><p><strong>Expand</strong> a lattice — read a lattice file, resolve its includes, and
-expand the line into an ordered list of elements — see
-<a class="reference internal" href="guide/lattices.html"><span class="std std-doc">Reading and expanding lattices</span></a>.</p></li>
-<li><p><strong>Translate</strong> a PALS lattice to SciBmad or Bmad format — see
-<a class="reference internal" href="guide/translation.html"><span class="std std-doc">Translating to SciBmad and Bmad</span></a>.</p></li>
-</ol>
-<p>The complete docstring reference is in the <strong>API Reference</strong> (linked in the
-sidebar).</p>
-</section>
-<section id="quick-example">
-<h2>Quick example<a class="headerlink" href="#quick-example" title="Link to this heading">¶</a></h2>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="n">pals_julia</span><span class="w"> </span><span class="n">as</span><span class="w"> </span><span class="n">pj</span>
+</noscript>
 
-<span class="c"># Read a lattice file and expand it.</span>
-<span class="n">lat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">get_lattices</span><span class="p">(</span><span class="s">&quot;ex.pals.yaml&quot;</span><span class="p">)</span>
-
-<span class="n">println</span><span class="p">(</span><span class="n">pj</span><span class="o">.</span><span class="n">to_yaml_string</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">expanded</span><span class="p">))</span><span class="w">   </span><span class="c"># the expanded lattice as YAML</span>
-
-<span class="c"># Build a document from scratch and write it out.</span>
-<span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">create_empty_tree</span><span class="p">()</span>
-<span class="n">server</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">add_map!</span><span class="p">(</span><span class="n">root</span><span class="p">;</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;server&quot;</span><span class="p">)</span>
-<span class="n">server</span><span class="p">[</span><span class="s">&quot;host&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;localhost&quot;</span>
-<span class="n">server</span><span class="p">[</span><span class="s">&quot;port&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;8080&quot;</span>
-
-<span class="n">pj</span><span class="o">.</span><span class="n">write_yaml</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;config.pals.yaml&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</section>
-</section>
+<div id="search-results"></div>
 
         </article>
       </div>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="guide/installation.html">
-              <div class="page-info">
-                <div class="context">
-                  <span>Next</span>
-                </div>
-                <div class="title">Installation</div>
-              </div>
-              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
-            </a>
+          
           
         </div>
         <div class="bottom-of-page">
@@ -327,28 +271,8 @@ sidebar).</p>
         
       </footer>
     </div>
-    <aside class="toc-drawer">
+    <aside class="toc-drawer no-toc">
       
-      
-      <div class="toc-sticky toc-scroll">
-        <div class="toc-title-container">
-          <span class="toc-title">
-            On this page
-          </span>
-        </div>
-        <div class="toc-tree-container">
-          <div class="toc-tree">
-            <ul>
-<li><a class="reference internal" href="#">pals-julia</a><ul>
-<li><a class="reference internal" href="#what-it-does">What it does</a></li>
-<li><a class="reference internal" href="#quick-example">Quick example</a></li>
-</ul>
-</li>
-</ul>
-
-          </div>
-        </div>
-      </div>
       
       
     </aside>
@@ -357,5 +281,8 @@ sidebar).</p>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>
-    </body>
+    
+<script src="_static/searchtools.js"></script>
+<script src="_static/language_data.js"></script>
+<script src="searchindex.js"></script></body>
 </html>

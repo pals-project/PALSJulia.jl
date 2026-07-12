@@ -1,16 +1,16 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="./">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Installation" href="guide/installation.html">
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Parsing and writing YAML" href="parsing.html"><link rel="prev" title="pals-julia" href="../index.html">
 
     <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
-        <title>pals-julia</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=e95d4d7f" />
+        <title>Installation - pals-julia</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=e95d4d7f" />
     
     
 
@@ -162,7 +162,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="#"><div class="brand">pals-julia</div></a>
+      <a href="../index.html"><div class="brand">pals-julia</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -181,29 +181,29 @@
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><a class="sidebar-brand" href="#">
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
   
   <span class="sidebar-brand-text">pals-julia</span>
   
-</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
   <input type="hidden" name="check_keywords" value="yes">
   <input type="hidden" name="area" value="default">
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="guide/installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="guide/parsing.html">Parsing and writing YAML</a></li>
-<li class="toctree-l1"><a class="reference internal" href="guide/lattices.html">Reading and expanding lattices</a></li>
-<li class="toctree-l1"><a class="reference internal" href="guide/translation.html">Translating to SciBmad and Bmad</a></li>
+<ul class="current">
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parsing.html">Parsing and writing YAML</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lattices.html">Reading and expanding lattices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="translation.html">Translating to SciBmad and Bmad</a></li>
 </ul>
 
 </div><div class="sidebar-tree">
   <ul>
     <li class="toctree-l1">
       <a class="reference internal"
-         href="api/index.html">API Reference →</a>
+         href="../api/index.html">API Reference →</a>
     </li>
   </ul>
 </div></div>
@@ -222,12 +222,12 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="https://github.com/pals-project/pals-julia/blob/main/docs/src/index.md?plain=true" title="View this page">
+  <a class="muted-link" href="https://github.com/pals-project/pals-julia/blob/main/docs/src/guide/installation.md?plain=true" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
 </div><div class="edit-this-page">
-  <a class="muted-link" href="https://github.com/pals-project/pals-julia/edit/main/docs/src/index.md" rel="edit" title="Edit this page">
+  <a class="muted-link" href="https://github.com/pals-project/pals-julia/edit/main/docs/src/guide/installation.md" rel="edit" title="Edit this page">
     <svg><use href="#svg-pencil"></use></svg>
     <span class="visually-hidden">Edit this page</span>
   </a>
@@ -244,53 +244,55 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section class="tex2jax_ignore mathjax_ignore" id="pals-julia">
-<h1>pals-julia<a class="headerlink" href="#pals-julia" title="Link to this heading">¶</a></h1>
-<p><strong>pals-julia</strong> is a Julia parser for the Particle Accelerator Lattice Standard
-(<a class="reference external" href="https://github.com/campa-consortium/pals">PALS</a>). It reads PALS-format lattice
-files, performs lattice expansion, and translates lattices into
-<a class="reference external" href="https://github.com/bmad-sim/SciBmad.jl">SciBmad</a> and
-<a class="reference external" href="https://www.classe.cornell.edu/bmad/">Bmad</a> formats.</p>
-<p>Under the hood, the package is a thin Julia wrapper around the
-<code class="docutils literal notranslate"><span class="pre">yaml_c_wrapper</span></code> C library (a <a class="reference external" href="https://github.com/biojppm/rapidyaml">rapidyaml</a>
-backend) shipped with
-<a class="reference external" href="https://github.com/pals-project/pals-cpp">pals-cpp</a>. A parsed document is a
-tree of <code class="docutils literal notranslate"><span class="pre">YAMLNode</span></code> values that you index and mutate with familiar Julia idioms
-(<code class="docutils literal notranslate"><span class="pre">node[&quot;key&quot;]</span></code>, <code class="docutils literal notranslate"><span class="pre">node[i]</span></code>, <code class="docutils literal notranslate"><span class="pre">haskey</span></code>, <code class="docutils literal notranslate"><span class="pre">keys</span></code>, <code class="docutils literal notranslate"><span class="pre">length</span></code>, iteration).</p>
-<div class="toctree-wrapper compound">
-</div>
-<section id="what-it-does">
-<h2>What it does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<ol class="arabic simple">
-<li><p><strong>Parse</strong> PALS-format YAML into a <code class="docutils literal notranslate"><span class="pre">YAMLNode</span></code> tree, or build one from
-scratch — see <a class="reference internal" href="guide/parsing.html"><span class="std std-doc">Parsing and writing YAML</span></a>.</p></li>
-<li><p><strong>Expand</strong> a lattice — read a lattice file, resolve its includes, and
-expand the line into an ordered list of elements — see
-<a class="reference internal" href="guide/lattices.html"><span class="std std-doc">Reading and expanding lattices</span></a>.</p></li>
-<li><p><strong>Translate</strong> a PALS lattice to SciBmad or Bmad format — see
-<a class="reference internal" href="guide/translation.html"><span class="std std-doc">Translating to SciBmad and Bmad</span></a>.</p></li>
-</ol>
-<p>The complete docstring reference is in the <strong>API Reference</strong> (linked in the
-sidebar).</p>
-</section>
-<section id="quick-example">
-<h2>Quick example<a class="headerlink" href="#quick-example" title="Link to this heading">¶</a></h2>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="n">pals_julia</span><span class="w"> </span><span class="n">as</span><span class="w"> </span><span class="n">pj</span>
-
-<span class="c"># Read a lattice file and expand it.</span>
-<span class="n">lat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">get_lattices</span><span class="p">(</span><span class="s">&quot;ex.pals.yaml&quot;</span><span class="p">)</span>
-
-<span class="n">println</span><span class="p">(</span><span class="n">pj</span><span class="o">.</span><span class="n">to_yaml_string</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">expanded</span><span class="p">))</span><span class="w">   </span><span class="c"># the expanded lattice as YAML</span>
-
-<span class="c"># Build a document from scratch and write it out.</span>
-<span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">create_empty_tree</span><span class="p">()</span>
-<span class="n">server</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">add_map!</span><span class="p">(</span><span class="n">root</span><span class="p">;</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;server&quot;</span><span class="p">)</span>
-<span class="n">server</span><span class="p">[</span><span class="s">&quot;host&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;localhost&quot;</span>
-<span class="n">server</span><span class="p">[</span><span class="s">&quot;port&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;8080&quot;</span>
-
-<span class="n">pj</span><span class="o">.</span><span class="n">write_yaml</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;config.pals.yaml&quot;</span><span class="p">)</span>
+          <section class="tex2jax_ignore mathjax_ignore" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h1>
+<p>pals-julia is a Julia wrapper around the <code class="docutils literal notranslate"><span class="pre">yaml_c_wrapper</span></code> C library that ships
+with <a class="reference external" href="https://github.com/pals-project/pals-cpp">pals-cpp</a>, so both repositories
+must be cloned side by side under the same parent directory.</p>
+<section id="clone-the-repositories">
+<h2>1. Clone the repositories<a class="headerlink" href="#clone-the-repositories" title="Link to this heading">¶</a></h2>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">git clone https://github.com/pals-project/pals-cpp.git</span>
+<span class="go">git clone https://github.com/pals-project/pals-julia.git</span>
 </pre></div>
 </div>
+<p>The resulting layout must look like this — pals-julia locates the compiled
+library relative to its own source tree, at <code class="docutils literal notranslate"><span class="pre">../pals-cpp/build/</span></code>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>some-directory/
+├── pals-cpp/
+│   └── build/
+│       └── libyaml_c_wrapper.dylib   (or .so / .dll)
+└── pals-julia/
+</pre></div>
+</div>
+</section>
+<section id="build-the-c-library">
+<h2>2. Build the C library<a class="headerlink" href="#build-the-c-library" title="Link to this heading">¶</a></h2>
+<p>Follow the build instructions in the pals-cpp <code class="docutils literal notranslate"><span class="pre">README</span></code>. The result is the
+shared library <code class="docutils literal notranslate"><span class="pre">libyaml_c_wrapper.dylib</span></code> (macOS), <code class="docutils literal notranslate"><span class="pre">.so</span></code> (Linux), or <code class="docutils literal notranslate"><span class="pre">.dll</span></code>
+(Windows) under <code class="docutils literal notranslate"><span class="pre">pals-cpp/build/</span></code>.</p>
+</section>
+<section id="activate-the-julia-project">
+<h2>3. Activate the Julia project<a class="headerlink" href="#activate-the-julia-project" title="Link to this heading">¶</a></h2>
+<p>From the <code class="docutils literal notranslate"><span class="pre">pals-julia</span></code> directory:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">Pkg</span>
+<span class="n">Pkg</span><span class="o">.</span><span class="n">activate</span><span class="p">(</span><span class="s">&quot;.&quot;</span><span class="p">)</span>
+<span class="n">Pkg</span><span class="o">.</span><span class="n">instantiate</span><span class="p">()</span>
+
+<span class="k">import</span><span class="w"> </span><span class="n">pals_julia</span><span class="w"> </span><span class="n">as</span><span class="w"> </span><span class="n">pj</span>
+</pre></div>
+</div>
+</section>
+<section id="check-the-installation">
+<h2>Check the installation<a class="headerlink" href="#check-the-installation" title="Link to this heading">¶</a></h2>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="n">pals_julia</span><span class="w"> </span><span class="n">as</span><span class="w"> </span><span class="n">pj</span>
+
+<span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">create_empty_tree</span><span class="p">()</span>
+<span class="n">root</span><span class="p">[</span><span class="s">&quot;hello&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;world&quot;</span>
+<span class="n">println</span><span class="p">(</span><span class="n">pj</span><span class="o">.</span><span class="n">to_yaml_string</span><span class="p">(</span><span class="n">root</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>If that prints <code class="docutils literal notranslate"><span class="pre">hello:</span> <span class="pre">world</span></code>, the Julia package and the underlying C library
+are wired up correctly.</p>
 </section>
 </section>
 
@@ -299,16 +301,26 @@ sidebar).</p>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="guide/installation.html">
+          <a class="next-page" href="parsing.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Installation</div>
+                <div class="title">Parsing and writing YAML</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          
+          <a class="prev-page" href="../index.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Home</div>
+                
+              </div>
+            </a>
         </div>
         <div class="bottom-of-page">
           <div class="left-details">
@@ -339,9 +351,11 @@ sidebar).</p>
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">pals-julia</a><ul>
-<li><a class="reference internal" href="#what-it-does">What it does</a></li>
-<li><a class="reference internal" href="#quick-example">Quick example</a></li>
+<li><a class="reference internal" href="#">Installation</a><ul>
+<li><a class="reference internal" href="#clone-the-repositories">1. Clone the repositories</a></li>
+<li><a class="reference internal" href="#build-the-c-library">2. Build the C library</a></li>
+<li><a class="reference internal" href="#activate-the-julia-project">3. Activate the Julia project</a></li>
+<li><a class="reference internal" href="#check-the-installation">Check the installation</a></li>
 </ul>
 </li>
 </ul>
@@ -353,9 +367,9 @@ sidebar).</p>
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=8a448e45"></script>
-    <script src="_static/doctools.js?v=fd6eb6e6"></script>
-    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+</div><script src="../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
     </body>
 </html>
