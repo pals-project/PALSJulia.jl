@@ -444,13 +444,13 @@ mutating helpers (suffixed with <code class="docutils literal notranslate"><span
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">add_scalar!(parent,</span> <span class="pre">value;</span> <span class="pre">key=nothing,</span> <span class="pre">index=END)</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">add_scalar!(parent,</span> <span class="pre">value;</span> <span class="pre">key=nothing,</span> <span class="pre">index=nothing)</span></code></p></td>
 <td><p>Add a scalar child.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">add_map!(parent;</span> <span class="pre">key=nothing,</span> <span class="pre">index=END)</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">add_map!(parent;</span> <span class="pre">key=nothing,</span> <span class="pre">index=nothing)</span></code></p></td>
 <td><p>Add an empty map child.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">add_sequence!(parent;</span> <span class="pre">key=nothing,</span> <span class="pre">index=END)</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">add_sequence!(parent;</span> <span class="pre">key=nothing,</span> <span class="pre">index=nothing)</span></code></p></td>
 <td><p>Add an empty sequence child.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">node[key]</span> <span class="pre">=</span> <span class="pre">value</span></code></p></td>
@@ -471,15 +471,15 @@ mutating helpers (suffixed with <code class="docutils literal notranslate"><span
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">deep_copy_node!(dst,</span> <span class="pre">src)</span></code></p></td>
 <td><p>Overwrite <code class="docutils literal notranslate"><span class="pre">dst</span></code> with a deep copy of <code class="docutils literal notranslate"><span class="pre">src</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">deep_copy_children!(dst,</span> <span class="pre">src;</span> <span class="pre">index=END)</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">deep_copy_children!(dst,</span> <span class="pre">src;</span> <span class="pre">index=nothing)</span></code></p></td>
 <td><p>Copy all children of <code class="docutils literal notranslate"><span class="pre">src</span></code> into <code class="docutils literal notranslate"><span class="pre">dst</span></code>.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 <p>Pass <code class="docutils literal notranslate"><span class="pre">key</span></code> for map children and omit it (or pass <code class="docutils literal notranslate"><span class="pre">nothing</span></code>) for sequence
-elements. <code class="docutils literal notranslate"><span class="pre">index</span></code> is 1-based and defaults to appending at the end, so you
-usually leave it out; to append explicitly the sentinel is <code class="docutils literal notranslate"><span class="pre">PALSJulia.END</span></code>.</p>
+elements. <code class="docutils literal notranslate"><span class="pre">index</span></code> selects the 1-based position among the existing children; it
+defaults to <code class="docutils literal notranslate"><span class="pre">nothing</span></code>, which appends at the end, so you usually leave it out.</p>
 <div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">create_empty_tree</span><span class="p">()</span>
 
 <span class="n">server</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">add_map!</span><span class="p">(</span><span class="n">root</span><span class="p">;</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;server&quot;</span><span class="p">)</span>

@@ -129,20 +129,20 @@ mutating helpers (suffixed with `!`) return the newly created child node:
 
 | Function | Description |
 | --- | --- |
-| `add_scalar!(parent, value; key=nothing, index=END)` | Add a scalar child. |
-| `add_map!(parent; key=nothing, index=END)` | Add an empty map child. |
-| `add_sequence!(parent; key=nothing, index=END)` | Add an empty sequence child. |
+| `add_scalar!(parent, value; key=nothing, index=nothing)` | Add a scalar child. |
+| `add_map!(parent; key=nothing, index=nothing)` | Add an empty map child. |
+| `add_sequence!(parent; key=nothing, index=nothing)` | Add an empty sequence child. |
 | `node[key] = value` | Set (or create) a scalar child under `key`. |
 | `set_scalar!(node, value)` | Set or replace a node's scalar value in place. |
 | `set_key!(node, key)` | Set or replace the key a node is stored under. |
 | `remove!(node)` | Remove a node and all its descendants. |
 | `copy(node)` | An independent deep copy of `node` in a new tree. |
 | `deep_copy_node!(dst, src)` | Overwrite `dst` with a deep copy of `src`. |
-| `deep_copy_children!(dst, src; index=END)` | Copy all children of `src` into `dst`. |
+| `deep_copy_children!(dst, src; index=nothing)` | Copy all children of `src` into `dst`. |
 
 Pass `key` for map children and omit it (or pass `nothing`) for sequence
-elements. `index` is 1-based and defaults to appending at the end, so you
-usually leave it out; to append explicitly the sentinel is `PALSJulia.END`.
+elements. `index` selects the 1-based position among the existing children; it
+defaults to `nothing`, which appends at the end, so you usually leave it out.
 
 ```julia
 root = create_empty_tree()
