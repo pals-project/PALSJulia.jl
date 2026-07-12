@@ -1,16 +1,12 @@
 name = "PALSJulia"
 uuid = "3ffa0026-5f68-41f0-beae-2f2b11b650a3"
 version = "0.1.0"
-authors = ["Alex He <adh236@cornell.edu>", "David Sagan <david.sagan@gmail.com>"]
+authors = ["David Sagan <david.sagan@gmail.com>", "Alex He <adh236@cornell.edu>"]
 
 [deps]
-Beamlines = "5bb90b03-0719-46b8-8ce4-1ef3afd3cd4b"
-Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
-Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 
 [compat]
-Beamlines = "0.8.12"
-julia = "1.6"
+julia = "1.10"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

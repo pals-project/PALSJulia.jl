@@ -1,8 +1,128 @@
-import Pkg
-Pkg.activate(joinpath(@__DIR__, ".."))
-import PALSJulia as pj
+function toBmad(file_dir::String)
+  in_path  = file_dir
+  out_path = first(splitext(in_path)) * "_out.bmad"
+  file     = parse_file(in_path)
+  facility = file["PALS"]["facility"]
+  open(out_path, "w") do io
+    ref_str     = ""
+    particle_str= ""
+    ele_str     = ""
+    full_bl_str = ""
+    lattice_str = ""
+    lattice_msc = ""
+    beamlines   = []
+    N_lattices  = 0
+    for ele in facility
+      props = ele[1]
+      if haskey(props, "kind")
+        pals_kind = String(props["kind"])
+        if pals_kind == "BeginningEle"
+          ref_str, particle_str = ele_to_bmad_str(ele)
+        elseif pals_kind == "BeamLine"
+          bl_name = node_key(ele[1])
+          bl_str = make_line_str(ele)
+          push!(beamlines, bl_str)
+          bl_str = ((length(bl_str) < 80) ? bl_str : ("\n\t" * bl_str * "\n\t"))
+          full_bl_str *= "$bl_name: line = ($(bl_str))"
+          full_bl_str *= "\n\n"
+        elseif pals_kind == "Lattice"
+          N_lattices += 1
+          N_lattices > 1 && error("\n
+                    Different BeamLine complexes must be translated from separate files.\n
+                    Bmad only supports one branching lattice per file.\n
+                    Consider using different Tao universes.\n")
+          lattices = props["branches"]
+          isempty(lattices) && continue
+          N_bl = length(lattices)
+          if N_bl == 1
+            bl = first(lattices)
+            if is_scalar(bl)
+              lattice_str *= "$(String(bl))"
+              periodic = "open"
+            elseif is_map(bl)
+              bl_props = bl[1]
+              lattice_str *= "$(node_key(bl_props)), "
 
-function make_init_str(ele::pj.YAMLNode)
+              if !isempty(keys(bl_props))
+                if haskey(bl_props, "periodic")
+                  if bl_props["periodic"] == "true"
+                    periodic = "closed"
+                  else
+                    periodic = "open"
+                  end
+                else
+                  periodic = "open"
+                end
+              else
+                periodic = "open"
+              end
+            elseif is_sequence(bl)
+              error("Expanding lattices is not done during PALS>Bmad translation")
+            else
+              error("This object is neither a scalar, map, nor sequence: ", bl)
+            end
+            lattice_msc *= "parameter[geometry] = $periodic"
+            write(io, "!======================================================================" * "\n")
+            write(io, lattice_msc * "\n\n")
+            lattice_msc = ""
+          else
+            for bl in lattices
+              if is_scalar(bl)
+                lattice_str *= "$(String(bl)), "
+                periodic = "open"
+              elseif is_map(bl)
+                bl_props = bl[1]
+                lattice_str *= "$(node_key(bl_props)), "
+
+                if !isempty(keys(bl_props))
+                  if haskey(bl_props, "periodic")
+                    if bl_props["periodic"] == "true"
+                      periodic = "closed"
+                    else
+                      periodic = "open"
+                    end
+                  else
+                    periodic = "open"
+                  end
+                else
+                  periodic = "open"
+                end
+              elseif is_sequence(bl)
+                error("Expanding lattices is not done during PALS>Bmad translation")
+              else
+                error("This object is neither a scalar, map, nor sequence: ", bl)
+              end
+              lattice_msc *= "$(node_key(bl_props))[geometry] = $periodic" * "\n"
+            end
+          end
+          idx = findlast(==(','), lattice_str)
+          if !isnothing(idx) 
+            lattice_str = lattice_str[1:idx-1] * lattice_str[idx+1:end]
+          end
+        else
+          ele_str *= make_bmad_ele_str(ele) * "\n"
+        end
+      end
+    end
+
+    !isempty(ref_str) && write(io, ref_str * "\n")
+    !isempty(particle_str) && write(io, particle_str * "\n\n")
+    write(io, "!======================================================================" * "\n")
+    write(io, "! Element definitions " * "\n\n")
+    !isempty(ele_str) && write(io, ele_str)
+    write(io, "!======================================================================" * "\n")
+    write(io, "! Beamline definitions " * "\n\n")
+    !isempty(full_bl_str) && write(io, full_bl_str)
+    !isempty(lattice_msc) && write(io, lattice_msc)
+    write(io, "!======================================================================" * "\n")
+    write(io, "! Branch structure " * "\n\n")
+    !isempty(lattice_str) && write(io, "use, " * lattice_str)
+  end
+end
+
+#---------------------------------------------------------------------------------------------------
+
+function ele_to_bmad_str(ele::YAMLNode)
   props = ele[1]
   ref_str, particle_str = "", ""
   for key in keys(props)
@@ -48,23 +168,23 @@ function make_init_str(ele::pj.YAMLNode)
   return ref_str, particle_str
 end
 
-function make_bl_str(ele::pj.YAMLNode)
+function make_line_str(ele::YAMLNode)
   props = ele[1]
   line = props["line"]
   l_line = length(line)
   line_str = ""
   tmp = ""
-  l_tmp = length(pj.node_key(props)) + 4
+  l_tmp = length(node_key(props)) + 4
 
   for i in 2:l_line
     line_ele = line[i]
 
-    if pj.is_scalar(line_ele)
+    if is_scalar(line_ele)
       ele_str = "$(String(line_ele))"
-    elseif pj.is_map(line_ele) || pj.is_sequence(line_ele)
-      ele_str = pj.node_key(line_ele[1])
+    elseif is_map(line_ele) || is_sequence(line_ele)
+      ele_str = node_key(line_ele[1])
     else
-      error("BeamLine $(pj.node_key(ele[1])) element $i is not scalar or sequence or map")
+      error("BeamLine $(node_key(ele[1])) element $i is not scalar or sequence or map")
     end
 
     i < l_line && (ele_str *= ", ")
@@ -238,15 +358,15 @@ end
 
 
 
-function make_ele_str(ele::pj.YAMLNode)
+function make_bmad_ele_str(ele::YAMLNode)
   props = ele[1]
-  eleString = pj.node_key(ele[1]) * ": "
+  eleString = node_key(ele[1]) * ": "
 
   ele_kind = String(props["kind"])
   if ele_kind == "Lattice"
     return ""
   else
-    println("Translating ele $(pj.node_key(props))")
+    println("Translating ele $(node_key(props))")
 
     ele_kind_bmad, args = bmad_kind(ele_kind)
 
@@ -269,7 +389,7 @@ function make_ele_str(ele::pj.YAMLNode)
       has_xwidth = haskey(apertureP, "x_width");  has_xcen  = haskey(apertureP, "x_center")
       if (has_xmin || has_xmax) && (has_xwidth || has_xcen)
         println("
-                Ignoring ApertureP of element $(pj.node_key(ele[1])). 
+                Ignoring ApertureP of element $(node_key(ele[1])). 
                 Either x_min and max should be defined or width and center, not both.
                 ")
       elseif (has_xwidth)
@@ -290,7 +410,7 @@ function make_ele_str(ele::pj.YAMLNode)
       has_ywidth = haskey(apertureP, "y_width");  has_ycen  = haskey(apertureP, "y_center")
       if (has_ymin || has_ymax) && (has_ywidth || has_ycen)
         println("
-                Ignoring ApertureP of element $(pj.node_key(ele[1])). 
+                Ignoring ApertureP of element $(node_key(ele[1])). 
                 Either y_min and max should be defined or width and center, not both.
                 ")
       elseif (has_ywidth)
@@ -372,13 +492,13 @@ function make_ele_str(ele::pj.YAMLNode)
           eleString *= "$bbkey = $(String(bbP[bbkey])),"
         end
       end=#
-      error("$(pj.node_key(props)): BeamBeamP not translated yet")            
+      error("$(node_key(props)): BeamBeamP not translated yet")            
     elseif key == "BendP"
       bendP = props["BendP"]
       has_e1 = haskey(bendP, "e1");  has_e1_rect  = haskey(bendP, "e1_rect");
       has_e2 = haskey(bendP, "e2");  has_e2_rect  = haskey(bendP, "e2_rect");
       if (has_e1 || has_e2) && (has_e1_rect || has_e2_rect)
-        error("$(pj.node_key(props)): should not have both e1 and e1_rect, nor both e2 and e2_rect")
+        error("$(node_key(props)): should not have both e1 and e1_rect, nor both e2 and e2_rect")
       end
 
       _keys = keys(bendP)
@@ -414,9 +534,9 @@ function make_ele_str(ele::pj.YAMLNode)
         elseif bkey == "h2"
           tmp *= "h2 = $(String(bendP["h2"])),"
         elseif bkey == "L_chord"
-          error("$(pj.node_key(props)): L_chord is a derived quantity for SBend elements")
+          error("$(node_key(props)): L_chord is a derived quantity for SBend elements")
         elseif bkey == "L_sagitta"
-          error("$(pj.node_key(props)): L_sagitta is a derived quantity for SBend/RBend elements")
+          error("$(node_key(props)): L_sagitta is a derived quantity for SBend/RBend elements")
         elseif bkey == "tilt_ref"
           tmp *= "ref_tilt = $(String(bendP["tilt_ref"])),"
         end
@@ -465,14 +585,14 @@ function make_ele_str(ele::pj.YAMLNode)
       full = FullRepresentation()
       full.L = haskey(props, "length") ? Float64(props["length"]) : 1.0
 
-      fill_multipoles!(full, mmP, pj.node_key(ele[1]))
+      fill_multipoles!(full, mmP, node_key(ele[1]))
 
       if all(values(full.normalized))
         # eleString *= "\tfield_master = F,\n" # (Default)
       elseif all(!, values(full.normalized)) && ele_kind != "RFCavity"
         eleString *= "\tfield_master = T,\n"
       else
-        error("$(pj.node_key(props)): Multipoles of one element must be all normalized or all unnormalized.")
+        error("$(node_key(props)): Multipoles of one element must be all normalized or all unnormalized.")
       end
 
       rep = KindMap(ele_kind)(full)   # pick the element-specific representation, then down-convert
@@ -531,7 +651,7 @@ function make_ele_str(ele::pj.YAMLNode)
     elseif key == "RFP"
       rfP = props["RFP"]
       if String(props["kind"]) == "CrabCavity"
-        error("$(pj.node_key(props)): CrabCavity not yet translated")
+        error("$(node_key(props)): CrabCavity not yet translated")
       end
       _keys = keys(rfP)
       isempty(_keys) && continue
@@ -553,9 +673,9 @@ function make_ele_str(ele::pj.YAMLNode)
             L = props["L"]
             grad = Float64(rfP["gradient"])
             tmp *= "voltage = $(grad*L),"
-            println("$(pj.node_key(props)): gradient not yet supported, replacing with voltage = gradient * length")
+            println("$(node_key(props)): gradient not yet supported, replacing with voltage = gradient * length")
           else
-            error("$(pj.node_key(props)): `gradient` not yet supported & `length` is undefined => voltage is undefined")
+            error("$(node_key(props)): `gradient` not yet supported & `length` is undefined => voltage is undefined")
           end
 
         elseif rfkey == "phase"
@@ -573,27 +693,27 @@ function make_ele_str(ele::pj.YAMLNode)
         elseif rfkey == "zero_phase"
           zp = String(rfP["zero_phase"])
           if zp == "ACCELERATING"
-            error("$(pj.node_key(props)): `Accelerating` phase is not supported with phi0_autoscale in Bmad")
+            error("$(node_key(props)): `Accelerating` phase is not supported with phi0_autoscale in Bmad")
           elseif zp == "BELOW_TRANSITION"
             tmp *= "rf_phase_below_transition_ref = T,"
           elseif zp == "ABOVE_TRANSITION"
             tmp *= "rf_phase_below_transition_ref = F,"
           else
-            println("$(pj.node_key(props)): unknown zero_phase type")
+            println("$(node_key(props)): unknown zero_phase type")
           end
 
         elseif rfkey == "L_active"
-          error("$(pj.node_key(props)): `L_active` is a dependent parameter in Bmad")
+          error("$(node_key(props)): `L_active` is a dependent parameter in Bmad")
 
         elseif rfkey == "dE_ref"
-          error("$(pj.node_key(props)): needs translation to LCavity for `dE_ref`")
+          error("$(node_key(props)): needs translation to LCavity for `dE_ref`")
         end
         if !isempty(tmp)
           eleString *= "\t" * tmp * "\n"
         end
       end
       if haskey(rfP, "frequency") && haskey(rfP, "harmon")
-        error("$(pj.node_key(props)): can only define `frequency` or `harmon` but not both")
+        error("$(node_key(props)): can only define `frequency` or `harmon` but not both")
       end
     elseif key == "SolenoidP"
       solP = props["SolenoidP"]
@@ -603,7 +723,7 @@ function make_ele_str(ele::pj.YAMLNode)
         elseif haskey(solP, "Bsol")
           eleString *= "$Bs_field = $(String(solP[Bsol])),"
         else
-          println("$(pj.node_key(props)) - unknown key(s): $keys(solP)")
+          println("$(node_key(props)) - unknown key(s): $keys(solP)")
         end
       end
     elseif key == "TrackingP"
@@ -616,7 +736,7 @@ function make_ele_str(ele::pj.YAMLNode)
       end
     elseif key == "ReferenceChangeP"
       if ele_kind_bmad != "Patch"
-        error("$(pj.node_key(props)): Bmad reference changes only allowed in Patch elements (PALS: Patch / RefereneChange)")
+        error("$(node_key(props)): Bmad reference changes only allowed in Patch elements (PALS: Patch / RefereneChange)")
         continue
       else
         refchangeP = props["ReferenceChangeP"]
@@ -630,10 +750,10 @@ function make_ele_str(ele::pj.YAMLNode)
             eleString *= "E_tot_offset = $(String(refchangeP["dE_ref"])),"
 
           elseif rkey == "dpc_ref"
-            error("$(pj.node_key(props)): dpc_ref (p0c_offset) not supported by Bmad, only E_tot_offset")
+            error("$(node_key(props)): dpc_ref (p0c_offset) not supported by Bmad, only E_tot_offset")
 
           elseif rkey == "time_ref"
-            error("$(pj.node_key(props)): setting time_ref is not supported by Bmad")
+            error("$(node_key(props)): setting time_ref is not supported by Bmad")
 
           elseif rkey == "E_tot_ref"
             eleString *= "E_tot_set = $(String(refchangeP["E_tot_ref"])),"
@@ -642,7 +762,7 @@ function make_ele_str(ele::pj.YAMLNode)
             eleString *= "p0c_set = $(String(refchangeP["pc_ref"])),"
 
           elseif rkey == "species_ref"
-            error("$(pj.node_key(props)): changing species in-beamline is not supported by Bmad")
+            error("$(node_key(props)): changing species in-beamline is not supported by Bmad")
           end
         end
       end
@@ -654,134 +774,4 @@ function make_ele_str(ele::pj.YAMLNode)
     eleString = eleString[1:idx-1] * eleString[idx+1:end]
   end
   return eleString
-end
-
-function main(file_dir::String)
-  in_path  = file_dir
-  out_path = first(splitext(in_path)) * "_out.bmad"
-  file     = pj.parse_file(in_path)
-  facility = file["PALS"]["facility"]
-  open(out_path, "w") do io
-    ref_str     = ""
-    particle_str= ""
-    ele_str     = ""
-    full_bl_str = ""
-    lattice_str = ""
-    lattice_msc = ""
-    beamlines   = []
-    N_lattices  = 0
-    for ele in facility
-      props = ele[1]
-      if haskey(props, "kind")
-        pals_kind = String(props["kind"])
-        if pals_kind == "BeginningEle"
-          ref_str, particle_str = make_init_str(ele)
-        elseif pals_kind == "BeamLine"
-          bl_name = pj.node_key(ele[1])
-          bl_str = make_bl_str(ele)
-          push!(beamlines, bl_str)
-          bl_str = ((length(bl_str) < 80) ? bl_str : ("\n\t" * bl_str * "\n\t"))
-          full_bl_str *= "$bl_name: line = ($(bl_str))"
-          full_bl_str *= "\n\n"
-        elseif pals_kind == "Lattice"
-          N_lattices += 1
-          N_lattices > 1 && error("\n
-                    Different BeamLine complexes must be translated from separate files.\n
-                    Bmad only supports one branching lattice per file.\n
-                    Consider using different Tao universes.\n")
-          lattices = props["branches"]
-          isempty(lattices) && continue
-          N_bl = length(lattices)
-          if N_bl == 1
-            bl = first(lattices)
-            if pj.is_scalar(bl)
-              lattice_str *= "$(String(bl))"
-              periodic = "open"
-            elseif pj.is_map(bl)
-              bl_props = bl[1]
-              lattice_str *= "$(pj.node_key(bl_props)), "
-
-              if !isempty(keys(bl_props))
-                if haskey(bl_props, "periodic")
-                  if bl_props["periodic"] == "true"
-                    periodic = "closed"
-                  else
-                    periodic = "open"
-                  end
-                else
-                  periodic = "open"
-                end
-              else
-                periodic = "open"
-              end
-            elseif pj.is_sequence(bl)
-              error("Expanding lattices is not done during PALS>Bmad translation")
-            else
-              error("This object is neither a scalar, map, nor sequence: ", bl)
-            end
-            lattice_msc *= "parameter[geometry] = $periodic"
-            write(io, "!======================================================================" * "\n")
-            write(io, lattice_msc * "\n\n")
-            lattice_msc = ""
-          else
-            for bl in lattices
-              if pj.is_scalar(bl)
-                lattice_str *= "$(String(bl)), "
-                periodic = "open"
-              elseif pj.is_map(bl)
-                bl_props = bl[1]
-                lattice_str *= "$(pj.node_key(bl_props)), "
-
-                if !isempty(keys(bl_props))
-                  if haskey(bl_props, "periodic")
-                    if bl_props["periodic"] == "true"
-                      periodic = "closed"
-                    else
-                      periodic = "open"
-                    end
-                  else
-                    periodic = "open"
-                  end
-                else
-                  periodic = "open"
-                end
-              elseif pj.is_sequence(bl)
-                error("Expanding lattices is not done during PALS>Bmad translation")
-              else
-                error("This object is neither a scalar, map, nor sequence: ", bl)
-              end
-              lattice_msc *= "$(pj.node_key(bl_props))[geometry] = $periodic" * "\n"
-            end
-          end
-          idx = findlast(==(','), lattice_str)
-          if !isnothing(idx) 
-            lattice_str = lattice_str[1:idx-1] * lattice_str[idx+1:end]
-          end
-        else
-          ele_str *= make_ele_str(ele) * "\n"
-        end
-      end
-    end
-
-    !isempty(ref_str) && write(io, ref_str * "\n")
-    !isempty(particle_str) && write(io, particle_str * "\n\n")
-    write(io, "!======================================================================" * "\n")
-    write(io, "! Element definitions " * "\n\n")
-    !isempty(ele_str) && write(io, ele_str)
-    write(io, "!======================================================================" * "\n")
-    write(io, "! Beamline definitions " * "\n\n")
-    !isempty(full_bl_str) && write(io, full_bl_str)
-    !isempty(lattice_msc) && write(io, lattice_msc)
-    write(io, "!======================================================================" * "\n")
-    write(io, "! Branch structure " * "\n\n")
-    !isempty(lattice_str) && write(io, "use, " * lattice_str)
-  end
-end
-
-
-if abspath(PROGRAM_FILE) == @__FILE__
-  if isempty(ARGS)
-    error("Usage: julia toBmad.jl <input.pals.yaml>")
-  end
-  main(ARGS[1])
 end

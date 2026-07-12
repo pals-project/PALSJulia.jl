@@ -14,5 +14,9 @@ On the Julia side:
 module PALSJulia
 
 include("yaml_wrapper.jl")
+include("toBmad.jl")
+include("toSciBmad.jl")
 
-end # module PALSJulia
+export toBmad, toSciBmad
+
+end 
