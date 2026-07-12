@@ -6,16 +6,48 @@ standard Julia collection idioms. The owning `YAMLTree` frees the underlying C
 tree automatically when it is garbage-collected, so you never manage memory by
 hand.
 
-## Reading
+## Making the functions available
 
-Parse from a file or from a string:
+`using PALSJulia` on its own brings only a handful of names into scope. The
+tree-manipulation functions documented below live in the package but are not
+exported by default. Call `export_manipulators()` once to export them so they
+can be used by their bare names:
+
+```julia
+using PALSJulia
+export_manipulators()
+
+root = parse_file("config.pals.yaml")
+```
+
+If you would rather **not** pull those extra symbols into your namespace, skip
+`export_manipulators()` and instead import the package under an alias:
 
 ```julia
 import PALSJulia as pj
 
 root = pj.parse_file("config.pals.yaml")
+```
+
+and prefix each call, e.g. `pj.parse_file(...)`. The rest of this guide assumes
+you have called `export_manipulators()` and uses bare names throughout.
+
+## Reading
+
+Parse from a file or from a string. Both return a `YAMLNode` pointing at the
+tree root:
+
+| Function | Description |
+| --- | --- |
+| `parse_file(filename)` | Parse a YAML file from disk. |
+| `parse_string(yaml_str)` | Parse YAML from a string. |
+| `create_empty_tree()` | Create a new, empty MAP tree to build up from scratch. |
+| `parse_and_expand_pals(filename, lattice_name="")` | Parse a PALS lattice file and return original, included, and expanded views. |
+
+```julia
+root = parse_file("config.pals.yaml")
 # or
-root = pj.parse_string("""
+root = parse_string("""
 server:
   host: localhost
   port: 8080
@@ -25,55 +57,120 @@ features:
 """)
 ```
 
-## Navigating the tree
+`parse_and_expand_pals` is PALS-specific: it returns a `Lattices` value holding
+three independent tree views (`original`, `included`, `expanded`), each freed on
+its own when garbage-collected.
 
-Index maps by key and sequences by (1-based) integer, then convert the leaf
-scalar to the Julia type you want:
+## Querying the tree
+
+Use these functions to inspect a node's kind, walk the tree, and read out its
+structure. None of them modify the document.
+
+### Kind checks
+
+Every node is exactly one of map, sequence, or scalar:
+
+| Function | Description |
+| --- | --- |
+| `is_map(node)` | `true` if `node` is a map (key/value pairs). |
+| `is_sequence(node)` | `true` if `node` is a sequence (ordered list). |
+| `is_scalar(node)` | `true` if `node` is a scalar leaf value. |
+
+### Navigation and inspection
+
+| Function | Description |
+| --- | --- |
+| `node[key]` | The direct child of a map `node` under string `key` (errors if absent). |
+| `node[index]` | The `index`-th child (1-based) of a map or sequence. |
+| `haskey(node, key)` | `true` if the map `node` has a direct child under `key`. |
+| `length(node)` | Number of direct children (0 for a scalar). |
+| `keys(node)` | The keys of a map `node`, in order, as a `Vector{String}`. |
+| `node_key(node)` | The key `node` is stored under in its parent, or `nothing`. |
+| `get_parent(node)` | The parent node (errors if `node` is the root). |
+| `eachindex(node)` | Index range for iterating a map or sequence. |
+| `iterate(node)` | Enables `for` loops: sequences yield elements, maps yield `(key, node)` pairs. |
+
+```julia
+haskey(root, "features")          # true
+length(root["features"])          # 2
+keys(root["server"])              # ["host", "port"]
+
+for item in root["features"]
+    println(String(item))         # auth, logging
+end
+
+for (k, v) in root["server"]
+    println(k, " => ", String(v)) # host => localhost, port => 8080
+end
+
+parent = get_parent(root["server"])   # back up to the root
+```
+
+### Reading scalar values
+
+Convert a scalar leaf node to the Julia type you want:
+
+| Function | Description |
+| --- | --- |
+| `String(node)` | The scalar value as a `String` (the raw text). |
+| `Int(node)` | The scalar parsed as an `Int`. |
+| `Float64(node)` | The scalar parsed as a `Float64`. |
+| `Bool(node)` | The scalar parsed as a `Bool` (`"true"` / `"false"`). |
 
 ```julia
 host = String(root["server"]["host"])   # "localhost"
-port = String(root["server"]["port"])   # "8080"
-
-pj.haskey(root, "features")              # true
-pj.length(root["features"])              # 2
-pj.keys(root["server"])                  # ["host", "port"]
-
-for item in root["features"]
-    println(String(item))                # auth, logging
-end
+port = Int(root["server"]["port"])       # 8080
 ```
-
-Use `is_map`, `is_sequence`, and `is_scalar` to test a node's kind.
 
 ## Building and editing
 
 Create an empty document and add maps, sequences, and scalars to it. The
 mutating helpers (suffixed with `!`) return the newly created child node:
 
-```julia
-root = pj.create_empty_tree()
+| Function | Description |
+| --- | --- |
+| `add_scalar!(parent, value; key=nothing, index=END)` | Add a scalar child. |
+| `add_map!(parent; key=nothing, index=END)` | Add an empty map child. |
+| `add_sequence!(parent; key=nothing, index=END)` | Add an empty sequence child. |
+| `node[key] = value` | Set (or create) a scalar child under `key`. |
+| `set_scalar!(node, value)` | Set or replace a node's scalar value in place. |
+| `set_key!(node, key)` | Set or replace the key a node is stored under. |
+| `remove!(node)` | Remove a node and all its descendants. |
+| `copy(node)` | An independent deep copy of `node` in a new tree. |
+| `deep_copy_node!(dst, src)` | Overwrite `dst` with a deep copy of `src`. |
+| `deep_copy_children!(dst, src; index=END)` | Copy all children of `src` into `dst`. |
 
-server = pj.add_map!(root; key = "server")
+Pass `key` for map children and omit it (or pass `nothing`) for sequence
+elements. `index` is 1-based and defaults to appending at the end, so you
+usually leave it out; to append explicitly the sentinel is `PALSJulia.END`.
+
+```julia
+root = create_empty_tree()
+
+server = add_map!(root; key = "server")
 server["host"] = "localhost"
 server["port"] = "8080"
 
-features = pj.add_sequence!(root; key = "features")
-pj.add_scalar!(features, "auth")
-pj.add_scalar!(features, "logging")
+features = add_sequence!(root; key = "features")
+add_scalar!(features, "auth")
+add_scalar!(features, "logging")
 ```
 
-Assigning with `node[key] = value` sets (or creates) a scalar child. Other
-handy edits include `set_scalar!`, `set_key!`, `remove!`, `copy`, and the
-`deep_copy_node!` / `deep_copy_children!` pair for grafting one subtree onto
-another.
+The `deep_copy_node!` / `deep_copy_children!` pair works across different trees,
+so you can graft one subtree onto another.
 
 ## Writing
 
 Serialize a node to a string or straight to disk:
 
+| Function | Description |
+| --- | --- |
+| `to_yaml_string(node)` | The node and its descendants as a YAML `String`. |
+| `write_yaml(node, filename)` | Write the whole tree containing `node` to a file. |
+
 ```julia
-text = pj.to_yaml_string(root)     # YAML as a String
-pj.write_yaml(root, "out.pals.yaml")
+text = to_yaml_string(root)     # YAML as a String
+write_yaml(root, "out.pals.yaml")
 ```
 
 See the **API Reference** (linked in the sidebar) for the full list of functions
