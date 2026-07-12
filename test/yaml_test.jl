@@ -1,7 +1,7 @@
 using Test
 import Pkg
 Pkg.activate(joinpath(@__DIR__, ".."))
-import pals_julia as pj
+import PALSJulia as pj
 
 @testset "YAML Wrapper Tests" begin
 

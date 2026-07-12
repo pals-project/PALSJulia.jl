@@ -1,8 +1,8 @@
 ```@meta
-CurrentModule = pals_julia
+CurrentModule = PALSJulia
 ```
 
-# pals-julia API Reference
+# PALSJulia API Reference
 
 Complete reference for every documented function and type, generated
 automatically from the package docstrings.
@@ -20,6 +20,6 @@ automatically from the package docstrings.
 ## Reference
 
 ```@autodocs
-Modules = [pals_julia]
+Modules = [PALSJulia]
 Order   = [:module, :type, :function]
 ```

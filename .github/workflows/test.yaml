@@ -18,10 +18,10 @@ jobs:
         os: [macos-latest]
     
     steps: 
-      - name: Checkout pals-julia repository
+      - name: Checkout PALSJulia repository
         uses: actions/checkout@v4
         with:
-          path: pals-julia
+          path: PALSJulia
 
 
       - name: Checkout pals-cpp repository
@@ -58,7 +58,7 @@ jobs:
 
       - name: Run tests
         run: |
-          cd $GITHUB_WORKSPACE/pals-julia
+          cd $GITHUB_WORKSPACE/PALSJulia
 
           julia --project=. -e '
             using Pkg

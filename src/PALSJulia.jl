@@ -1,5 +1,5 @@
 """
-    pals-julia
+    PALSJulia
 
 A Julia wrapper around the yaml_c_wrapper C library (rapidyaml backend).
 
@@ -11,7 +11,7 @@ On the Julia side:
   - `YAMLNode`  is a lightweight value type holding a reference to its parent
                 tree (keeping it alive) and the integer node id.
 """
-module pals_julia
+module PALSJulia
 
 const LIBYAML = joinpath(@__DIR__, "..", "..", "pals-cpp", "build", "libyaml_c_wrapper.dylib")
 
@@ -458,4 +458,4 @@ function Base.show(io::IO, node::YAMLNode)
     end
 end
 
-end # module pals_julia
+end # module PALSJulia

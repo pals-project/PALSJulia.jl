@@ -1,6 +1,6 @@
 # Installation
 
-pals-julia is a Julia wrapper around the `yaml_c_wrapper` C library that ships
+PALSJulia is a Julia wrapper around the `yaml_c_wrapper` C library that ships
 with [pals-cpp](https://github.com/pals-project/pals-cpp), so both repositories
 must be cloned side by side under the same parent directory.
 
@@ -8,10 +8,10 @@ must be cloned side by side under the same parent directory.
 
 ```console
 git clone https://github.com/pals-project/pals-cpp.git
-git clone https://github.com/pals-project/pals-julia.git
+git clone https://github.com/pals-project/PALSJulia.git
 ```
 
-The resulting layout must look like this — pals-julia locates the compiled
+The resulting layout must look like this — PALSJulia locates the compiled
 library relative to its own source tree, at `../pals-cpp/build/`:
 
 ```text
@@ -19,7 +19,7 @@ some-directory/
 ├── pals-cpp/
 │   └── build/
 │       └── libyaml_c_wrapper.dylib   (or .so / .dll)
-└── pals-julia/
+└── PALSJulia/
 ```
 
 ## 2. Build the C library
@@ -30,20 +30,20 @@ shared library `libyaml_c_wrapper.dylib` (macOS), `.so` (Linux), or `.dll`
 
 ## 3. Activate the Julia project
 
-From the `pals-julia` directory:
+From the `PALSJulia` directory:
 
 ```julia
 using Pkg
 Pkg.activate(".")
 Pkg.instantiate()
 
-import pals_julia as pj
+import PALSJulia as pj
 ```
 
 ## Check the installation
 
 ```julia
-import pals_julia as pj
+import PALSJulia as pj
 
 root = pj.create_empty_tree()
 root["hello"] = "world"

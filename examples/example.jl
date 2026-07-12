@@ -1,6 +1,6 @@
 import Pkg
 Pkg.activate(joinpath(@__DIR__, ".."))
-import pals_julia as pj
+import PALSJulia as pj
 
 function main()
     lattice_dir = joinpath(@__DIR__, "..", "lattice_files")

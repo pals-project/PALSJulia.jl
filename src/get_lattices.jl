@@ -1,6 +1,6 @@
 import Pkg
 Pkg.activate(joinpath(@__DIR__, ".."))
-import pals_julia as pj
+import PALSJulia as pj
 
 function main()
     file_name    = joinpath(@__DIR__, "..", "lattice_files", "ex.pals.yaml")

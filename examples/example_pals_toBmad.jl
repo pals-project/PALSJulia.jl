@@ -4,6 +4,6 @@ if abspath(PROGRAM_FILE) == @__FILE__
 
     include(joinpath(pals_dir, "src", "toBmad.jl"))
 
-    # Produces a file "pals_julia/lattice_files/bta.pals_out.bmad"
+    # Produces a file "PALSJulia/lattice_files/bta.pals_out.bmad"
     main(ex_file)
 end

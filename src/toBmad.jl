@@ -1,6 +1,6 @@
 import Pkg
 Pkg.activate(joinpath(@__DIR__, ".."))
-import pals_julia as pj
+import PALSJulia as pj
 
 function make_init_str(ele::pj.YAMLNode)
     props = ele[1]
