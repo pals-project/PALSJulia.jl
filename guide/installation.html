@@ -267,9 +267,17 @@ library relative to its own source tree, at <code class="docutils literal notran
 </section>
 <section id="build-the-c-library">
 <h2>2. Build the C library<a class="headerlink" href="#build-the-c-library" title="Link to this heading">¶</a></h2>
-<p>Follow the build instructions in the pals-cpp <code class="docutils literal notranslate"><span class="pre">README</span></code>. The result is the
-shared library <code class="docutils literal notranslate"><span class="pre">libyaml_c_wrapper.dylib</span></code> (macOS), <code class="docutils literal notranslate"><span class="pre">.so</span></code> (Linux), or <code class="docutils literal notranslate"><span class="pre">.dll</span></code>
-(Windows) under <code class="docutils literal notranslate"><span class="pre">pals-cpp/build/</span></code>.</p>
+<p>From the <code class="docutils literal notranslate"><span class="pre">pals-cpp</span></code> directory, configure and build with CMake (this needs CMake
+and a C++17 compiler — Apple Clang on macOS, GCC or Clang on Linux):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">cmake -S . -B build</span>
+<span class="go">cmake --build build</span>
+</pre></div>
+</div>
+<p>CMake fetches the <a class="reference external" href="https://github.com/biojppm/rapidyaml">rapidyaml</a> backend
+automatically. The result is the shared library <code class="docutils literal notranslate"><span class="pre">libyaml_c_wrapper.dylib</span></code>
+(macOS), <code class="docutils literal notranslate"><span class="pre">.so</span></code> (Linux), or <code class="docutils literal notranslate"><span class="pre">.dll</span></code> (Windows) under <code class="docutils literal notranslate"><span class="pre">pals-cpp/build/</span></code>. Rebuild
+with <code class="docutils literal notranslate"><span class="pre">cmake</span> <span class="pre">--build</span> <span class="pre">build</span></code> after changing any pals-cpp source. See the pals-cpp
+<code class="docutils literal notranslate"><span class="pre">README</span></code> for more detail.</p>
 </section>
 <section id="activate-the-julia-project">
 <h2>3. Activate the Julia project<a class="headerlink" href="#activate-the-julia-project" title="Link to this heading">¶</a></h2>
