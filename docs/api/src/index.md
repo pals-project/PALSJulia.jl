@@ -17,9 +17,20 @@ automatically from the package docstrings.
 ```@index
 ```
 
-## Reference
+## Public API
 
 ```@autodocs
 Modules = [PALSJulia]
 Order   = [:module, :type, :function]
+Public  = true
+Private = false
+```
+
+## Internals
+
+```@autodocs
+Modules = [PALSJulia]
+Order   = [:type, :function]
+Public  = false
+Private = true
 ```

@@ -73,7 +73,7 @@ All three are freed independently when their `YAMLNode`s are GC'd.
 """
 function read_pals_file(filename::String, lattice_name::String="")
   isfile(filename) || error("File not found: $filename")
-  handles = @ccall LIBYAML.get_lattices(
+  handles = @ccall LIBYAML.parse_and_expand_PALS(
     filename::Cstring,
     lattice_name::Cstring
   )::LatticesHandle

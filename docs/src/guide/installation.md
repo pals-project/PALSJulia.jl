@@ -24,9 +24,19 @@ some-directory/
 
 ## 2. Build the C library
 
-Follow the build instructions in the pals-cpp `README`. The result is the
-shared library `libyaml_c_wrapper.dylib` (macOS), `.so` (Linux), or `.dll`
-(Windows) under `pals-cpp/build/`.
+From the `pals-cpp` directory, configure and build with CMake (this needs CMake
+and a C++17 compiler — Apple Clang on macOS, GCC or Clang on Linux):
+
+```console
+cmake -S . -B build
+cmake --build build
+```
+
+CMake fetches the [rapidyaml](https://github.com/biojppm/rapidyaml) backend
+automatically. The result is the shared library `libyaml_c_wrapper.dylib`
+(macOS), `.so` (Linux), or `.dll` (Windows) under `pals-cpp/build/`. Rebuild
+with `cmake --build build` after changing any pals-cpp source. See the pals-cpp
+`README` for more detail.
 
 ## 3. Activate the Julia project
 
