@@ -88,8 +88,13 @@ is_scalar(node::YAMLNode) =
 
 # ─── traversal ───────────────────────────────────────────────────────────────
 
-"""Return the parent node, or error if called on the root."""
-function parent(node::YAMLNode)
+"""
+    get_parent(node) -> YAMLNode
+
+Return the parent of `node`, or error if `node` is the root (which has no
+parent).
+"""
+function get_parent(node::YAMLNode)
   id = @ccall LIBYAML.get_parent(node.tree.handle::Ptr{Cvoid}, node.id::Csize_t)::Csize_t
   id == YAML_NULL_ID && error("Node has no parent (it is the root)")
   return YAMLNode(node.tree, id)
