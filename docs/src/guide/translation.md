@@ -1,6 +1,6 @@
 # Translating to SciBmad and Bmad
 
-pals-julia can translate a PALS-format lattice into the two Cornell accelerator
+PALSJulia can translate a PALS-format lattice into the two Cornell accelerator
 formats:
 
 - **`src/toSciBmad.jl`** — emits a [SciBmad](https://github.com/bmad-sim/SciBmad.jl)
@@ -32,7 +32,7 @@ an `ApertureP` becomes a Bmad `ApertureParams`, with `x_min`/`x_max` mapped to
 `x1_limit`/`x2_limit` (or derived from `x_center`/`x_width`).
 
 The complete, element-by-element list of these mappings is maintained in
-[`docs/translation_notes.md`](https://github.com/pals-project/pals-julia/blob/main/docs/translation_notes.md)
+[`docs/translation_notes.md`](https://github.com/pals-project/PALSJulia/blob/main/docs/translation_notes.md)
 in the repository. Consult it when adding support for a new element or when a
 parameter comes through untranslated.
 

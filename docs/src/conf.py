@@ -7,8 +7,8 @@
 import os
 
 # -- Project information -----------------------------------------------------
-project = 'pals-julia'
-copyright = '2026, pals-julia Contributors'
+project = 'PALSJulia'
+copyright = '2026, PALSJulia Contributors'
 author = 'Alex He and contributors'
 
 # -- General configuration ---------------------------------------------------
@@ -26,7 +26,7 @@ numfig = True
 # docs/build.py). The fixer below rewrites the absolute API URLs to site-
 # relative paths so previews and local builds work.
 _docs_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_api_base_url = 'https://pals-project.github.io/pals-julia/api/'
+_api_base_url = 'https://pals-project.github.io/PALSJulia/api/'
 intersphinx_mapping = {
     'julia': (_api_base_url,
               (os.path.join(_docs_dir, 'api', 'build', 'objects.inv'),)),
@@ -103,13 +103,13 @@ myst_heading_anchors = 3
 # -- HTML output (Furo) ------------------------------------------------------
 html_theme = 'furo'
 html_theme_options = {
-    'source_repository': 'https://github.com/pals-project/pals-julia',
+    'source_repository': 'https://github.com/pals-project/PALSJulia',
     'source_branch': 'main',
     'source_directory': 'docs/src/',
     'navigation_with_keys': True,
     'sidebar_hide_name': False,
 }
-html_title = 'pals-julia'
+html_title = 'PALSJulia'
 templates_path = ['_templates']
 html_static_path = ['_static']
 html_css_files = ['custom.css']

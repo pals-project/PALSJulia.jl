@@ -16,7 +16,7 @@ Each view is an ordinary `YAMLNode`, so everything in
 ## Basic use
 
 ```julia
-import pals_julia as pj
+import PALSJulia as pj
 
 lat = pj.get_lattices("ex.pals.yaml")
 

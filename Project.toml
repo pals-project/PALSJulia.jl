@@ -1,7 +1,7 @@
-name = "pals_julia"
-uuid = "05302d2e-dc94-4a43-8277-9ca7ef3c80e8"
+name = "PALSJulia"
+uuid = "3ffa0026-5f68-41f0-beae-2f2b11b650a3"
 version = "0.1.0"
-authors = ["Alex He <adh236@cornell.edu>"]
+authors = ["Alex He <adh236@cornell.edu>", "David Sagan <david.sagan@gmail.com>"]
 
 [deps]
 Beamlines = "5bb90b03-0719-46b8-8ce4-1ef3afd3cd4b"

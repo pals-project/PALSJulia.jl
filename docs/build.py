@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build and combine the pals-julia documentation.
+"""Build and combine the PALSJulia documentation.
 
 Produces a single site in ``gh-pages/`` (at the repository root):
 

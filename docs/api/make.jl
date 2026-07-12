@@ -9,18 +9,18 @@
 # Output lands in docs/api/build/ (Documenter's default, relative to this file).
 # ---------------------------------------------------------------------------
 
-using pals_julia
+using PALSJulia
 using Documenter
 
-DocMeta.setdocmeta!(pals_julia, :DocTestSetup,
-                    :(using pals_julia); recursive = true)
+DocMeta.setdocmeta!(PALSJulia, :DocTestSetup,
+                    :(using PALSJulia); recursive = true)
 
 makedocs(;
-  modules  = [pals_julia],
+  modules  = [PALSJulia],
   authors  = "Alex He and contributors",
-  sitename = "pals-julia API Reference",
+  sitename = "PALSJulia API Reference",
   format = Documenter.HTML(;
-    canonical = "https://pals-project.github.io/pals-julia/api",
+    canonical = "https://pals-project.github.io/PALSJulia/api",
     edit_link = "main",
     assets    = String[],
     # Flat .html files (not pretty dir URLs) so the "← Documentation" redirect
