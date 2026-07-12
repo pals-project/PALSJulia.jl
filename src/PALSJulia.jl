@@ -13,11 +13,42 @@ On the Julia side:
 """
 module PALSJulia
 
+"""
+    export_manipulators()
+
+Export the public functions from yaml_wrapper.jl (Base/Core method extensions
+such as getindex, length, keys, ... are intentionally omitted).
+"""
+function export_manipulators()
+  @eval export parse_and_expand_pals
+  @eval export parse_file
+  @eval export parse_string
+  @eval export create_empty_tree
+  @eval export is_map
+  @eval export is_sequence
+  @eval export is_scalar
+  @eval export parent
+  @eval export node_key
+  @eval export add_scalar!
+  @eval export add_map!
+  @eval export add_sequence!
+  @eval export set_scalar!
+  @eval export set_key!
+  @eval export remove!
+  @eval export deep_copy_node!
+  @eval export deep_copy_children!
+  @eval export to_yaml_string
+  @eval export write_yaml
+  return nothing
+end
+
 include("structs.jl")
 include("yaml_wrapper.jl")
 include("toBmad.jl")
 include("toSciBmad.jl")
 
-export parse_and_expand_pals, toBmad, toSciBmad
 
-end 
+
+export toBmad, toSciBmad, export_manipulators
+
+end
