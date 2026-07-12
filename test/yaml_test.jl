@@ -1,40 +1,47 @@
 using Test
-import Pkg
-Pkg.activate(joinpath(@__DIR__, ".."))
-import PALSJulia as pj
+using PALSJulia
+
+# yaml_wrapper.jl symbols are not exported, so bring the ones used here into scope.
+using PALSJulia: YAMLTree, YAMLNode, create_empty_tree,
+  is_map, is_sequence, is_scalar,
+  parse_string, parse_file,
+  add_map!, add_sequence!, add_scalar!,
+  set_scalar!, remove!,
+  to_yaml_string, write_yaml,
+  deep_copy_node!, deep_copy_children!
 
 @testset "YAML Wrapper Tests" begin
 
   @testset "Node Creation" begin
     @testset "create_empty_tree returns a MAP root" begin
-      root = pj.create_empty_tree()
-      @test root isa pj.YAMLNode
+      root = create_empty_tree()
+      @test root isa YAMLNode
       @test root.tree.handle != C_NULL
-      @test pj.is_map(root)
+      @test is_map(root)
       @test length(root) == 0
     end
 
     @testset "add_map! and add_sequence! create typed children" begin
-      root = pj.create_empty_tree()
-      m = pj.add_map!(root, key="m")
-      @test pj.is_map(m)
+      root = create_empty_tree()
+      m = add_map!(root, key="m")
+      @test is_map(m)
 
-      s = pj.add_sequence!(root, key="s")
-      @test pj.is_sequence(s)
+      s = add_sequence!(root, key="s")
+      @test is_sequence(s)
     end
 
     @testset "add_scalar! creates a scalar child" begin
       # Sequence elements are pure VAL nodes; keyed map entries are KEYVAL
       # and ryml's is_val() returns false for those — use a seq element.
-      root = pj.create_empty_tree()
-      seq  = pj.add_sequence!(root, key="items")
-      sc   = pj.add_scalar!(seq, "hello")
-      @test pj.is_scalar(sc)
+      root = create_empty_tree()
+      seq  = add_sequence!(root, key="items")
+      sc   = add_scalar!(seq, "hello")
+      @test is_scalar(sc)
       @test String(sc) == "hello"
     end
 
     @testset "Invalid tree handle throws" begin
-      @test_throws ErrorException pj.YAMLTree(C_NULL)
+      @test_throws ErrorException YAMLTree(C_NULL)
     end
   end
 
@@ -45,8 +52,8 @@ import PALSJulia as pj
             age: 30
             active: true
             """
-      node = pj.parse_string(yaml_str)
-      @test pj.is_map(node)
+      node = parse_string(yaml_str)
+      @test is_map(node)
       @test haskey(node, "name")
       @test haskey(node, "age")
       @test haskey(node, "active")
@@ -57,8 +64,8 @@ import PALSJulia as pj
 
     @testset "parse_string - sequence" begin
       yaml_str = "- item1\n- item2\n- item3\n"
-      node = pj.parse_string(yaml_str)
-      @test pj.is_sequence(node)
+      node = parse_string(yaml_str)
+      @test is_sequence(node)
       @test length(node) == 3
       @test String(node[1]) == "item1"
       @test String(node[2]) == "item2"
@@ -73,10 +80,10 @@ import PALSJulia as pj
               - name: Bob
                 age: 25
             """
-      node = pj.parse_string(yaml_str)
-      @test pj.is_map(node)
+      node = parse_string(yaml_str)
+      @test is_map(node)
       users = node["users"]
-      @test pj.is_sequence(users)
+      @test is_sequence(users)
       @test length(users) == 2
       @test String(users[1]["name"]) == "Alice"
       @test Int(users[1]["age"]) == 30
@@ -86,8 +93,8 @@ import PALSJulia as pj
       filename = tempname() * ".yaml"
       try
         write(filename, "x: 1\ny: 2\n")
-        node = pj.parse_file(filename)
-        @test pj.is_map(node)
+        node = parse_file(filename)
+        @test is_map(node)
         @test Int(node["x"]) == 1
         @test Int(node["y"]) == 2
       finally
@@ -96,88 +103,88 @@ import PALSJulia as pj
     end
 
     @testset "parse_file - missing file throws" begin
-      @test_throws ErrorException pj.parse_file("/nonexistent/path.yaml")
+      @test_throws ErrorException parse_file("/nonexistent/path.yaml")
     end
   end
 
   @testset "Type Checks" begin
-    root   = pj.parse_string("key: value")
-    seq    = pj.parse_string("- 1\n- 2\n- 3\n")
+    root   = parse_string("key: value")
+    seq    = parse_string("- 1\n- 2\n- 3\n")
     scalar = seq[1]   # pure VAL node; map entries (KEYVAL) fail is_scalar
 
-    @test pj.is_scalar(scalar)
-    @test !pj.is_map(scalar)
-    @test !pj.is_sequence(scalar)
+    @test is_scalar(scalar)
+    @test !is_map(scalar)
+    @test !is_sequence(scalar)
 
-    @test pj.is_map(root)
-    @test !pj.is_scalar(root)
-    @test !pj.is_sequence(root)
+    @test is_map(root)
+    @test !is_scalar(root)
+    @test !is_sequence(root)
 
-    @test pj.is_sequence(seq)
-    @test !pj.is_scalar(seq)
-    @test !pj.is_map(seq)
+    @test is_sequence(seq)
+    @test !is_scalar(seq)
+    @test !is_map(seq)
   end
 
   @testset "Access Operations" begin
     @testset "Map access with getindex" begin
-      node = pj.parse_string("name: Alice\nage: 30")
+      node = parse_string("name: Alice\nage: 30")
       @test String(node["name"]) == "Alice"
       @test Int(node["age"]) == 30
     end
 
     @testset "Sequence access with getindex" begin
-      node = pj.parse_string("- 10\n- 20\n- 30\n")
+      node = parse_string("- 10\n- 20\n- 30\n")
       @test Int(node[1]) == 10
       @test Int(node[2]) == 20
       @test Int(node[3]) == 30
     end
 
     @testset "Key not found throws" begin
-      node = pj.parse_string("name: Alice")
+      node = parse_string("name: Alice")
       @test_throws ErrorException node["nonexistent"]
     end
 
     @testset "Index out of bounds throws" begin
-      node = pj.parse_string("- 1\n- 2\n- 3\n")
+      node = parse_string("- 1\n- 2\n- 3\n")
       @test_throws ErrorException node[10]
     end
 
     @testset "haskey" begin
-      node = pj.parse_string("name: Alice\nage: 30")
+      node = parse_string("name: Alice\nage: 30")
       @test haskey(node, "name")
       @test haskey(node, "age")
       @test !haskey(node, "nonexistent")
     end
 
     @testset "length" begin
-      seq = pj.parse_string("- 1\n- 2\n- 3\n- 4\n- 5\n")
+      seq = parse_string("- 1\n- 2\n- 3\n- 4\n- 5\n")
       @test length(seq) == 5
 
-      map = pj.parse_string("a: 1\nb: 2\nc: 3")
+      map = parse_string("a: 1\nb: 2\nc: 3")
       @test length(map) == 3
     end
   end
 
   @testset "Type Conversions" begin
     @testset "String conversion" begin
-      node = pj.parse_string("msg: hello world")
+      node = parse_string("msg: hello world")
       @test String(node["msg"]) == "hello world"
     end
 
     @testset "Int conversion" begin
-      node = pj.parse_string("a: 42\nb: -100")
+      node = parse_string("a: 42\nb: -100")
       @test Int(node["a"]) == 42
       @test Int(node["b"]) == -100
     end
 
     @testset "Float64 conversion" begin
-      node = pj.parse_string("x: 3.14159\ny: -2.5")
+      node = parse_string("x: 3.14159\ny: -2.5")
       @test Float64(node["x"]) ≈ 3.14159
       @test Float64(node["y"]) ≈ -2.5
     end
 
     @testset "Bool conversion" begin
-      node = pj.parse_string("t: true\nf: false")
+      node = parse_string("t: true\nf: false")
       @test Bool(node["t"]) == true
       @test Bool(node["f"]) == false
     end
@@ -185,7 +192,7 @@ import PALSJulia as pj
 
   @testset "Modification Operations" begin
     @testset "setindex! adds and updates MAP entries" begin
-      root = pj.create_empty_tree()
+      root = create_empty_tree()
       root["name"]   = "Alice"
       root["age"]    = "30"
       root["pi"]     = "3.14"
@@ -202,78 +209,78 @@ import PALSJulia as pj
     end
 
     @testset "add_map! as child of MAP" begin
-      parent = pj.create_empty_tree()
-      child  = pj.add_map!(parent, key="child")
+      parent = create_empty_tree()
+      child  = add_map!(parent, key="child")
       child["key"] = "value"
 
-      @test pj.is_map(parent["child"])
+      @test is_map(parent["child"])
       @test String(parent["child"]["key"]) == "value"
     end
 
     @testset "set_scalar! updates an existing scalar" begin
-      root = pj.create_empty_tree()
-      sc   = pj.add_scalar!(root, "initial", key="val")
-      pj.set_scalar!(sc, "updated")
+      root = create_empty_tree()
+      sc   = add_scalar!(root, "initial", key="val")
+      set_scalar!(sc, "updated")
       @test String(sc) == "updated"
 
-      pj.set_scalar!(sc, "42")
+      set_scalar!(sc, "42")
       @test Int(sc) == 42
 
-      pj.set_scalar!(sc, "2.71828")
+      set_scalar!(sc, "2.71828")
       @test Float64(sc) ≈ 2.71828
 
-      pj.set_scalar!(sc, "false")
+      set_scalar!(sc, "false")
       @test Bool(sc) == false
     end
 
     @testset "add_scalar! appends to sequences" begin
-      root = pj.create_empty_tree()
-      seq  = pj.add_sequence!(root, key="items")
+      root = create_empty_tree()
+      seq  = add_sequence!(root, key="items")
 
-      pj.add_scalar!(seq, "item1")
-      pj.add_scalar!(seq, "item2")
+      add_scalar!(seq, "item1")
+      add_scalar!(seq, "item2")
       @test length(seq) == 2
       @test String(seq[1]) == "item1"
       @test String(seq[2]) == "item2"
 
-      pj.add_scalar!(seq, "10", index=1)   # insert at front
+      add_scalar!(seq, "10", index=1)   # insert at front
       @test String(seq[1]) == "10"
       @test length(seq) == 3
     end
 
     @testset "add_scalar! with numeric values (as strings)" begin
-      root = pj.create_empty_tree()
-      seq  = pj.add_sequence!(root, key="nums")
+      root = create_empty_tree()
+      seq  = add_sequence!(root, key="nums")
 
-      pj.add_scalar!(seq, "10")
-      pj.add_scalar!(seq, "20")
+      add_scalar!(seq, "10")
+      add_scalar!(seq, "20")
       @test Int(seq[1]) == 10
       @test Int(seq[2]) == 20
 
-      pj.add_scalar!(seq, "1.5")
-      pj.add_scalar!(seq, "2.5")
+      add_scalar!(seq, "1.5")
+      add_scalar!(seq, "2.5")
       @test Float64(seq[3]) ≈ 1.5
       @test Float64(seq[4]) ≈ 2.5
     end
 
     @testset "add_map! as sequence element" begin
-      root = pj.create_empty_tree()
-      seq  = pj.add_sequence!(root, key="records")
-      elem = pj.add_map!(seq)
+      root = create_empty_tree()
+      seq  = add_sequence!(root, key="records")
+      elem = add_map!(seq)
       elem["key"] = "value"
 
       @test length(seq) == 1
-      @test pj.is_map(seq[1])
+      @test is_map(seq[1])
       @test String(seq[1]["key"]) == "value"
     end
 
     @testset "remove!" begin
-      root = pj.create_empty_tree()
+      root = create_empty_tree()
       root["keep"]   = "yes"
       root["delete"] = "no"
       @test length(root) == 2
 
-      pj.remove!(root["delete"])
+      remove!(root["delete"])
       @test length(root) == 1
       @test !haskey(root, "delete")
       @test haskey(root, "keep")
@@ -282,8 +289,8 @@ import PALSJulia as pj
 
   @testset "Write and Emit Operations" begin
     @testset "to_yaml_string" begin
-      node = pj.parse_string("name: Alice\nage: 30")
-      yaml_str = pj.to_yaml_string(node)
+      node = parse_string("name: Alice\nage: 30")
+      yaml_str = to_yaml_string(node)
       @test yaml_str isa String
       @test occursin("name", yaml_str)
       @test occursin("Alice", yaml_str)
@@ -292,16 +299,16 @@ import PALSJulia as pj
     end
 
     @testset "write_yaml to file and read back" begin
-      root = pj.create_empty_tree()
+      root = create_empty_tree()
       root["test"]  = "data"
       root["value"] = "123"
       filename = tempname() * ".yaml"
 
       try
-        @test pj.write_yaml(root, filename)
+        @test write_yaml(root, filename)
         @test isfile(filename)
 
-        loaded = pj.parse_file(filename)
+        loaded = parse_file(filename)
         @test String(loaded["test"])  == "data"
         @test Int(loaded["value"]) == 123
       finally
@@ -312,7 +319,7 @@ import PALSJulia as pj
 
   @testset "Deep Copy" begin
     @testset "copy produces an independent duplicate" begin
-      original = pj.parse_string("name: Alice\nage: 30")
+      original = parse_string("name: Alice\nage: 30")
       cloned   = copy(original)
 
       @test String(cloned["name"]) == "Alice"
@@ -328,20 +335,20 @@ import PALSJulia as pj
     end
 
     @testset "deep_copy_node! copies content into existing node" begin
-      src = pj.parse_string("x: 10\ny: 20")
-      dst = pj.create_empty_tree()
-      pj.deep_copy_node!(dst, src)
+      src = parse_string("x: 10\ny: 20")
+      dst = create_empty_tree()
+      deep_copy_node!(dst, src)
 
       @test Int(dst["x"]) == 10
       @test Int(dst["y"]) == 20
     end
 
     @testset "deep_copy_children! copies children into existing node" begin
-      src = pj.parse_string("a: 1\nb: 2")
-      dst = pj.create_empty_tree()
+      src = parse_string("a: 1\nb: 2")
+      dst = create_empty_tree()
       dst["existing"] = "yes"
 
-      pj.deep_copy_children!(dst, src)
+      deep_copy_children!(dst, src)
       @test haskey(dst, "existing")
       @test haskey(dst, "a")
       @test haskey(dst, "b")
@@ -350,8 +357,8 @@ import PALSJulia as pj
   end
 
   @testset "Base.show" begin
-    map_node = pj.parse_string("a: 1\nb: 2")
-    seq_node = pj.parse_string("- x\n- y\n")
+    map_node = parse_string("a: 1\nb: 2")
+    seq_node = parse_string("- x\n- y\n")
     scalar   = seq_node[1]   # pure VAL node
 
     io = IOBuffer()
@@ -364,21 +371,21 @@ import PALSJulia as pj
     @testset "Build nested structure programmatically" begin
       # {users: [{name: Alice, scores: [90, 85, 92]},
       #          {name: Bob,   scores: [88, 91, 87]}]}
-      root  = pj.create_empty_tree()
-      users = pj.add_sequence!(root, key="users")
+      root  = create_empty_tree()
+      users = add_sequence!(root, key="users")
 
-      user1 = pj.add_map!(users)
+      user1 = add_map!(users)
       user1["name"] = "Alice"
-      s1 = pj.add_sequence!(user1, key="scores")
-      foreach(v -> pj.add_scalar!(s1, v), ["90", "85", "92"])
+      s1 = add_sequence!(user1, key="scores")
+      foreach(v -> add_scalar!(s1, v), ["90", "85", "92"])
 
-      user2 = pj.add_map!(users)
+      user2 = add_map!(users)
       user2["name"] = "Bob"
-      s2 = pj.add_sequence!(user2, key="scores")
-      foreach(v -> pj.add_scalar!(s2, v), ["88", "91", "87"])
+      s2 = add_sequence!(user2, key="scores")
+      foreach(v -> add_scalar!(s2, v), ["88", "91", "87"])
 
-      @test pj.is_map(root)
-      @test pj.is_sequence(root["users"])
+      @test is_map(root)
+      @test is_sequence(root["users"])
       @test length(root["users"]) == 2
       @test String(root["users"][1]["name"])     == "Alice"
       @test length(root["users"][1]["scores"])   == 3
@@ -391,7 +398,7 @@ import PALSJulia as pj
               timeout: 30
               retries: 3
             """
-      node   = pj.parse_string(yaml_str)
+      node   = parse_string(yaml_str)
       config = node["config"]
 
       config["timeout"] = "60"
@@ -403,7 +410,7 @@ import PALSJulia as pj
     end
 
     @testset "Round-trip YAML through file" begin
-      original = pj.parse_string("""
+      original = parse_string("""
             application:
               name: MyApp
               version: 1.0.0
@@ -418,8 +425,8 @@ import PALSJulia as pj
       filename = tempname() * ".yaml"
 
       try
-        @test pj.write_yaml(original, filename)
-        loaded = pj.parse_file(filename)
+        @test write_yaml(original, filename)
+        loaded = parse_file(filename)
 
         @test String(loaded["application"]["name"])        == "MyApp"
         @test String(loaded["application"]["version"])     == "1.0.0"
@@ -435,28 +442,28 @@ import PALSJulia as pj
 
   @testset "Edge Cases" begin
     @testset "Empty structures" begin
-      empty_map = pj.parse_string("{}")
-      @test pj.is_map(empty_map)
+      empty_map = parse_string("{}")
+      @test is_map(empty_map)
       @test length(empty_map) == 0
 
-      empty_seq = pj.parse_string("[]")
-      @test pj.is_sequence(empty_seq)
+      empty_seq = parse_string("[]")
+      @test is_sequence(empty_seq)
       @test length(empty_seq) == 0
     end
 
     @testset "Special string values" begin
-      node = pj.parse_string("text: \"true\"")   # quoted — stays a string
+      node = parse_string("text: \"true\"")   # quoted — stays a string
       @test String(node["text"]) == "true"
 
-      node = pj.parse_string("number: \"123\"")
+      node = parse_string("number: \"123\"")
       @test String(node["number"]) == "123"
     end
 
     @testset "Unicode strings" begin
-      node = pj.parse_string("greeting: こんにちは")
+      node = parse_string("greeting: こんにちは")
       @test String(node["greeting"]) == "こんにちは"
 
-      node = pj.parse_string("emoji: 🎉")
+      node = parse_string("emoji: 🎉")
       @test String(node["emoji"]) == "🎉"
     end
 
@@ -467,7 +474,7 @@ import PALSJulia as pj
               multiline
               string
             """
-      node = pj.parse_string(yaml_str)
+      node = parse_string(yaml_str)
       @test occursin("multiline", String(node["description"]))
     end
   end

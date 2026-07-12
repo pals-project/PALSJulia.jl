@@ -1,9 +1,41 @@
-import Pkg
-Pkg.activate(joinpath(@__DIR__, ".."))
-import PALSJulia as pj
-using Beamlines
+function toSciBmad()
+  file     = parse_file("../lattice_files/convert.pals.yaml")
+  facility = file["PALS"]["facility"]
+  open("../lattice_files/convert_out.jl", "w") do io
+    ele_str     = ""
+    bl_str      = ""
+    lattice_str = ""
+    for ele in facility
+      props = ele[keys(ele)[1]]
+      if haskey(props, "kind")
+        kind = String(props["kind"])
+        if kind == "BeginningEle"
+          _, particle_str = _ele_to_scibmad_str(ele)
+          write(io, particle_str * "\n\n")
+        elseif kind == "Lattice"
+          latticees = props["branches"]
+          for bl in latticees
+            lattice_str *= "$(String(bl)),"
+          end
+          name        = keys(ele)[1]
+          # placeholder for when Lattice element in SciBmad is implemented
+          lattice_str = "$name = [$lattice_str]"
+        elseif kind == "BeamLine"
+          bl_str *= _make_beamline_str(ele) * "\n"
+        else
+          ele_str *= _make_scibmad_ele_str(ele) * "\n"
+        end
+      end
+    end
+    write(io, "@elements begin\n$(ele_str)end\n\n")
+    write(io, bl_str)
+    write(io, lattice_str)
+  end
+end
 
-function make_init_str(ele::pj.YAMLNode)
+#---------------------------------------------------------------------------------------------------
+
+function _ele_to_scibmad_str(ele::YAMLNode)
   props = ele[keys(ele)[1]]
   ref_str, particle_str = "", ""
   for key in keys(props)
@@ -47,16 +79,16 @@ function make_init_str(ele::pj.YAMLNode)
   return ref_str, particle_str
 end
 
-function make_bl_str(ele::pj.YAMLNode)
+function _make_beamline_str(ele::YAMLNode)
   props = ele[keys(ele)[1]]
   line = props["line"]
   line_str = ""
-  ref_str, _ = make_init_str(line[1])
+  ref_str, _ = _ele_to_scibmad_str(line[1])
   for i in 2:length(line)
     line_ele = line[i]
-    if pj.is_scalar(line_ele)
+    if is_scalar(line_ele)
       line_str *= "$(String(line_ele)),"
-    elseif pj.is_map(line_ele)
+    elseif is_map(line_ele)
       name = keys(line_ele)[1]
       line_str *= "$name,"
     end
@@ -64,7 +96,7 @@ function make_bl_str(ele::pj.YAMLNode)
   return "$(keys(ele)[1]) = Beamline([$line_str], $ref_str)"
 end
 
-function make_ele_str(ele::pj.YAMLNode)
+function _make_scibmad_ele_str(ele::YAMLNode)
   props = ele[keys(ele)[1]]
   paramString = ""
 
@@ -356,40 +388,3 @@ function make_ele_str(ele::pj.YAMLNode)
 
   return "$(keys(ele)[1]) = LineElement($paramString)"
 end
-
-function main()
-  file     = pj.parse_file("../lattice_files/convert.pals.yaml")
-  facility = file["PALS"]["facility"]
-  open("../lattice_files/convert_out.jl", "w") do io
-    ele_str     = ""
-    bl_str      = ""
-    lattice_str = ""
-    for ele in facility
-      props = ele[keys(ele)[1]]
-      if haskey(props, "kind")
-        kind = String(props["kind"])
-        if kind == "BeginningEle"
-          _, particle_str = make_init_str(ele)
-          write(io, particle_str * "\n\n")
-        elseif kind == "Lattice"
-          latticees = props["branches"]
-          for bl in latticees
-            lattice_str *= "$(String(bl)),"
-          end
-          name        = keys(ele)[1]
-          # placeholder for when Lattice element in SciBmad is implemented
-          lattice_str = "$name = [$lattice_str]"
-        elseif kind == "BeamLine"
-          bl_str *= make_bl_str(ele) * "\n"
-        else
-          ele_str *= make_ele_str(ele) * "\n"
-        end
-      end
-    end
-    write(io, "@elements begin\n$(ele_str)end\n\n")
-    write(io, bl_str)
-    write(io, lattice_str)
-  end
-end
-
-main()
