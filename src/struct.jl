@@ -37,7 +37,7 @@ end
 
 #---------------------------------------------------------------------------------------------------
 
-# Raw C struct returned by read_pals_file — three tree handles by value.
+# Raw C struct returned by parse_and_expand_pals — three tree handles by value.
 struct LatticesHandle
   original::Ptr{Cvoid}
   included::Ptr{Cvoid}

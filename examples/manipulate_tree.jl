@@ -9,12 +9,13 @@ expand_file  = joinpath(lattice_dir, "expand.pals.yaml")
 
 println("============ Printing Developer Information ============")
 
-text = "Use the function 'parse_file(filename)' to read a lattice file. For example,\n" *
-       "tree = parse_file(\"../lattice_files/ex.pals.yaml\")\n" *
-       "reads the file 'ex.pals.yaml' into a tree named 'tree'.\n\n"
+text = 
 
 # reading a lattice from a yaml file
-print(text)
+println("""Use the function 'tree = parse_file(filename)' to read a YAML file.
+           This reads in any YAML file. To read in a PALS file with lattice expansion,
+           use the function parse_and_expand_pals.""")
+
 tree = pj.parse_file(ex_file)
 
 # printing to terminal
