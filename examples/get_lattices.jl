@@ -1,3 +1,5 @@
+using PALSJulia
+
 file_name    = joinpath(@__DIR__, "..", "lattice_files", "ex.pals.yaml")
 lattice_dir  = joinpath(@__DIR__, "..", "lattice_files")
 lattice_name = ""
