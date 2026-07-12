@@ -1,6 +1,6 @@
 # Reading and expanding lattices
 
-The `read_pals_file` entry point reads a PALS lattice
+The `parse_and_expand_pals` entry point reads a PALS lattice
 file, resolves any files it includes, and expands the lattice line into an
 ordered list of elements. It returns a `Lattices` value with three independent
 views of the document:
@@ -18,7 +18,7 @@ Each view is an ordinary `YAMLNode`, so everything in
 ```julia
 import PALSJulia as pj
 
-lat = pj.read_pals_file("ex.pals.yaml")
+lat = pj.parse_and_expand_pals("ex.pals.yaml")
 
 println(pj.to_yaml_string(lat.original))
 println(pj.to_yaml_string(lat.included))
@@ -29,7 +29,7 @@ To expand a single named lattice from a file that defines several, pass its
 name as the second argument:
 
 ```julia
-lat = pj.read_pals_file("ex.pals.yaml", "main_ring")
+lat = pj.parse_and_expand_pals("ex.pals.yaml", "main_ring")
 ```
 
 ## Relative includes
@@ -42,7 +42,7 @@ by relative path, `cd` into the lattice directory first:
 lattice_dir = joinpath(@__DIR__, "..", "lattice_files")
 
 lat = cd(lattice_dir) do
-    pj.read_pals_file("ex.pals.yaml")
+    pj.parse_and_expand_pals("ex.pals.yaml")
 end
 ```
 
