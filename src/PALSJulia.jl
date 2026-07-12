@@ -13,6 +13,7 @@ On the Julia side:
 """
 module PALSJulia
 
+include("struct.jl")
 include("yaml_wrapper.jl")
 include("toBmad.jl")
 include("toSciBmad.jl")

@@ -5,55 +5,6 @@ const LIBYAML = joinpath(@__DIR__, "..", "..", "pals-cpp", "build", "libyaml_c_w
 const YAML_NULL_ID = typemax(Csize_t)
 const END          = typemax(Csize_t)
 
-# ─── core types ──────────────────────────────────────────────────────────────
-
-"""
-    YAMLTree
-
-Owns a C `YAMLTreeHandle`. Freed automatically when the object is GC'd.
-Do not use the handle after the tree has been freed.
-"""
-mutable struct YAMLTree
-  handle::Ptr{Cvoid}
-
-  function YAMLTree(handle::Ptr{Cvoid})
-    handle == C_NULL && error("Invalid YAML tree handle (C returned NULL)")
-    t = new(handle)
-    finalizer(t) do tree
-      if tree.handle != C_NULL
-        @ccall LIBYAML.delete_tree(tree.handle::Ptr{Cvoid})::Cvoid
-        tree.handle = C_NULL
-      end
-    end
-    return t
-  end
-end
-
-"""
-    YAMLNode
-
-A reference to a single node within a `YAMLTree`.  Holding a `YAMLNode` keeps
-its parent tree alive.  Node ids are invalidated if the tree is deleted.
-"""
-struct YAMLNode
-  tree::YAMLTree   # keeps the tree alive
-  id::Csize_t      # node id within the tree
-end
-
-# Raw C struct returned by read_pals_file — three tree handles by value.
-struct LatticesHandle
-  original::Ptr{Cvoid}
-  included::Ptr{Cvoid}
-  expanded::Ptr{Cvoid}
-end
-
-"""Three representations of a lattice, each as a root `YAMLNode`."""
-struct Lattices
-  original::YAMLNode
-  included::YAMLNode
-  expanded::YAMLNode
-end
-
 # ─── internal helpers ────────────────────────────────────────────────────────
 
 # Wrap a tree handle and return a node pointing to its root.
@@ -102,6 +53,8 @@ function parse_file(filename::String)
   return _root_node(handle)
 end
 
+#---------------------------------------------------------------------------------------------------
+
 """
     parse_string(yaml_str) -> YAMLNode
 
@@ -112,6 +65,8 @@ function parse_string(yaml_str::String)
   handle == C_NULL && error("Failed to parse YAML string")
   return _root_node(handle)
 end
+
+#---------------------------------------------------------------------------------------------------
 
 """
     create_empty_tree() -> YAMLNode
@@ -128,8 +83,12 @@ end
 is_map(node::YAMLNode) =
   @ccall LIBYAML.is_map(node.tree.handle::Ptr{Cvoid}, node.id::Csize_t)::Bool
 
+#---------------------------------------------------------------------------------------------------
+
 is_sequence(node::YAMLNode) =
   @ccall LIBYAML.is_sequence(node.tree.handle::Ptr{Cvoid}, node.id::Csize_t)::Bool
+
+#---------------------------------------------------------------------------------------------------
 
 is_scalar(node::YAMLNode) =
   @ccall LIBYAML.is_scalar(node.tree.handle::Ptr{Cvoid}, node.id::Csize_t)::Bool
@@ -143,6 +102,8 @@ function parent(node::YAMLNode)
   return YAMLNode(node.tree, id)
 end
 
+#---------------------------------------------------------------------------------------------------
+
 """Look up a direct child of a MAP node by key."""
 function Base.getindex(node::YAMLNode, key::String)
   id = @ccall LIBYAML.get_child_by_key(
@@ -150,6 +111,8 @@ function Base.getindex(node::YAMLNode, key::String)
   id == YAML_NULL_ID && error("Key not found: $key")
   return YAMLNode(node.tree, id)
 end
+
+#---------------------------------------------------------------------------------------------------
 
 """Return the nth child (1-based) of a MAP or sequence node."""
 function Base.getindex(node::YAMLNode, index::Int)
@@ -159,6 +122,8 @@ function Base.getindex(node::YAMLNode, index::Int)
   return YAMLNode(node.tree, id)
 end
 
+#---------------------------------------------------------------------------------------------------
+
 """Return true if the MAP node has a child with the given key."""
 function Base.haskey(node::YAMLNode, key::String)
   id = @ccall LIBYAML.get_child_by_key(
@@ -166,10 +131,14 @@ function Base.haskey(node::YAMLNode, key::String)
   return id != YAML_NULL_ID
 end
 
+#---------------------------------------------------------------------------------------------------
+
 """Return the number of direct children."""
 function Base.length(node::YAMLNode)
   Int(@ccall LIBYAML.get_size(node.tree.handle::Ptr{Cvoid}, node.id::Csize_t)::Csize_t)
 end
+
+#---------------------------------------------------------------------------------------------------
 
 """Return all keys of a MAP node as a `Vector{String}`."""
 function Base.keys(node::YAMLNode)
@@ -189,6 +158,8 @@ function Base.keys(node::YAMLNode)
   return result
 end
 
+#---------------------------------------------------------------------------------------------------
+
 """Return the key of this node as a String, or nothing if the node has no key."""
 function node_key(node::YAMLNode)
   ptr = @ccall LIBYAML.get_node_key(
@@ -198,6 +169,8 @@ function node_key(node::YAMLNode)
   @ccall LIBYAML.yaml_free_string(ptr::Cstring)::Cvoid
   return s
 end
+
+#---------------------------------------------------------------------------------------------------
 
 """Iterate: sequences yield `YAMLNode` elements; maps yield `(key, YAMLNode)` pairs."""
 function Base.iterate(node::YAMLNode, state=1)
@@ -214,6 +187,8 @@ function Base.iterate(node::YAMLNode, state=1)
   end
 end
 
+#---------------------------------------------------------------------------------------------------
+
 Base.eachindex(node::YAMLNode) = (is_sequence(node) || is_map(node)) ? (1:length(node)) : (1:0)
 
 # ─── reading values ───────────────────────────────────────────────────────────
@@ -228,11 +203,17 @@ function Base.String(node::YAMLNode)
   return s
 end
 
+#---------------------------------------------------------------------------------------------------
+
 """Parse the scalar value as an `Int`."""
 Base.Int(node::YAMLNode)     = parse(Int,     String(node))
 
+#---------------------------------------------------------------------------------------------------
+
 """Parse the scalar value as a `Float64`."""
 Base.Float64(node::YAMLNode) = parse(Float64, String(node))
+
+#---------------------------------------------------------------------------------------------------
 
 """Parse the scalar value as a `Bool` (accepts `true`/`false`)."""
 function Base.Bool(node::YAMLNode)
@@ -258,6 +239,8 @@ macro _ccall_add(fn, tree, parent_id, key, rest...)
   end
 end
 
+#---------------------------------------------------------------------------------------------------
+
 """
     add_scalar!(parent, value; key=nothing, index=END) -> YAMLNode
 
@@ -281,6 +264,8 @@ function add_scalar!(parent::YAMLNode, value::String;
   return YAMLNode(parent.tree, id)
 end
 
+#---------------------------------------------------------------------------------------------------
+
 """
     add_map!(parent; key=nothing, index=END) -> YAMLNode
 
@@ -302,6 +287,8 @@ function add_map!(parent::YAMLNode;
   id == YAML_NULL_ID && error("Failed to add map")
   return YAMLNode(parent.tree, id)
 end
+
+#---------------------------------------------------------------------------------------------------
 
 """
     add_sequence!(parent; key=nothing, index=END) -> YAMLNode
@@ -325,6 +312,8 @@ function add_sequence!(parent::YAMLNode;
   return YAMLNode(parent.tree, id)
 end
 
+#---------------------------------------------------------------------------------------------------
+
 """
     node[key] = value
 
@@ -344,17 +333,23 @@ function Base.setindex!(node::YAMLNode, value::String, key::String)
   end
 end
 
+#---------------------------------------------------------------------------------------------------
+
 """Set or replace the scalar value of a node."""
 function set_scalar!(node::YAMLNode, value::String)
   @ccall LIBYAML.set_scalar(
     node.tree.handle::Ptr{Cvoid}, node.id::Csize_t, value::Cstring)::Cvoid
 end
 
+#---------------------------------------------------------------------------------------------------
+
 """Set or replace the key of a node."""
 function set_key!(node::YAMLNode, key::String)
   @ccall LIBYAML.set_node_key(
     node.tree.handle::Ptr{Cvoid}, node.id::Csize_t, key::Cstring)::Cvoid
 end
+
+#---------------------------------------------------------------------------------------------------
 
 """Remove this node and all its descendants from the tree."""
 function remove!(node::YAMLNode)
@@ -378,6 +373,8 @@ function deep_copy_node!(dst::YAMLNode, src::YAMLNode)
     src.tree.handle::Ptr{Cvoid}, src.id::Csize_t)::Cvoid
 end
 
+#---------------------------------------------------------------------------------------------------
+
 """
     deep_copy_children!(dst, src; index=END)
 
@@ -391,6 +388,8 @@ function deep_copy_children!(dst::YAMLNode, src::YAMLNode; index::Integer=END)
     src.tree.handle::Ptr{Cvoid}, src.id::Csize_t,
     c_index::Csize_t)::Cvoid
 end
+
+#---------------------------------------------------------------------------------------------------
 
 """
     Base.copy(node) -> YAMLNode
@@ -418,6 +417,8 @@ function to_yaml_string(node::YAMLNode)
   @ccall LIBYAML.yaml_free_string(ptr::Cstring)::Cvoid
   return s
 end
+
+#---------------------------------------------------------------------------------------------------
 
 """
     write_yaml(node, filename) -> Bool
