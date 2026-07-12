@@ -1,26 +1,33 @@
 ## Introduction
 
-PALSJulia is a parser for the Particle Accelerator Lattice Standard ([PALS](https://github.com/campa-consortium/pals)) for the Julia language. 
+`PALSJulia` is a parser for the Particle Accelerator Language Standard ([PALS](https://github.com/campa-consortium/pals)) for the Julia language. 
 
-`examples/read_pals.jl` is the main program that will read lattices, perform lattice expansion, and print to terminal. See the README for pals-cpp for more information. 
+In addition, `PALSJulia` provides translation functions:
 
-`toSciBmad.jl` translates lattices in PALS format to SciBmad format. Notes on the translation are in `docs/src/guide/translation.md`.
+- From `PALS` files to [`Bmad`](https://github.com/bmad-sim/bmad-ecosystem) lattice files.
+- From `PALS` files to [`SciBmad`](https://github.com/bmad-sim/SciBmad.jl) lattice files.
 
-Place lattices files in `/lattice_files`.
+For a translator from `Bmad` to `PALS`, the `Bmad` based `Tao` program can be used.
+A translator from `SciBmad` to `PALS` is planned.
 
 ## Status
 
-2026-2-24: In initial development.
+- 2026-02-24: In initial development.
+- 2026-07-12: Basic lattice translation done.
 
 ## Installation
 
-From same root directory, clone [pals-cpp](https://github.com/pals-project/pals-cpp) and [PALSJulia](https://github.com/pals-project/PALSJulia).  
+PALSJulia is a thin Julia wrapper around the `yaml_c_wrapper` C library shipped
+with [pals-cpp](https://github.com/pals-project/pals-cpp), so both repositories
+must be cloned side by side and the C library must be built first.
 
-`src/PALSJulia.jl` contains all the functions for manipulating lattice files. It is a
-wrapper for the underlying C code contained in `pals-cpp/build/libyaml_c_wrapper.dylib`
+**See the [Installation guide](https://pals-project.github.io/PALSJulia.jl/guide/installation.html)
+for full step-by-step instructions.**
 
-For various examples of these functions, see the examples in the `examples` directory. 
-It can be run with
+## EXamples
+
+For usage examples, see the runnable scripts in the `examples` directory, e.g.
+
 ```console
-julia example.jl
+julia examples/read_pals.jl
 ```
