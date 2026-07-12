@@ -354,6 +354,19 @@ using PALSJulia: YAMLTree, YAMLNode, create_empty_tree,
       @test haskey(dst, "b")
       @test Int(dst["a"]) == 1
     end
+
+    @testset "deep_copy_children! honors an explicit index" begin
+      src = parse_string("- a\n- b\n")          # children to graft in
+      dst = parse_string("- x\n- y\n")          # existing sequence
+      @test is_sequence(dst)
+
+      deep_copy_children!(dst, src, index=1)    # insert at the front
+      @test length(dst) == 4
+      @test String(dst[1]) == "a"
+      @test String(dst[2]) == "b"
+      @test String(dst[3]) == "x"
+      @test String(dst[4]) == "y"
+    end
   end
 
   @testset "Base.show" begin
