@@ -1,0 +1,608 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Reading and expanding lattices" href="lattices.html"><link rel="prev" title="Installation" href="installation.html">
+
+    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>Parsing and writing YAML - PALSJulia</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=3ecf7383" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">PALSJulia</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  <span class="sidebar-brand-text">PALSJulia</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Parsing and writing YAML</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lattices.html">Reading and expanding lattices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="translation.html">Translating to SciBmad and Bmad</a></li>
+</ul>
+
+</div><div class="sidebar-tree">
+  <ul>
+    <li class="toctree-l1">
+      <a class="reference internal"
+         href="../api/index.html">API Reference →</a>
+    </li>
+  </ul>
+</div></div>
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/pals-project/PALSJulia/blob/main/docs/src/guide/parsing.md?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/pals-project/PALSJulia/edit/main/docs/src/guide/parsing.md" rel="edit" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section class="tex2jax_ignore mathjax_ignore" id="parsing-and-writing-yaml">
+<h1>Parsing and writing YAML<a class="headerlink" href="#parsing-and-writing-yaml" title="Link to this heading">¶</a></h1>
+<p>PALSJulia represents a parsed document as a tree of <code class="docutils literal notranslate"><span class="pre">YAMLNode</span></code> values. Each
+node knows whether it is a map, a sequence, or a scalar, and supports the
+standard Julia collection idioms. The owning <code class="docutils literal notranslate"><span class="pre">YAMLTree</span></code> frees the underlying C
+tree automatically when it is garbage-collected, so you never manage memory by
+hand.</p>
+<section id="making-the-functions-available">
+<h2>Making the functions available<a class="headerlink" href="#making-the-functions-available" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">using</span> <span class="pre">PALSJulia</span></code> on its own brings only a handful of names into scope. The
+tree-manipulation functions documented below live in the package but are not
+exported by default. Call <code class="docutils literal notranslate"><span class="pre">export_manipulators()</span></code> once to export them so they
+can be used by their bare names:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">PALSJulia</span>
+<span class="n">export_manipulators</span><span class="p">()</span>
+
+<span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">parse_file</span><span class="p">(</span><span class="s">&quot;config.pals.yaml&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If you would rather <strong>not</strong> pull those extra symbols into your namespace, skip
+<code class="docutils literal notranslate"><span class="pre">export_manipulators()</span></code> and instead import the package under an alias:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="n">PALSJulia</span><span class="w"> </span><span class="n">as</span><span class="w"> </span><span class="n">pj</span>
+
+<span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">parse_file</span><span class="p">(</span><span class="s">&quot;config.pals.yaml&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>and prefix each call, e.g. <code class="docutils literal notranslate"><span class="pre">pj.parse_file(...)</span></code>. The rest of this guide assumes
+you have called <code class="docutils literal notranslate"><span class="pre">export_manipulators()</span></code> and uses bare names throughout.</p>
+</section>
+<section id="reading">
+<h2>Reading<a class="headerlink" href="#reading" title="Link to this heading">¶</a></h2>
+<p>Parse from a file or from a string. Both return a <code class="docutils literal notranslate"><span class="pre">YAMLNode</span></code> pointing at the
+tree root:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">parse_file(filename)</span></code></p></td>
+<td><p>Parse a YAML file from disk.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">parse_string(yaml_str)</span></code></p></td>
+<td><p>Parse YAML from a string.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">create_empty_tree()</span></code></p></td>
+<td><p>Create a new, empty MAP tree to build up from scratch.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">parse_and_expand_pals(filename,</span> <span class="pre">lattice_name=&quot;&quot;)</span></code></p></td>
+<td><p>Parse a PALS lattice file and return original, included, and expanded views.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">parse_file</span><span class="p">(</span><span class="s">&quot;config.pals.yaml&quot;</span><span class="p">)</span>
+<span class="c"># or</span>
+<span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">parse_string</span><span class="p">(</span><span class="s">&quot;&quot;&quot;</span>
+<span class="s">server:</span>
+<span class="s">  host: localhost</span>
+<span class="s">  port: 8080</span>
+<span class="s">features:</span>
+<span class="s">  - auth</span>
+<span class="s">  - logging</span>
+<span class="s">&quot;&quot;&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">parse_and_expand_pals</span></code> is PALS-specific: it returns a <code class="docutils literal notranslate"><span class="pre">Lattices</span></code> value holding
+three independent tree views (<code class="docutils literal notranslate"><span class="pre">original</span></code>, <code class="docutils literal notranslate"><span class="pre">included</span></code>, <code class="docutils literal notranslate"><span class="pre">expanded</span></code>), each freed on
+its own when garbage-collected.</p>
+</section>
+<section id="querying-the-tree">
+<h2>Querying the tree<a class="headerlink" href="#querying-the-tree" title="Link to this heading">¶</a></h2>
+<p>Use these functions to inspect a node’s kind, walk the tree, and read out its
+structure. None of them modify the document.</p>
+<section id="kind-checks">
+<h3>Kind checks<a class="headerlink" href="#kind-checks" title="Link to this heading">¶</a></h3>
+<p>Every node is exactly one of map, sequence, or scalar:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">is_map(node)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code> if <code class="docutils literal notranslate"><span class="pre">node</span></code> is a map (key/value pairs).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">is_sequence(node)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code> if <code class="docutils literal notranslate"><span class="pre">node</span></code> is a sequence (ordered list).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">is_scalar(node)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code> if <code class="docutils literal notranslate"><span class="pre">node</span></code> is a scalar leaf value.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="navigation-and-inspection">
+<h3>Navigation and inspection<a class="headerlink" href="#navigation-and-inspection" title="Link to this heading">¶</a></h3>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">node[key]</span></code></p></td>
+<td><p>The direct child of a map <code class="docutils literal notranslate"><span class="pre">node</span></code> under string <code class="docutils literal notranslate"><span class="pre">key</span></code> (errors if absent).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">node[index]</span></code></p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">index</span></code>-th child (1-based) of a map or sequence.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">haskey(node,</span> <span class="pre">key)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code> if the map <code class="docutils literal notranslate"><span class="pre">node</span></code> has a direct child under <code class="docutils literal notranslate"><span class="pre">key</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">length(node)</span></code></p></td>
+<td><p>Number of direct children (0 for a scalar).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">keys(node)</span></code></p></td>
+<td><p>The keys of a map <code class="docutils literal notranslate"><span class="pre">node</span></code>, in order, as a <code class="docutils literal notranslate"><span class="pre">Vector{String}</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">node_key(node)</span></code></p></td>
+<td><p>The key <code class="docutils literal notranslate"><span class="pre">node</span></code> is stored under in its parent, or <code class="docutils literal notranslate"><span class="pre">nothing</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">get_parent(node)</span></code></p></td>
+<td><p>The parent node (errors if <code class="docutils literal notranslate"><span class="pre">node</span></code> is the root).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">eachindex(node)</span></code></p></td>
+<td><p>Index range for iterating a map or sequence.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">iterate(node)</span></code></p></td>
+<td><p>Enables <code class="docutils literal notranslate"><span class="pre">for</span></code> loops: sequences yield elements, maps yield <code class="docutils literal notranslate"><span class="pre">(key,</span> <span class="pre">node)</span></code> pairs.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">haskey</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;features&quot;</span><span class="p">)</span><span class="w">          </span><span class="c"># true</span>
+<span class="n">length</span><span class="p">(</span><span class="n">root</span><span class="p">[</span><span class="s">&quot;features&quot;</span><span class="p">])</span><span class="w">          </span><span class="c"># 2</span>
+<span class="n">keys</span><span class="p">(</span><span class="n">root</span><span class="p">[</span><span class="s">&quot;server&quot;</span><span class="p">])</span><span class="w">              </span><span class="c"># [&quot;host&quot;, &quot;port&quot;]</span>
+
+<span class="k">for</span><span class="w"> </span><span class="n">item</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">root</span><span class="p">[</span><span class="s">&quot;features&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="n">println</span><span class="p">(</span><span class="kt">String</span><span class="p">(</span><span class="n">item</span><span class="p">))</span><span class="w">         </span><span class="c"># auth, logging</span>
+<span class="k">end</span>
+
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">root</span><span class="p">[</span><span class="s">&quot;server&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="n">println</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; =&gt; &quot;</span><span class="p">,</span><span class="w"> </span><span class="kt">String</span><span class="p">(</span><span class="n">v</span><span class="p">))</span><span class="w"> </span><span class="c"># host =&gt; localhost, port =&gt; 8080</span>
+<span class="k">end</span>
+
+<span class="n">parent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">get_parent</span><span class="p">(</span><span class="n">root</span><span class="p">[</span><span class="s">&quot;server&quot;</span><span class="p">])</span><span class="w">   </span><span class="c"># back up to the root</span>
+</pre></div>
+</div>
+</section>
+<section id="reading-scalar-values">
+<h3>Reading scalar values<a class="headerlink" href="#reading-scalar-values" title="Link to this heading">¶</a></h3>
+<p>Convert a scalar leaf node to the Julia type you want:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">String(node)</span></code></p></td>
+<td><p>The scalar value as a <code class="docutils literal notranslate"><span class="pre">String</span></code> (the raw text).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Int(node)</span></code></p></td>
+<td><p>The scalar parsed as an <code class="docutils literal notranslate"><span class="pre">Int</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Float64(node)</span></code></p></td>
+<td><p>The scalar parsed as a <code class="docutils literal notranslate"><span class="pre">Float64</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Bool(node)</span></code></p></td>
+<td><p>The scalar parsed as a <code class="docutils literal notranslate"><span class="pre">Bool</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;true&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;false&quot;</span></code>).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">String</span><span class="p">(</span><span class="n">root</span><span class="p">[</span><span class="s">&quot;server&quot;</span><span class="p">][</span><span class="s">&quot;host&quot;</span><span class="p">])</span><span class="w">   </span><span class="c"># &quot;localhost&quot;</span>
+<span class="n">port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">Int</span><span class="p">(</span><span class="n">root</span><span class="p">[</span><span class="s">&quot;server&quot;</span><span class="p">][</span><span class="s">&quot;port&quot;</span><span class="p">])</span><span class="w">       </span><span class="c"># 8080</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="building-and-editing">
+<h2>Building and editing<a class="headerlink" href="#building-and-editing" title="Link to this heading">¶</a></h2>
+<p>Create an empty document and add maps, sequences, and scalars to it. The
+mutating helpers (suffixed with <code class="docutils literal notranslate"><span class="pre">!</span></code>) return the newly created child node:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">add_scalar!(parent,</span> <span class="pre">value;</span> <span class="pre">key=nothing,</span> <span class="pre">index=nothing)</span></code></p></td>
+<td><p>Add a scalar child.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">add_map!(parent;</span> <span class="pre">key=nothing,</span> <span class="pre">index=nothing)</span></code></p></td>
+<td><p>Add an empty map child.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">add_sequence!(parent;</span> <span class="pre">key=nothing,</span> <span class="pre">index=nothing)</span></code></p></td>
+<td><p>Add an empty sequence child.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">node[key]</span> <span class="pre">=</span> <span class="pre">value</span></code></p></td>
+<td><p>Set (or create) a scalar child under <code class="docutils literal notranslate"><span class="pre">key</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">set_scalar!(node,</span> <span class="pre">value)</span></code></p></td>
+<td><p>Set or replace a node’s scalar value in place.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">set_key!(node,</span> <span class="pre">key)</span></code></p></td>
+<td><p>Set or replace the key a node is stored under.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">remove!(node)</span></code></p></td>
+<td><p>Remove a node and all its descendants.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">copy(node)</span></code></p></td>
+<td><p>An independent deep copy of <code class="docutils literal notranslate"><span class="pre">node</span></code> in a new tree.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">deep_copy_node!(dst,</span> <span class="pre">src)</span></code></p></td>
+<td><p>Overwrite <code class="docutils literal notranslate"><span class="pre">dst</span></code> with a deep copy of <code class="docutils literal notranslate"><span class="pre">src</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">deep_copy_children!(dst,</span> <span class="pre">src;</span> <span class="pre">index=nothing)</span></code></p></td>
+<td><p>Copy all children of <code class="docutils literal notranslate"><span class="pre">src</span></code> into <code class="docutils literal notranslate"><span class="pre">dst</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Pass <code class="docutils literal notranslate"><span class="pre">key</span></code> for map children and omit it (or pass <code class="docutils literal notranslate"><span class="pre">nothing</span></code>) for sequence
+elements. <code class="docutils literal notranslate"><span class="pre">index</span></code> selects the 1-based position among the existing children; it
+defaults to <code class="docutils literal notranslate"><span class="pre">nothing</span></code>, which appends at the end, so you usually leave it out.</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">create_empty_tree</span><span class="p">()</span>
+
+<span class="n">server</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">add_map!</span><span class="p">(</span><span class="n">root</span><span class="p">;</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;server&quot;</span><span class="p">)</span>
+<span class="n">server</span><span class="p">[</span><span class="s">&quot;host&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;localhost&quot;</span>
+<span class="n">server</span><span class="p">[</span><span class="s">&quot;port&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;8080&quot;</span>
+
+<span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">add_sequence!</span><span class="p">(</span><span class="n">root</span><span class="p">;</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;features&quot;</span><span class="p">)</span>
+<span class="n">add_scalar!</span><span class="p">(</span><span class="n">features</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;auth&quot;</span><span class="p">)</span>
+<span class="n">add_scalar!</span><span class="p">(</span><span class="n">features</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;logging&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">deep_copy_node!</span></code> / <code class="docutils literal notranslate"><span class="pre">deep_copy_children!</span></code> pair works across different trees,
+so you can graft one subtree onto another.</p>
+</section>
+<section id="writing">
+<h2>Writing<a class="headerlink" href="#writing" title="Link to this heading">¶</a></h2>
+<p>Serialize a node to a string or straight to disk:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">to_yaml_string(node)</span></code></p></td>
+<td><p>The node and its descendants as a YAML <code class="docutils literal notranslate"><span class="pre">String</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">write_yaml(node,</span> <span class="pre">filename)</span></code></p></td>
+<td><p>Write the whole tree containing <code class="docutils literal notranslate"><span class="pre">node</span></code> to a file.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">to_yaml_string</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="w">     </span><span class="c"># YAML as a String</span>
+<span class="n">write_yaml</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;out.pals.yaml&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>See the <strong>API Reference</strong> (linked in the sidebar) for the full list of functions
+and their signatures.</p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="lattices.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Reading and expanding lattices</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="installation.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Installation</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, PALSJulia Contributors
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Parsing and writing YAML</a><ul>
+<li><a class="reference internal" href="#making-the-functions-available">Making the functions available</a></li>
+<li><a class="reference internal" href="#reading">Reading</a></li>
+<li><a class="reference internal" href="#querying-the-tree">Querying the tree</a><ul>
+<li><a class="reference internal" href="#kind-checks">Kind checks</a></li>
+<li><a class="reference internal" href="#navigation-and-inspection">Navigation and inspection</a></li>
+<li><a class="reference internal" href="#reading-scalar-values">Reading scalar values</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#building-and-editing">Building and editing</a></li>
+<li><a class="reference internal" href="#writing">Writing</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>
