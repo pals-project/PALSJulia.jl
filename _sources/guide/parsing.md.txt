@@ -1,6 +1,6 @@
 # Parsing and writing YAML
 
-pals-julia represents a parsed document as a tree of `YAMLNode` values. Each
+PALSJulia represents a parsed document as a tree of `YAMLNode` values. Each
 node knows whether it is a map, a sequence, or a scalar, and supports the
 standard Julia collection idioms. The owning `YAMLTree` frees the underlying C
 tree automatically when it is garbage-collected, so you never manage memory by
@@ -11,7 +11,7 @@ hand.
 Parse from a file or from a string:
 
 ```julia
-import pals_julia as pj
+import PALSJulia as pj
 
 root = pj.parse_file("config.pals.yaml")
 # or

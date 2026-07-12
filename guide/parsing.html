@@ -6,11 +6,11 @@
 <link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Reading and expanding lattices" href="lattices.html"><link rel="prev" title="Installation" href="installation.html">
 
     <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
-        <title>Parsing and writing YAML - pals-julia</title>
+        <title>Parsing and writing YAML - PALSJulia</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
-    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=e95d4d7f" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=3ecf7383" />
     
     
 
@@ -162,7 +162,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">pals-julia</div></a>
+      <a href="../index.html"><div class="brand">PALSJulia</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -183,7 +183,7 @@
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
   
-  <span class="sidebar-brand-text">pals-julia</span>
+  <span class="sidebar-brand-text">PALSJulia</span>
   
 </a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -222,12 +222,12 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="https://github.com/pals-project/pals-julia/blob/main/docs/src/guide/parsing.md?plain=true" title="View this page">
+  <a class="muted-link" href="https://github.com/pals-project/PALSJulia/blob/main/docs/src/guide/parsing.md?plain=true" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
 </div><div class="edit-this-page">
-  <a class="muted-link" href="https://github.com/pals-project/pals-julia/edit/main/docs/src/guide/parsing.md" rel="edit" title="Edit this page">
+  <a class="muted-link" href="https://github.com/pals-project/PALSJulia/edit/main/docs/src/guide/parsing.md" rel="edit" title="Edit this page">
     <svg><use href="#svg-pencil"></use></svg>
     <span class="visually-hidden">Edit this page</span>
   </a>
@@ -246,7 +246,7 @@
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="parsing-and-writing-yaml">
 <h1>Parsing and writing YAML<a class="headerlink" href="#parsing-and-writing-yaml" title="Link to this heading">¶</a></h1>
-<p>pals-julia represents a parsed document as a tree of <code class="docutils literal notranslate"><span class="pre">YAMLNode</span></code> values. Each
+<p>PALSJulia represents a parsed document as a tree of <code class="docutils literal notranslate"><span class="pre">YAMLNode</span></code> values. Each
 node knows whether it is a map, a sequence, or a scalar, and supports the
 standard Julia collection idioms. The owning <code class="docutils literal notranslate"><span class="pre">YAMLTree</span></code> frees the underlying C
 tree automatically when it is garbage-collected, so you never manage memory by
@@ -254,7 +254,7 @@ hand.</p>
 <section id="reading">
 <h2>Reading<a class="headerlink" href="#reading" title="Link to this heading">¶</a></h2>
 <p>Parse from a file or from a string:</p>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="n">pals_julia</span><span class="w"> </span><span class="n">as</span><span class="w"> </span><span class="n">pj</span>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="n">PALSJulia</span><span class="w"> </span><span class="n">as</span><span class="w"> </span><span class="n">pj</span>
 
 <span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">parse_file</span><span class="p">(</span><span class="s">&quot;config.pals.yaml&quot;</span><span class="p">)</span>
 <span class="c"># or</span>
@@ -348,7 +348,7 @@ and their signatures.</p>
         <div class="bottom-of-page">
           <div class="left-details">
             <div class="copyright">
-                Copyright &#169; 2026, pals-julia Contributors
+                Copyright &#169; 2026, PALSJulia Contributors
             </div>
             Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
             

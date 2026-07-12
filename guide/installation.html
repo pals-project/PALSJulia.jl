@@ -3,14 +3,14 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Parsing and writing YAML" href="parsing.html"><link rel="prev" title="pals-julia" href="../index.html">
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Parsing and writing YAML" href="parsing.html"><link rel="prev" title="PALSJulia" href="../index.html">
 
     <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
-        <title>Installation - pals-julia</title>
+        <title>Installation - PALSJulia</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
-    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=e95d4d7f" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=3ecf7383" />
     
     
 
@@ -162,7 +162,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">pals-julia</div></a>
+      <a href="../index.html"><div class="brand">PALSJulia</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -183,7 +183,7 @@
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
   
-  <span class="sidebar-brand-text">pals-julia</span>
+  <span class="sidebar-brand-text">PALSJulia</span>
   
 </a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -222,12 +222,12 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="https://github.com/pals-project/pals-julia/blob/main/docs/src/guide/installation.md?plain=true" title="View this page">
+  <a class="muted-link" href="https://github.com/pals-project/PALSJulia/blob/main/docs/src/guide/installation.md?plain=true" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
 </div><div class="edit-this-page">
-  <a class="muted-link" href="https://github.com/pals-project/pals-julia/edit/main/docs/src/guide/installation.md" rel="edit" title="Edit this page">
+  <a class="muted-link" href="https://github.com/pals-project/PALSJulia/edit/main/docs/src/guide/installation.md" rel="edit" title="Edit this page">
     <svg><use href="#svg-pencil"></use></svg>
     <span class="visually-hidden">Edit this page</span>
   </a>
@@ -246,22 +246,22 @@
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h1>
-<p>pals-julia is a Julia wrapper around the <code class="docutils literal notranslate"><span class="pre">yaml_c_wrapper</span></code> C library that ships
+<p>PALSJulia is a Julia wrapper around the <code class="docutils literal notranslate"><span class="pre">yaml_c_wrapper</span></code> C library that ships
 with <a class="reference external" href="https://github.com/pals-project/pals-cpp">pals-cpp</a>, so both repositories
 must be cloned side by side under the same parent directory.</p>
 <section id="clone-the-repositories">
 <h2>1. Clone the repositories<a class="headerlink" href="#clone-the-repositories" title="Link to this heading">¶</a></h2>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">git clone https://github.com/pals-project/pals-cpp.git</span>
-<span class="go">git clone https://github.com/pals-project/pals-julia.git</span>
+<span class="go">git clone https://github.com/pals-project/PALSJulia.git</span>
 </pre></div>
 </div>
-<p>The resulting layout must look like this — pals-julia locates the compiled
+<p>The resulting layout must look like this — PALSJulia locates the compiled
 library relative to its own source tree, at <code class="docutils literal notranslate"><span class="pre">../pals-cpp/build/</span></code>:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>some-directory/
 ├── pals-cpp/
 │   └── build/
 │       └── libyaml_c_wrapper.dylib   (or .so / .dll)
-└── pals-julia/
+└── PALSJulia/
 </pre></div>
 </div>
 </section>
@@ -273,18 +273,18 @@ shared library <code class="docutils literal notranslate"><span class="pre">liby
 </section>
 <section id="activate-the-julia-project">
 <h2>3. Activate the Julia project<a class="headerlink" href="#activate-the-julia-project" title="Link to this heading">¶</a></h2>
-<p>From the <code class="docutils literal notranslate"><span class="pre">pals-julia</span></code> directory:</p>
+<p>From the <code class="docutils literal notranslate"><span class="pre">PALSJulia</span></code> directory:</p>
 <div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">Pkg</span>
 <span class="n">Pkg</span><span class="o">.</span><span class="n">activate</span><span class="p">(</span><span class="s">&quot;.&quot;</span><span class="p">)</span>
 <span class="n">Pkg</span><span class="o">.</span><span class="n">instantiate</span><span class="p">()</span>
 
-<span class="k">import</span><span class="w"> </span><span class="n">pals_julia</span><span class="w"> </span><span class="n">as</span><span class="w"> </span><span class="n">pj</span>
+<span class="k">import</span><span class="w"> </span><span class="n">PALSJulia</span><span class="w"> </span><span class="n">as</span><span class="w"> </span><span class="n">pj</span>
 </pre></div>
 </div>
 </section>
 <section id="check-the-installation">
 <h2>Check the installation<a class="headerlink" href="#check-the-installation" title="Link to this heading">¶</a></h2>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="n">pals_julia</span><span class="w"> </span><span class="n">as</span><span class="w"> </span><span class="n">pj</span>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="n">PALSJulia</span><span class="w"> </span><span class="n">as</span><span class="w"> </span><span class="n">pj</span>
 
 <span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">create_empty_tree</span><span class="p">()</span>
 <span class="n">root</span><span class="p">[</span><span class="s">&quot;hello&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;world&quot;</span>
@@ -325,7 +325,7 @@ are wired up correctly.</p>
         <div class="bottom-of-page">
           <div class="left-details">
             <div class="copyright">
-                Copyright &#169; 2026, pals-julia Contributors
+                Copyright &#169; 2026, PALSJulia Contributors
             </div>
             Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
             
