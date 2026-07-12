@@ -1,3 +1,10 @@
+const LIBYAML = joinpath(@__DIR__, "..", "..", "pals-cpp", "build", "libyaml_c_wrapper.dylib")
+
+# ─── constants matching the C header ────────────────────────────────────────
+# Both map to (size_t)-1 in C.
+const YAML_NULL_ID = typemax(Csize_t)
+const END          = typemax(Csize_t)
+
 # ─── core types ──────────────────────────────────────────────────────────────
 
 """
@@ -37,7 +44,7 @@ end
 
 #---------------------------------------------------------------------------------------------------
 
-# Raw C struct returned by read_pals_file — three tree handles by value.
+# Raw C struct returned by parse_and_expand_pals — three tree handles by value.
 struct LatticesHandle
   original::Ptr{Cvoid}
   included::Ptr{Cvoid}

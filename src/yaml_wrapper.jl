@@ -1,10 +1,3 @@
-const LIBYAML = joinpath(@__DIR__, "..", "..", "pals-cpp", "build", "libyaml_c_wrapper.dylib")
-
-# ─── constants matching the C header ────────────────────────────────────────
-# Both map to (size_t)-1 in C.
-const YAML_NULL_ID = typemax(Csize_t)
-const END          = typemax(Csize_t)
-
 # ─── internal helpers ────────────────────────────────────────────────────────
 
 # Wrap a tree handle and return a node pointing to its root.
@@ -14,15 +7,15 @@ function _root_node(handle::Ptr{Cvoid})
   return YAMLNode(tree, root_id)
 end
 
-# ─── read_pals_file ──────────────────────────────────────────────────────────
+# ─── parse_and_expand_pals ────────────────────────────────────────────────────
 
 """
-    read_pals_file(filename, lattice_name="") -> Lattices
+    parse_and_expand_pals(filename, lattice_name="") -> Lattices
 
 Parse a lattice file and return original, included, and expanded views.
 All three are freed independently when their `YAMLNode`s are GC'd.
 """
-function read_pals_file(filename::String, lattice_name::String="")
+function parse_and_expand_pals(filename::String, lattice_name::String="")
   isfile(filename) || error("File not found: $filename")
   handles = @ccall LIBYAML.parse_and_expand_PALS(
     filename::Cstring,

@@ -21,7 +21,7 @@ end
 # cd into the lattice directory so that relative include paths inside the
 # YAML files resolve correctly when the C library opens them.
 lat = cd(lattice_dir) do
-  read_pals_file(file_name, lattice_name)
+  parse_and_expand_pals(file_name, lattice_name)
 end
 
 println("Printing original lattice information:")
