@@ -251,14 +251,58 @@ node knows whether it is a map, a sequence, or a scalar, and supports the
 standard Julia collection idioms. The owning <code class="docutils literal notranslate"><span class="pre">YAMLTree</span></code> frees the underlying C
 tree automatically when it is garbage-collected, so you never manage memory by
 hand.</p>
-<section id="reading">
-<h2>Reading<a class="headerlink" href="#reading" title="Link to this heading">¶</a></h2>
-<p>Parse from a file or from a string:</p>
+<section id="making-the-functions-available">
+<h2>Making the functions available<a class="headerlink" href="#making-the-functions-available" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">using</span> <span class="pre">PALSJulia</span></code> on its own brings only a handful of names into scope. The
+tree-manipulation functions documented below live in the package but are not
+exported by default. Call <code class="docutils literal notranslate"><span class="pre">export_manipulators()</span></code> once to export them so they
+can be used by their bare names:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">PALSJulia</span>
+<span class="n">export_manipulators</span><span class="p">()</span>
+
+<span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">parse_file</span><span class="p">(</span><span class="s">&quot;config.pals.yaml&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If you would rather <strong>not</strong> pull those extra symbols into your namespace, skip
+<code class="docutils literal notranslate"><span class="pre">export_manipulators()</span></code> and instead import the package under an alias:</p>
 <div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="n">PALSJulia</span><span class="w"> </span><span class="n">as</span><span class="w"> </span><span class="n">pj</span>
 
 <span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">parse_file</span><span class="p">(</span><span class="s">&quot;config.pals.yaml&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>and prefix each call, e.g. <code class="docutils literal notranslate"><span class="pre">pj.parse_file(...)</span></code>. The rest of this guide assumes
+you have called <code class="docutils literal notranslate"><span class="pre">export_manipulators()</span></code> and uses bare names throughout.</p>
+</section>
+<section id="reading">
+<h2>Reading<a class="headerlink" href="#reading" title="Link to this heading">¶</a></h2>
+<p>Parse from a file or from a string. Both return a <code class="docutils literal notranslate"><span class="pre">YAMLNode</span></code> pointing at the
+tree root:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">parse_file(filename)</span></code></p></td>
+<td><p>Parse a YAML file from disk.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">parse_string(yaml_str)</span></code></p></td>
+<td><p>Parse YAML from a string.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">create_empty_tree()</span></code></p></td>
+<td><p>Create a new, empty MAP tree to build up from scratch.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">parse_and_expand_pals(filename,</span> <span class="pre">lattice_name=&quot;&quot;)</span></code></p></td>
+<td><p>Parse a PALS lattice file and return original, included, and expanded views.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">parse_file</span><span class="p">(</span><span class="s">&quot;config.pals.yaml&quot;</span><span class="p">)</span>
 <span class="c"># or</span>
-<span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">parse_string</span><span class="p">(</span><span class="s">&quot;&quot;&quot;</span>
+<span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">parse_string</span><span class="p">(</span><span class="s">&quot;&quot;&quot;</span>
 <span class="s">server:</span>
 <span class="s">  host: localhost</span>
 <span class="s">  port: 8080</span>
@@ -268,50 +312,210 @@ hand.</p>
 <span class="s">&quot;&quot;&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">parse_and_expand_pals</span></code> is PALS-specific: it returns a <code class="docutils literal notranslate"><span class="pre">Lattices</span></code> value holding
+three independent tree views (<code class="docutils literal notranslate"><span class="pre">original</span></code>, <code class="docutils literal notranslate"><span class="pre">included</span></code>, <code class="docutils literal notranslate"><span class="pre">expanded</span></code>), each freed on
+its own when garbage-collected.</p>
 </section>
-<section id="navigating-the-tree">
-<h2>Navigating the tree<a class="headerlink" href="#navigating-the-tree" title="Link to this heading">¶</a></h2>
-<p>Index maps by key and sequences by (1-based) integer, then convert the leaf
-scalar to the Julia type you want:</p>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">String</span><span class="p">(</span><span class="n">root</span><span class="p">[</span><span class="s">&quot;server&quot;</span><span class="p">][</span><span class="s">&quot;host&quot;</span><span class="p">])</span><span class="w">   </span><span class="c"># &quot;localhost&quot;</span>
-<span class="n">port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">String</span><span class="p">(</span><span class="n">root</span><span class="p">[</span><span class="s">&quot;server&quot;</span><span class="p">][</span><span class="s">&quot;port&quot;</span><span class="p">])</span><span class="w">   </span><span class="c"># &quot;8080&quot;</span>
-
-<span class="n">pj</span><span class="o">.</span><span class="n">haskey</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;features&quot;</span><span class="p">)</span><span class="w">              </span><span class="c"># true</span>
-<span class="n">pj</span><span class="o">.</span><span class="n">length</span><span class="p">(</span><span class="n">root</span><span class="p">[</span><span class="s">&quot;features&quot;</span><span class="p">])</span><span class="w">              </span><span class="c"># 2</span>
-<span class="n">pj</span><span class="o">.</span><span class="n">keys</span><span class="p">(</span><span class="n">root</span><span class="p">[</span><span class="s">&quot;server&quot;</span><span class="p">])</span><span class="w">                  </span><span class="c"># [&quot;host&quot;, &quot;port&quot;]</span>
+<section id="querying-the-tree">
+<h2>Querying the tree<a class="headerlink" href="#querying-the-tree" title="Link to this heading">¶</a></h2>
+<p>Use these functions to inspect a node’s kind, walk the tree, and read out its
+structure. None of them modify the document.</p>
+<section id="kind-checks">
+<h3>Kind checks<a class="headerlink" href="#kind-checks" title="Link to this heading">¶</a></h3>
+<p>Every node is exactly one of map, sequence, or scalar:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">is_map(node)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code> if <code class="docutils literal notranslate"><span class="pre">node</span></code> is a map (key/value pairs).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">is_sequence(node)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code> if <code class="docutils literal notranslate"><span class="pre">node</span></code> is a sequence (ordered list).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">is_scalar(node)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code> if <code class="docutils literal notranslate"><span class="pre">node</span></code> is a scalar leaf value.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="navigation-and-inspection">
+<h3>Navigation and inspection<a class="headerlink" href="#navigation-and-inspection" title="Link to this heading">¶</a></h3>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">node[key]</span></code></p></td>
+<td><p>The direct child of a map <code class="docutils literal notranslate"><span class="pre">node</span></code> under string <code class="docutils literal notranslate"><span class="pre">key</span></code> (errors if absent).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">node[index]</span></code></p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">index</span></code>-th child (1-based) of a map or sequence.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">haskey(node,</span> <span class="pre">key)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code> if the map <code class="docutils literal notranslate"><span class="pre">node</span></code> has a direct child under <code class="docutils literal notranslate"><span class="pre">key</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">length(node)</span></code></p></td>
+<td><p>Number of direct children (0 for a scalar).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">keys(node)</span></code></p></td>
+<td><p>The keys of a map <code class="docutils literal notranslate"><span class="pre">node</span></code>, in order, as a <code class="docutils literal notranslate"><span class="pre">Vector{String}</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">node_key(node)</span></code></p></td>
+<td><p>The key <code class="docutils literal notranslate"><span class="pre">node</span></code> is stored under in its parent, or <code class="docutils literal notranslate"><span class="pre">nothing</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">get_parent(node)</span></code></p></td>
+<td><p>The parent node (errors if <code class="docutils literal notranslate"><span class="pre">node</span></code> is the root).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">eachindex(node)</span></code></p></td>
+<td><p>Index range for iterating a map or sequence.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">iterate(node)</span></code></p></td>
+<td><p>Enables <code class="docutils literal notranslate"><span class="pre">for</span></code> loops: sequences yield elements, maps yield <code class="docutils literal notranslate"><span class="pre">(key,</span> <span class="pre">node)</span></code> pairs.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">haskey</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;features&quot;</span><span class="p">)</span><span class="w">          </span><span class="c"># true</span>
+<span class="n">length</span><span class="p">(</span><span class="n">root</span><span class="p">[</span><span class="s">&quot;features&quot;</span><span class="p">])</span><span class="w">          </span><span class="c"># 2</span>
+<span class="n">keys</span><span class="p">(</span><span class="n">root</span><span class="p">[</span><span class="s">&quot;server&quot;</span><span class="p">])</span><span class="w">              </span><span class="c"># [&quot;host&quot;, &quot;port&quot;]</span>
 
 <span class="k">for</span><span class="w"> </span><span class="n">item</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">root</span><span class="p">[</span><span class="s">&quot;features&quot;</span><span class="p">]</span>
-<span class="w">    </span><span class="n">println</span><span class="p">(</span><span class="kt">String</span><span class="p">(</span><span class="n">item</span><span class="p">))</span><span class="w">                </span><span class="c"># auth, logging</span>
+<span class="w">    </span><span class="n">println</span><span class="p">(</span><span class="kt">String</span><span class="p">(</span><span class="n">item</span><span class="p">))</span><span class="w">         </span><span class="c"># auth, logging</span>
 <span class="k">end</span>
+
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">root</span><span class="p">[</span><span class="s">&quot;server&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="n">println</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; =&gt; &quot;</span><span class="p">,</span><span class="w"> </span><span class="kt">String</span><span class="p">(</span><span class="n">v</span><span class="p">))</span><span class="w"> </span><span class="c"># host =&gt; localhost, port =&gt; 8080</span>
+<span class="k">end</span>
+
+<span class="n">parent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">get_parent</span><span class="p">(</span><span class="n">root</span><span class="p">[</span><span class="s">&quot;server&quot;</span><span class="p">])</span><span class="w">   </span><span class="c"># back up to the root</span>
 </pre></div>
 </div>
-<p>Use <code class="docutils literal notranslate"><span class="pre">is_map</span></code>, <code class="docutils literal notranslate"><span class="pre">is_sequence</span></code>, and <code class="docutils literal notranslate"><span class="pre">is_scalar</span></code> to test a node’s kind.</p>
+</section>
+<section id="reading-scalar-values">
+<h3>Reading scalar values<a class="headerlink" href="#reading-scalar-values" title="Link to this heading">¶</a></h3>
+<p>Convert a scalar leaf node to the Julia type you want:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">String(node)</span></code></p></td>
+<td><p>The scalar value as a <code class="docutils literal notranslate"><span class="pre">String</span></code> (the raw text).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Int(node)</span></code></p></td>
+<td><p>The scalar parsed as an <code class="docutils literal notranslate"><span class="pre">Int</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Float64(node)</span></code></p></td>
+<td><p>The scalar parsed as a <code class="docutils literal notranslate"><span class="pre">Float64</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Bool(node)</span></code></p></td>
+<td><p>The scalar parsed as a <code class="docutils literal notranslate"><span class="pre">Bool</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;true&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;false&quot;</span></code>).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">String</span><span class="p">(</span><span class="n">root</span><span class="p">[</span><span class="s">&quot;server&quot;</span><span class="p">][</span><span class="s">&quot;host&quot;</span><span class="p">])</span><span class="w">   </span><span class="c"># &quot;localhost&quot;</span>
+<span class="n">port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">Int</span><span class="p">(</span><span class="n">root</span><span class="p">[</span><span class="s">&quot;server&quot;</span><span class="p">][</span><span class="s">&quot;port&quot;</span><span class="p">])</span><span class="w">       </span><span class="c"># 8080</span>
+</pre></div>
+</div>
+</section>
 </section>
 <section id="building-and-editing">
 <h2>Building and editing<a class="headerlink" href="#building-and-editing" title="Link to this heading">¶</a></h2>
 <p>Create an empty document and add maps, sequences, and scalars to it. The
 mutating helpers (suffixed with <code class="docutils literal notranslate"><span class="pre">!</span></code>) return the newly created child node:</p>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">create_empty_tree</span><span class="p">()</span>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">add_scalar!(parent,</span> <span class="pre">value;</span> <span class="pre">key=nothing,</span> <span class="pre">index=END)</span></code></p></td>
+<td><p>Add a scalar child.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">add_map!(parent;</span> <span class="pre">key=nothing,</span> <span class="pre">index=END)</span></code></p></td>
+<td><p>Add an empty map child.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">add_sequence!(parent;</span> <span class="pre">key=nothing,</span> <span class="pre">index=END)</span></code></p></td>
+<td><p>Add an empty sequence child.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">node[key]</span> <span class="pre">=</span> <span class="pre">value</span></code></p></td>
+<td><p>Set (or create) a scalar child under <code class="docutils literal notranslate"><span class="pre">key</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">set_scalar!(node,</span> <span class="pre">value)</span></code></p></td>
+<td><p>Set or replace a node’s scalar value in place.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">set_key!(node,</span> <span class="pre">key)</span></code></p></td>
+<td><p>Set or replace the key a node is stored under.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">remove!(node)</span></code></p></td>
+<td><p>Remove a node and all its descendants.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">copy(node)</span></code></p></td>
+<td><p>An independent deep copy of <code class="docutils literal notranslate"><span class="pre">node</span></code> in a new tree.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">deep_copy_node!(dst,</span> <span class="pre">src)</span></code></p></td>
+<td><p>Overwrite <code class="docutils literal notranslate"><span class="pre">dst</span></code> with a deep copy of <code class="docutils literal notranslate"><span class="pre">src</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">deep_copy_children!(dst,</span> <span class="pre">src;</span> <span class="pre">index=END)</span></code></p></td>
+<td><p>Copy all children of <code class="docutils literal notranslate"><span class="pre">src</span></code> into <code class="docutils literal notranslate"><span class="pre">dst</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Pass <code class="docutils literal notranslate"><span class="pre">key</span></code> for map children and omit it (or pass <code class="docutils literal notranslate"><span class="pre">nothing</span></code>) for sequence
+elements. <code class="docutils literal notranslate"><span class="pre">index</span></code> is 1-based and defaults to appending at the end, so you
+usually leave it out; to append explicitly the sentinel is <code class="docutils literal notranslate"><span class="pre">PALSJulia.END</span></code>.</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">create_empty_tree</span><span class="p">()</span>
 
-<span class="n">server</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">add_map!</span><span class="p">(</span><span class="n">root</span><span class="p">;</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;server&quot;</span><span class="p">)</span>
+<span class="n">server</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">add_map!</span><span class="p">(</span><span class="n">root</span><span class="p">;</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;server&quot;</span><span class="p">)</span>
 <span class="n">server</span><span class="p">[</span><span class="s">&quot;host&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;localhost&quot;</span>
 <span class="n">server</span><span class="p">[</span><span class="s">&quot;port&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;8080&quot;</span>
 
-<span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">add_sequence!</span><span class="p">(</span><span class="n">root</span><span class="p">;</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;features&quot;</span><span class="p">)</span>
-<span class="n">pj</span><span class="o">.</span><span class="n">add_scalar!</span><span class="p">(</span><span class="n">features</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;auth&quot;</span><span class="p">)</span>
-<span class="n">pj</span><span class="o">.</span><span class="n">add_scalar!</span><span class="p">(</span><span class="n">features</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;logging&quot;</span><span class="p">)</span>
+<span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">add_sequence!</span><span class="p">(</span><span class="n">root</span><span class="p">;</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;features&quot;</span><span class="p">)</span>
+<span class="n">add_scalar!</span><span class="p">(</span><span class="n">features</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;auth&quot;</span><span class="p">)</span>
+<span class="n">add_scalar!</span><span class="p">(</span><span class="n">features</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;logging&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Assigning with <code class="docutils literal notranslate"><span class="pre">node[key]</span> <span class="pre">=</span> <span class="pre">value</span></code> sets (or creates) a scalar child. Other
-handy edits include <code class="docutils literal notranslate"><span class="pre">set_scalar!</span></code>, <code class="docutils literal notranslate"><span class="pre">set_key!</span></code>, <code class="docutils literal notranslate"><span class="pre">remove!</span></code>, <code class="docutils literal notranslate"><span class="pre">copy</span></code>, and the
-<code class="docutils literal notranslate"><span class="pre">deep_copy_node!</span></code> / <code class="docutils literal notranslate"><span class="pre">deep_copy_children!</span></code> pair for grafting one subtree onto
-another.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">deep_copy_node!</span></code> / <code class="docutils literal notranslate"><span class="pre">deep_copy_children!</span></code> pair works across different trees,
+so you can graft one subtree onto another.</p>
 </section>
 <section id="writing">
 <h2>Writing<a class="headerlink" href="#writing" title="Link to this heading">¶</a></h2>
 <p>Serialize a node to a string or straight to disk:</p>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">to_yaml_string</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="w">     </span><span class="c"># YAML as a String</span>
-<span class="n">pj</span><span class="o">.</span><span class="n">write_yaml</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;out.pals.yaml&quot;</span><span class="p">)</span>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">to_yaml_string(node)</span></code></p></td>
+<td><p>The node and its descendants as a YAML <code class="docutils literal notranslate"><span class="pre">String</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">write_yaml(node,</span> <span class="pre">filename)</span></code></p></td>
+<td><p>Write the whole tree containing <code class="docutils literal notranslate"><span class="pre">node</span></code> to a file.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">to_yaml_string</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="w">     </span><span class="c"># YAML as a String</span>
+<span class="n">write_yaml</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;out.pals.yaml&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>See the <strong>API Reference</strong> (linked in the sidebar) for the full list of functions
@@ -375,8 +579,14 @@ and their signatures.</p>
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Parsing and writing YAML</a><ul>
+<li><a class="reference internal" href="#making-the-functions-available">Making the functions available</a></li>
 <li><a class="reference internal" href="#reading">Reading</a></li>
-<li><a class="reference internal" href="#navigating-the-tree">Navigating the tree</a></li>
+<li><a class="reference internal" href="#querying-the-tree">Querying the tree</a><ul>
+<li><a class="reference internal" href="#kind-checks">Kind checks</a></li>
+<li><a class="reference internal" href="#navigation-and-inspection">Navigation and inspection</a></li>
+<li><a class="reference internal" href="#reading-scalar-values">Reading scalar values</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#building-and-editing">Building and editing</a></li>
 <li><a class="reference internal" href="#writing">Writing</a></li>
 </ul>
