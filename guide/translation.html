@@ -254,18 +254,21 @@ formats:</p>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">src/toBmad.jl</span></code></strong> — emits a classic <a class="reference external" href="https://www.classe.cornell.edu/bmad/">Bmad</a>
 lattice.</p></li>
 </ul>
-<p>Both translators read a lattice with <code class="docutils literal notranslate"><span class="pre">get_lattices</span></code>,
-walk the expanded element list, and map each PALS element and its parameters
+<p>Both translators read a lattice with <code class="docutils literal notranslate"><span class="pre">parse_file</span></code>,
+walk the element list, and map each PALS element and its parameters
 onto the corresponding target-format element.</p>
 <section id="running-the-translators">
 <h2>Running the translators<a class="headerlink" href="#running-the-translators" title="Link to this heading">¶</a></h2>
-<p>Each translator is a runnable script. <code class="docutils literal notranslate"><span class="pre">toSciBmad.jl</span></code> translates the built-in
-example lattice, while <code class="docutils literal notranslate"><span class="pre">toBmad.jl</span></code> takes a lattice directory as its first
-argument:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">julia src/toSciBmad.jl</span>
-<span class="go">julia src/toBmad.jl lattice_files</span>
+<p><code class="docutils literal notranslate"><span class="pre">toBmad</span></code> and <code class="docutils literal notranslate"><span class="pre">toSciBmad</span></code> are exported functions. Load the package, then call
+<code class="docutils literal notranslate"><span class="pre">toBmad</span></code> with the path to a PALS-YAML file — it writes <code class="docutils literal notranslate"><span class="pre">&lt;stem&gt;_out.bmad</span></code> beside
+the input — or call <code class="docutils literal notranslate"><span class="pre">toSciBmad</span></code>, which translates the built-in example lattice:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">PALSJulia</span>
+<span class="n">toBmad</span><span class="p">(</span><span class="n">joinpath</span><span class="p">(</span><span class="s">&quot;lattice_files&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;bta.pals.yaml&quot;</span><span class="p">))</span><span class="w">  </span><span class="c"># writes lattice_files/bta.pals_out.bmad</span>
+<span class="n">toSciBmad</span><span class="p">()</span><span class="w">                                          </span><span class="c"># translates the built-in convert.pals.yaml</span>
 </pre></div>
 </div>
+<p>The <a class="reference external" href="https://github.com/pals-project/PALSJulia/tree/main/examples"><code class="docutils literal notranslate"><span class="pre">examples/</span></code></a>
+directory has runnable scripts, such as <code class="docutils literal notranslate"><span class="pre">examples/pals_to_bmad.jl</span></code>.</p>
 </section>
 <section id="element-and-parameter-mapping">
 <h2>Element and parameter mapping<a class="headerlink" href="#element-and-parameter-mapping" title="Link to this heading">¶</a></h2>
@@ -274,21 +277,230 @@ translators encode the conversions — renamed parameters, unit changes, and
 cases that have no equivalent (and are skipped with a warning). For example,
 an <code class="docutils literal notranslate"><span class="pre">ApertureP</span></code> becomes a Bmad <code class="docutils literal notranslate"><span class="pre">ApertureParams</span></code>, with <code class="docutils literal notranslate"><span class="pre">x_min</span></code>/<code class="docutils literal notranslate"><span class="pre">x_max</span></code> mapped to
 <code class="docutils literal notranslate"><span class="pre">x1_limit</span></code>/<code class="docutils literal notranslate"><span class="pre">x2_limit</span></code> (or derived from <code class="docutils literal notranslate"><span class="pre">x_center</span></code>/<code class="docutils literal notranslate"><span class="pre">x_width</span></code>).</p>
-<p>The complete, element-by-element list of these mappings is maintained in
-<a class="reference external" href="https://github.com/pals-project/PALSJulia/blob/main/docs/translation_notes.md"><code class="docutils literal notranslate"><span class="pre">docs/translation_notes.md</span></code></a>
-in the repository. Consult it when adding support for a new element or when a
-parameter comes through untranslated.</p>
+<p>The complete, element-by-element list of these mappings is given in the
+<a class="reference internal" href="#parameter-mapping-reference">Parameter mapping reference</a> below. Consult it
+when adding support for a new element or when a parameter comes through
+untranslated.</p>
 </section>
 <section id="extending-a-translator">
 <h2>Extending a translator<a class="headerlink" href="#extending-a-translator" title="Link to this heading">¶</a></h2>
 <p>To add support for a new element or parameter:</p>
 <ol class="arabic simple">
 <li><p>Find its PALS definition and decide on the target-format equivalent; record
-it in <code class="docutils literal notranslate"><span class="pre">docs/translation_notes.md</span></code>.</p></li>
-<li><p>Add the mapping to <code class="docutils literal notranslate"><span class="pre">make_ele_str</span></code> (and the helpers it calls, such as
-<code class="docutils literal notranslate"><span class="pre">make_init_str</span></code> and <code class="docutils literal notranslate"><span class="pre">make_bl_str</span></code>) in the relevant translator.</p></li>
+it in the <a class="reference internal" href="#parameter-mapping-reference">Parameter mapping reference</a> below.</p></li>
+<li><p>Add the mapping to the element builder — <code class="docutils literal notranslate"><span class="pre">_make_bmad_ele_str</span></code> in
+<code class="docutils literal notranslate"><span class="pre">src/toBmad.jl</span></code> or <code class="docutils literal notranslate"><span class="pre">_make_scibmad_ele_str</span></code> in <code class="docutils literal notranslate"><span class="pre">src/toSciBmad.jl</span></code> — and to any
+helper it calls (e.g. <code class="docutils literal notranslate"><span class="pre">_ele_to_bmad_str</span></code>, <code class="docutils literal notranslate"><span class="pre">_make_line_str</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">_ele_to_scibmad_str</span></code>, <code class="docutils literal notranslate"><span class="pre">_make_beamline_str</span></code>).</p></li>
 <li><p>Translate a lattice that exercises the element and check the output.</p></li>
 </ol>
+</section>
+<section id="parameter-mapping-reference">
+<h2>Parameter mapping reference<a class="headerlink" href="#parameter-mapping-reference" title="Link to this heading">¶</a></h2>
+<p>The following is the element-by-element mapping between PALS parameter groups
+and their SciBmad/Bmad equivalents.</p>
+<section id="ackickerp-none">
+<h3>ACKickerP –&gt; None<a class="headerlink" href="#ackickerp-none" title="Link to this heading">¶</a></h3>
+</section>
+<section id="aperturep-apertureparams">
+<h3>ApertureP –&gt; ApertureParams<a class="headerlink" href="#aperturep-apertureparams" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>x_min –&gt; x1_limit</p></li>
+<li><p>x_max –&gt; x2_limit</p></li>
+<li><p>x_width and x_center:</p>
+<ul>
+<li><p>x1_limit = x_center - x_width / 2</p></li>
+<li><p>x2_limit = x_center + x_width / 2</p></li>
+</ul>
+</li>
+<li><p>Note: Either both min and max are defined, or width and center are defined, not both.</p></li>
+<li><p>y_min –&gt; y1_limit</p></li>
+<li><p>y_may –&gt; y2_limit</p></li>
+<li><p>y_width and y_center:</p>
+<ul>
+<li><p>y1_limit = y_center - y_width / 2</p></li>
+<li><p>y2_limit = y_center + y_width / 2</p></li>
+</ul>
+</li>
+<li><p>shape –&gt; aperture_shape</p>
+<ul>
+<li><p>RECTANGULAR –&gt; Rectangular</p></li>
+<li><p>ELLIPTICAL –&gt; Elliptical</p></li>
+<li><p>VERTICES –&gt; none</p></li>
+<li><p>CUSTOM_SHAPE –&gt; none</p></li>
+</ul>
+</li>
+<li><p>location –&gt; aperture_at</p>
+<ul>
+<li><p>ENTRANCE_END –&gt; Entrance</p></li>
+<li><p>EXIT_END –&gt; Exit</p></li>
+<li><p>BOTH_ENDS –&gt; BothEnds</p></li>
+<li><p>EVERYWHERE –&gt; BothEnds</p></li>
+<li><p>CENTER –&gt; BothEnds</p></li>
+<li><p>NOWHERE –&gt; none</p></li>
+</ul>
+</li>
+<li><p>aperture_shifts_with_body –&gt; aperture_shifts_with_body</p></li>
+<li><p>aperture_active –&gt; aperture_active</p></li>
+<li><p>vertices –&gt; none</p></li>
+<li><p>material –&gt; none</p></li>
+<li><p>thickness –&gt; none</p></li>
+</ul>
+</section>
+<section id="beambeamp-not-in-scibmad-yet">
+<h3>BeamBeamP –&gt; Not in SciBmad yet<a class="headerlink" href="#beambeamp-not-in-scibmad-yet" title="Link to this heading">¶</a></h3>
+</section>
+<section id="bendp-bendparams">
+<h3>BendP –&gt; BendParams<a class="headerlink" href="#bendp-bendparams" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>rho_ref -&gt; caluclated</p></li>
+<li><p>bend_field_ref -&gt; calculated</p></li>
+<li><p>e1 –&gt; e1</p></li>
+<li><p>e2 –&gt; e2</p></li>
+<li><p>e1_rect –&gt; calculated</p></li>
+<li><p>e2_rect –&gt; calcualted</p></li>
+<li><p>edge1_int –&gt; edge1_int</p></li>
+<li><p>edge2_int –&gt; edge2_int</p></li>
+<li><p>g_ref –&gt; g_ref</p></li>
+<li><p>h1 –&gt; not in scibmad</p></li>
+<li><p>h2 –&gt; not in scibmad</p></li>
+<li><p>L_chord –&gt; calculated</p></li>
+<li><p>L_sagitta –&gt; calculated</p></li>
+<li><p>tilt_ref –&gt; tilt_ref</p></li>
+</ul>
+</section>
+<section id="bodyshiftp-alignmentparams">
+<h3>BodyShiftP –&gt; AlignmentParams<a class="headerlink" href="#bodyshiftp-alignmentparams" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>x_offset –&gt; x_offset</p></li>
+<li><p>y_offset –&gt; y_offset</p></li>
+<li><p>z_offset –&gt; z_offset</p></li>
+<li><p>x_rot –&gt; x_rot</p></li>
+<li><p>y_rot –&gt; y_rot</p></li>
+<li><p>z_rot –&gt; tilt</p></li>
+</ul>
+</section>
+<section id="electricmultipolep-not-in-scibmad-yet">
+<h3>ElectricMultipoleP –&gt; Not in SciBmad yet<a class="headerlink" href="#electricmultipolep-not-in-scibmad-yet" title="Link to this heading">¶</a></h3>
+</section>
+<section id="floorp-calculated">
+<h3>FloorP –&gt; Calculated<a class="headerlink" href="#floorp-calculated" title="Link to this heading">¶</a></h3>
+</section>
+<section id="floorshiftp-set-in-floor-shift-element-to-be-added-to-scibmad">
+<h3>FloorShiftP –&gt; Set in floor shift element (to be added to scibmad)<a class="headerlink" href="#floorshiftp-set-in-floor-shift-element-to-be-added-to-scibmad" title="Link to this heading">¶</a></h3>
+</section>
+<section id="forkp-needs-to-be-implemented-in-scibmad">
+<h3>ForkP –&gt; Needs to be Implemented in scibmad<a class="headerlink" href="#forkp-needs-to-be-implemented-in-scibmad" title="Link to this heading">¶</a></h3>
+</section>
+<section id="girderp-in-contruction">
+<h3>GirderP In Contruction<a class="headerlink" href="#girderp-in-contruction" title="Link to this heading">¶</a></h3>
+</section>
+<section id="magneticmultipolep-bmultipoleparams">
+<h3>MagneticMultipoleP –&gt; BMultipoleParams<a class="headerlink" href="#magneticmultipolep-bmultipoleparams" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>tiltN –&gt; tiltN</p></li>
+<li><p>[BK][ns]NL? –&gt; [BK][ns]NL?</p></li>
+<li><p>BnN(L) –&gt; BnN(L)</p></li>
+</ul>
+</section>
+<section id="metap-metaparams">
+<h3>MetaP –&gt; MetaParams<a class="headerlink" href="#metap-metaparams" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>alias –&gt; alias</p></li>
+<li><p>ID –&gt; none</p></li>
+<li><p>label –&gt; label</p></li>
+<li><p>description –&gt; description</p></li>
+</ul>
+</section>
+<section id="particlep-create-new-bunch">
+<h3>ParticleP –&gt; Create new bunch<a class="headerlink" href="#particlep-create-new-bunch" title="Link to this heading">¶</a></h3>
+</section>
+<section id="patchp-patchparams">
+<h3>PatchP –&gt; PatchParams<a class="headerlink" href="#patchp-patchparams" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>x_offset –&gt; x_offset</p></li>
+<li><p>y_offset –&gt; y_offset</p></li>
+<li><p>z_offset –&gt; z_offset</p></li>
+<li><p>t_offset –&gt; dt (not in PALS yet)</p></li>
+<li><p>x_rot –&gt; x_rot</p></li>
+<li><p>y_rot –&gt; y_rot</p></li>
+<li><p>z_rot –&gt; z_rot</p></li>
+<li><p>flexible –&gt; none</p></li>
+<li><p>ref_coords –&gt; none</p></li>
+<li><p>user_sets_length –&gt; none</p></li>
+</ul>
+</section>
+<section id="referencep-beamline-properties">
+<h3>ReferenceP –&gt; Beamline Properties<a class="headerlink" href="#referencep-beamline-properties" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>species_ref –&gt; species_ref</p></li>
+<li><p>pc_ref –&gt; pc_ref</p></li>
+<li><p>E_tot_ref –&gt; E_ref</p></li>
+<li><p>time_ref –&gt; none</p></li>
+<li><p>location –&gt; none</p></li>
+</ul>
+</section>
+<section id="referencechangep-beamline-properties">
+<h3>ReferenceChangeP –&gt; Beamline Properties<a class="headerlink" href="#referencechangep-beamline-properties" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>extra_dtime_ref –&gt; none</p></li>
+<li><p>dE_ref –&gt; dE_ref</p></li>
+<li><p>E_tot_ref –&gt; E_ref</p></li>
+<li><p>species_ref –&gt; species_ref</p></li>
+</ul>
+</section>
+<section id="rfp-rfparams">
+<h3>RFP –&gt; RFParams<a class="headerlink" href="#rfp-rfparams" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>frequency –&gt; rate, rate_meaning = false</p></li>
+<li><p>harmon –&gt; rate, if rate_meaning = true</p></li>
+<li><p>if neither frequency or harmon exist, set rate_meaning = -1</p></li>
+<li><p>voltage –&gt; voltage</p></li>
+<li><p>gradient –&gt; none</p></li>
+<li><p>phase –&gt; phi0</p></li>
+<li><p>multipass_phase –&gt; none</p></li>
+<li><p>cavity_type –&gt; traveling_wave</p>
+<ul>
+<li><p>STANDING_WAVE –&gt; false</p></li>
+<li><p>TRAVELING_WAVE –&gt; true</p></li>
+</ul>
+</li>
+<li><p>num_cells –&gt; tracking_method = SaganCavity(num_cells)</p></li>
+<li><p>zero_phase –&gt; zero_phase</p>
+<ul>
+<li><p>ACCELERATING –&gt; Accelerating</p></li>
+<li><p>BELOW_TRANSITION –&gt; BelowTransition</p></li>
+<li><p>ABOVE_TRANSITION –&gt; AboveTransition</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="solenoidp-bmultipoleparams">
+<h3>SolenoidP –&gt; BMultipoleParams<a class="headerlink" href="#solenoidp-bmultipoleparams" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Ksol –&gt; Ksol</p></li>
+<li><p>Bsol –&gt; Bsol</p></li>
+</ul>
+</section>
+<section id="trackingp-universalparams-tracking-method">
+<h3>TrackingP –&gt; UniversalParams.tracking_method<a class="headerlink" href="#trackingp-universalparams-tracking-method" title="Link to this heading">¶</a></h3>
+</section>
+<section id="lattices">
+<h3>Lattices<a class="headerlink" href="#lattices" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Beamlines –&gt; Beamlines</p></li>
+<li><p>To be added: Lattices in PALS –&gt; Lattices</p></li>
+</ul>
+</section>
+<section id="todo">
+<h3>TODO<a class="headerlink" href="#todo" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>translating expression</p></li>
+<li><p>names of fundamental constants</p></li>
+<li><p>names of functions (tan)</p></li>
+<li><p>sinc –&gt; sincu</p></li>
+</ul>
+</section>
 </section>
 </section>
 
@@ -343,6 +555,30 @@ it in <code class="docutils literal notranslate"><span class="pre">docs/translat
 <li><a class="reference internal" href="#running-the-translators">Running the translators</a></li>
 <li><a class="reference internal" href="#element-and-parameter-mapping">Element and parameter mapping</a></li>
 <li><a class="reference internal" href="#extending-a-translator">Extending a translator</a></li>
+<li><a class="reference internal" href="#parameter-mapping-reference">Parameter mapping reference</a><ul>
+<li><a class="reference internal" href="#ackickerp-none">ACKickerP –&gt; None</a></li>
+<li><a class="reference internal" href="#aperturep-apertureparams">ApertureP –&gt; ApertureParams</a></li>
+<li><a class="reference internal" href="#beambeamp-not-in-scibmad-yet">BeamBeamP –&gt; Not in SciBmad yet</a></li>
+<li><a class="reference internal" href="#bendp-bendparams">BendP –&gt; BendParams</a></li>
+<li><a class="reference internal" href="#bodyshiftp-alignmentparams">BodyShiftP –&gt; AlignmentParams</a></li>
+<li><a class="reference internal" href="#electricmultipolep-not-in-scibmad-yet">ElectricMultipoleP –&gt; Not in SciBmad yet</a></li>
+<li><a class="reference internal" href="#floorp-calculated">FloorP –&gt; Calculated</a></li>
+<li><a class="reference internal" href="#floorshiftp-set-in-floor-shift-element-to-be-added-to-scibmad">FloorShiftP –&gt; Set in floor shift element (to be added to scibmad)</a></li>
+<li><a class="reference internal" href="#forkp-needs-to-be-implemented-in-scibmad">ForkP –&gt; Needs to be Implemented in scibmad</a></li>
+<li><a class="reference internal" href="#girderp-in-contruction">GirderP In Contruction</a></li>
+<li><a class="reference internal" href="#magneticmultipolep-bmultipoleparams">MagneticMultipoleP –&gt; BMultipoleParams</a></li>
+<li><a class="reference internal" href="#metap-metaparams">MetaP –&gt; MetaParams</a></li>
+<li><a class="reference internal" href="#particlep-create-new-bunch">ParticleP –&gt; Create new bunch</a></li>
+<li><a class="reference internal" href="#patchp-patchparams">PatchP –&gt; PatchParams</a></li>
+<li><a class="reference internal" href="#referencep-beamline-properties">ReferenceP –&gt; Beamline Properties</a></li>
+<li><a class="reference internal" href="#referencechangep-beamline-properties">ReferenceChangeP –&gt; Beamline Properties</a></li>
+<li><a class="reference internal" href="#rfp-rfparams">RFP –&gt; RFParams</a></li>
+<li><a class="reference internal" href="#solenoidp-bmultipoleparams">SolenoidP –&gt; BMultipoleParams</a></li>
+<li><a class="reference internal" href="#trackingp-universalparams-tracking-method">TrackingP –&gt; UniversalParams.tracking_method</a></li>
+<li><a class="reference internal" href="#lattices">Lattices</a></li>
+<li><a class="reference internal" href="#todo">TODO</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

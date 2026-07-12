@@ -1,6 +1,6 @@
 # Reading and expanding lattices
 
-The `get_lattices` entry point reads a PALS lattice
+The `read_pals_file` entry point reads a PALS lattice
 file, resolves any files it includes, and expands the lattice line into an
 ordered list of elements. It returns a `Lattices` value with three independent
 views of the document:
@@ -18,7 +18,7 @@ Each view is an ordinary `YAMLNode`, so everything in
 ```julia
 import PALSJulia as pj
 
-lat = pj.get_lattices("ex.pals.yaml")
+lat = pj.read_pals_file("ex.pals.yaml")
 
 println(pj.to_yaml_string(lat.original))
 println(pj.to_yaml_string(lat.included))
@@ -29,7 +29,7 @@ To expand a single named lattice from a file that defines several, pass its
 name as the second argument:
 
 ```julia
-lat = pj.get_lattices("ex.pals.yaml", "main_ring")
+lat = pj.read_pals_file("ex.pals.yaml", "main_ring")
 ```
 
 ## Relative includes
@@ -42,18 +42,18 @@ by relative path, `cd` into the lattice directory first:
 lattice_dir = joinpath(@__DIR__, "..", "lattice_files")
 
 lat = cd(lattice_dir) do
-    pj.get_lattices("ex.pals.yaml")
+    pj.read_pals_file("ex.pals.yaml")
 end
 ```
 
 ## Command-line driver
 
-`src/get_lattices.jl` is a small runnable program that wraps the above: it reads
+`examples/read_pals.jl` is a small runnable program that wraps the above: it reads
 a lattice, expands it, and prints the original, included, and expanded views. It
 accepts a file path and an optional `-lat <name>` flag:
 
 ```console
-julia src/get_lattices.jl lattice_files/ex.pals.yaml -lat main_ring
+julia examples/read_pals.jl lattice_files/ex.pals.yaml -lat main_ring
 ```
 
 Place your lattice files under `lattice_files/`.

@@ -8,20 +8,24 @@ formats:
 - **`src/toBmad.jl`** — emits a classic [Bmad](https://www.classe.cornell.edu/bmad/)
   lattice.
 
-Both translators read a lattice with `get_lattices`,
-walk the expanded element list, and map each PALS element and its parameters
+Both translators read a lattice with `parse_file`,
+walk the element list, and map each PALS element and its parameters
 onto the corresponding target-format element.
 
 ## Running the translators
 
-Each translator is a runnable script. `toSciBmad.jl` translates the built-in
-example lattice, while `toBmad.jl` takes a lattice directory as its first
-argument:
+`toBmad` and `toSciBmad` are exported functions. Load the package, then call
+`toBmad` with the path to a PALS-YAML file — it writes `<stem>_out.bmad` beside
+the input — or call `toSciBmad`, which translates the built-in example lattice:
 
-```console
-julia src/toSciBmad.jl
-julia src/toBmad.jl lattice_files
+```julia
+using PALSJulia
+toBmad(joinpath("lattice_files", "bta.pals.yaml"))  # writes lattice_files/bta.pals_out.bmad
+toSciBmad()                                          # translates the built-in convert.pals.yaml
 ```
+
+The [`examples/`](https://github.com/pals-project/PALSJulia/tree/main/examples)
+directory has runnable scripts, such as `examples/pals_to_bmad.jl`.
 
 ## Element and parameter mapping
 
@@ -31,17 +35,166 @@ cases that have no equivalent (and are skipped with a warning). For example,
 an `ApertureP` becomes a Bmad `ApertureParams`, with `x_min`/`x_max` mapped to
 `x1_limit`/`x2_limit` (or derived from `x_center`/`x_width`).
 
-The complete, element-by-element list of these mappings is maintained in
-[`docs/translation_notes.md`](https://github.com/pals-project/PALSJulia/blob/main/docs/translation_notes.md)
-in the repository. Consult it when adding support for a new element or when a
-parameter comes through untranslated.
+The complete, element-by-element list of these mappings is given in the
+[Parameter mapping reference](#parameter-mapping-reference) below. Consult it
+when adding support for a new element or when a parameter comes through
+untranslated.
 
 ## Extending a translator
 
 To add support for a new element or parameter:
 
 1. Find its PALS definition and decide on the target-format equivalent; record
-   it in `docs/translation_notes.md`.
-2. Add the mapping to `make_ele_str` (and the helpers it calls, such as
-   `make_init_str` and `make_bl_str`) in the relevant translator.
+   it in the [Parameter mapping reference](#parameter-mapping-reference) below.
+2. Add the mapping to the element builder — `_make_bmad_ele_str` in
+   `src/toBmad.jl` or `_make_scibmad_ele_str` in `src/toSciBmad.jl` — and to any
+   helper it calls (e.g. `_ele_to_bmad_str`, `_make_line_str`, or
+   `_ele_to_scibmad_str`, `_make_beamline_str`).
 3. Translate a lattice that exercises the element and check the output.
+
+## Parameter mapping reference
+
+The following is the element-by-element mapping between PALS parameter groups
+and their SciBmad/Bmad equivalents.
+
+### ACKickerP --> None
+
+### ApertureP --> ApertureParams
+- x_min --> x1_limit
+- x_max --> x2_limit
+- x_width and x_center:
+    - x1_limit = x_center - x_width / 2
+    - x2_limit = x_center + x_width / 2
+- Note: Either both min and max are defined, or width and center are defined, not both.
+- y_min --> y1_limit
+- y_may --> y2_limit
+- y_width and y_center:
+    - y1_limit = y_center - y_width / 2
+    - y2_limit = y_center + y_width / 2
+
+- shape --> aperture_shape
+    - RECTANGULAR --> Rectangular
+    - ELLIPTICAL --> Elliptical
+    - VERTICES --> none
+    - CUSTOM_SHAPE --> none
+
+- location --> aperture_at
+    - ENTRANCE_END --> Entrance
+    - EXIT_END --> Exit
+    - BOTH_ENDS --> BothEnds
+    - EVERYWHERE --> BothEnds
+    - CENTER --> BothEnds
+    - NOWHERE --> none
+
+- aperture_shifts_with_body --> aperture_shifts_with_body
+- aperture_active --> aperture_active
+- vertices --> none
+- material --> none
+- thickness --> none
+
+### BeamBeamP --> Not in SciBmad yet
+
+### BendP --> BendParams
+- rho_ref -> caluclated
+- bend_field_ref -> calculated
+- e1 --> e1
+- e2 --> e2
+- e1_rect --> calculated
+- e2_rect --> calcualted
+- edge1_int --> edge1_int
+- edge2_int --> edge2_int
+- g_ref --> g_ref
+- h1 --> not in scibmad
+- h2 --> not in scibmad
+- L_chord --> calculated
+- L_sagitta --> calculated
+- tilt_ref --> tilt_ref
+
+### BodyShiftP --> AlignmentParams
+- x_offset --> x_offset
+- y_offset --> y_offset
+- z_offset --> z_offset
+- x_rot --> x_rot
+- y_rot --> y_rot
+- z_rot --> tilt
+
+### ElectricMultipoleP --> Not in SciBmad yet
+
+### FloorP --> Calculated
+
+### FloorShiftP --> Set in floor shift element (to be added to scibmad)
+
+### ForkP --> Needs to be Implemented in scibmad
+
+### GirderP In Contruction
+
+### MagneticMultipoleP --> BMultipoleParams
+- tiltN --> tiltN
+- [BK][ns]NL? --> [BK][ns]NL?
+- BnN(L) --> BnN(L)
+
+### MetaP --> MetaParams
+- alias --> alias
+- ID --> none
+- label --> label
+- description --> description
+
+### ParticleP --> Create new bunch
+
+### PatchP --> PatchParams
+- x_offset --> x_offset
+- y_offset --> y_offset
+- z_offset --> z_offset
+- t_offset --> dt (not in PALS yet)
+- x_rot --> x_rot
+- y_rot --> y_rot
+- z_rot --> z_rot
+- flexible --> none
+- ref_coords --> none
+- user_sets_length --> none
+
+### ReferenceP --> Beamline Properties
+- species_ref --> species_ref
+- pc_ref --> pc_ref
+- E_tot_ref --> E_ref
+- time_ref --> none
+- location --> none
+
+### ReferenceChangeP --> Beamline Properties
+- extra_dtime_ref --> none
+- dE_ref --> dE_ref
+- E_tot_ref --> E_ref
+- species_ref --> species_ref
+
+### RFP --> RFParams
+- frequency --> rate, rate_meaning = false
+- harmon --> rate, if rate_meaning = true
+- if neither frequency or harmon exist, set rate_meaning = -1
+- voltage --> voltage
+- gradient --> none
+- phase --> phi0
+- multipass_phase --> none
+- cavity_type --> traveling_wave
+    - STANDING_WAVE --> false
+    - TRAVELING_WAVE --> true
+- num_cells --> tracking_method = SaganCavity(num_cells)
+- zero_phase --> zero_phase
+    - ACCELERATING --> Accelerating
+    - BELOW_TRANSITION --> BelowTransition
+    - ABOVE_TRANSITION --> AboveTransition
+
+### SolenoidP --> BMultipoleParams
+- Ksol --> Ksol
+- Bsol --> Bsol
+
+### TrackingP --> UniversalParams.tracking_method
+
+### Lattices
+- Beamlines --> Beamlines
+- To be added: Lattices in PALS --> Lattices
+
+### TODO
+- translating expression
+- names of fundamental constants
+- names of functions (tan)
+- sinc --> sincu

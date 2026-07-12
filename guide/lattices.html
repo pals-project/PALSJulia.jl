@@ -246,7 +246,7 @@
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="reading-and-expanding-lattices">
 <h1>Reading and expanding lattices<a class="headerlink" href="#reading-and-expanding-lattices" title="Link to this heading">¶</a></h1>
-<p>The <code class="docutils literal notranslate"><span class="pre">get_lattices</span></code> entry point reads a PALS lattice
+<p>The <code class="docutils literal notranslate"><span class="pre">read_pals_file</span></code> entry point reads a PALS lattice
 file, resolves any files it includes, and expands the lattice line into an
 ordered list of elements. It returns a <code class="docutils literal notranslate"><span class="pre">Lattices</span></code> value with three independent
 views of the document:</p>
@@ -262,7 +262,7 @@ ordered sequence of elements.</p></li>
 <h2>Basic use<a class="headerlink" href="#basic-use" title="Link to this heading">¶</a></h2>
 <div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="n">PALSJulia</span><span class="w"> </span><span class="n">as</span><span class="w"> </span><span class="n">pj</span>
 
-<span class="n">lat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">get_lattices</span><span class="p">(</span><span class="s">&quot;ex.pals.yaml&quot;</span><span class="p">)</span>
+<span class="n">lat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">read_pals_file</span><span class="p">(</span><span class="s">&quot;ex.pals.yaml&quot;</span><span class="p">)</span>
 
 <span class="n">println</span><span class="p">(</span><span class="n">pj</span><span class="o">.</span><span class="n">to_yaml_string</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">original</span><span class="p">))</span>
 <span class="n">println</span><span class="p">(</span><span class="n">pj</span><span class="o">.</span><span class="n">to_yaml_string</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">included</span><span class="p">))</span>
@@ -271,7 +271,7 @@ ordered sequence of elements.</p></li>
 </div>
 <p>To expand a single named lattice from a file that defines several, pass its
 name as the second argument:</p>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">lat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">get_lattices</span><span class="p">(</span><span class="s">&quot;ex.pals.yaml&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;main_ring&quot;</span><span class="p">)</span>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">lat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">read_pals_file</span><span class="p">(</span><span class="s">&quot;ex.pals.yaml&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;main_ring&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -283,17 +283,17 @@ by relative path, <code class="docutils literal notranslate"><span class="pre">c
 <div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">lattice_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">joinpath</span><span class="p">(</span><span class="nd">@__DIR__</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;..&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;lattice_files&quot;</span><span class="p">)</span>
 
 <span class="n">lat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cd</span><span class="p">(</span><span class="n">lattice_dir</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
-<span class="w">    </span><span class="n">pj</span><span class="o">.</span><span class="n">get_lattices</span><span class="p">(</span><span class="s">&quot;ex.pals.yaml&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">pj</span><span class="o">.</span><span class="n">read_pals_file</span><span class="p">(</span><span class="s">&quot;ex.pals.yaml&quot;</span><span class="p">)</span>
 <span class="k">end</span>
 </pre></div>
 </div>
 </section>
 <section id="command-line-driver">
 <h2>Command-line driver<a class="headerlink" href="#command-line-driver" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">src/get_lattices.jl</span></code> is a small runnable program that wraps the above: it reads
+<p><code class="docutils literal notranslate"><span class="pre">examples/read_pals.jl</span></code> is a small runnable program that wraps the above: it reads
 a lattice, expands it, and prints the original, included, and expanded views. It
 accepts a file path and an optional <code class="docutils literal notranslate"><span class="pre">-lat</span> <span class="pre">&lt;name&gt;</span></code> flag:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">julia src/get_lattices.jl lattice_files/ex.pals.yaml -lat main_ring</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">julia examples/read_pals.jl lattice_files/ex.pals.yaml -lat main_ring</span>
 </pre></div>
 </div>
 <p>Place your lattice files under <code class="docutils literal notranslate"><span class="pre">lattice_files/</span></code>.</p>
