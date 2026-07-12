@@ -19,19 +19,19 @@ jobs:
     
     steps: 
       - name: Checkout PALSJulia repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: PALSJulia
 
 
       - name: Checkout pals-cpp repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: pals-project/pals-cpp
           path: pals-cpp
 
       - name: Setup Julia
-        uses: julia-actions/setup-julia@v1
+        uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.julia-version }}
 
