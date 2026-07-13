@@ -264,16 +264,17 @@ onto the corresponding target-format element.</p>
 <section id="running-the-translators">
 <h2>Running the translators<a class="headerlink" href="#running-the-translators" title="Link to this heading">¶</a></h2>
 <p>Translating is a two-step process, exported as two pairs of functions.
-<code class="docutils literal notranslate"><span class="pre">pals_to_bmad</span></code> / <code class="docutils literal notranslate"><span class="pre">pals_to_scibmad</span></code> read a PALS-YAML file and return its parsed
-YAML structure; <code class="docutils literal notranslate"><span class="pre">write_bmad_file</span></code> / <code class="docutils literal notranslate"><span class="pre">write_scibmad_file</span></code> take that structure and
-an output path and write the lattice file:</p>
+<code class="docutils literal notranslate"><span class="pre">pals_to_bmad</span></code> / <code class="docutils literal notranslate"><span class="pre">pals_to_scibmad</span></code> read a PALS-YAML file and translate it into an
+in-memory model of the <em>target</em> lattice (a <code class="docutils literal notranslate"><span class="pre">BmadLattice</span></code> / <code class="docutils literal notranslate"><span class="pre">SciBmadLattice</span></code> of
+elements, beamlines, and parameters); <code class="docutils literal notranslate"><span class="pre">write_bmad_file</span></code> / <code class="docutils literal notranslate"><span class="pre">write_scibmad_file</span></code>
+take that structure and an output path and serialize the lattice file:</p>
 <div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">PALSJulia</span>
 
-<span class="n">yaml</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pals_to_bmad</span><span class="p">(</span><span class="n">joinpath</span><span class="p">(</span><span class="s">&quot;lattice_files&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;bta.pals.yaml&quot;</span><span class="p">))</span>
-<span class="n">write_bmad_file</span><span class="p">(</span><span class="n">yaml</span><span class="p">,</span><span class="w"> </span><span class="n">joinpath</span><span class="p">(</span><span class="s">&quot;lattice_files&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;bta.pals_out.bmad&quot;</span><span class="p">))</span>
+<span class="n">bmad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pals_to_bmad</span><span class="p">(</span><span class="n">joinpath</span><span class="p">(</span><span class="s">&quot;lattice_files&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;bta.pals.yaml&quot;</span><span class="p">))</span>
+<span class="n">write_bmad_file</span><span class="p">(</span><span class="n">bmad</span><span class="p">,</span><span class="w"> </span><span class="n">joinpath</span><span class="p">(</span><span class="s">&quot;lattice_files&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;bta.pals_out.bmad&quot;</span><span class="p">))</span>
 
-<span class="n">yaml</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pals_to_scibmad</span><span class="p">(</span><span class="n">joinpath</span><span class="p">(</span><span class="s">&quot;lattice_files&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;convert.pals.yaml&quot;</span><span class="p">))</span>
-<span class="n">write_scibmad_file</span><span class="p">(</span><span class="n">yaml</span><span class="p">,</span><span class="w"> </span><span class="n">joinpath</span><span class="p">(</span><span class="s">&quot;lattice_files&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;convert.pals_out.jl&quot;</span><span class="p">))</span>
+<span class="n">scibmad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pals_to_scibmad</span><span class="p">(</span><span class="n">joinpath</span><span class="p">(</span><span class="s">&quot;lattice_files&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;convert.pals.yaml&quot;</span><span class="p">))</span>
+<span class="n">write_scibmad_file</span><span class="p">(</span><span class="n">scibmad</span><span class="p">,</span><span class="w"> </span><span class="n">joinpath</span><span class="p">(</span><span class="s">&quot;lattice_files&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;convert.pals_out.jl&quot;</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>The <a class="reference external" href="https://github.com/pals-project/PALSJulia/tree/main/examples"><code class="docutils literal notranslate"><span class="pre">examples/</span></code></a>
@@ -297,10 +298,10 @@ untranslated.</p>
 <ol class="arabic simple">
 <li><p>Find its PALS definition and decide on the target-format equivalent; record
 it in the <a class="reference internal" href="#parameter-mapping-reference">Parameter mapping reference</a> below.</p></li>
-<li><p>Add the mapping to the element builder — <code class="docutils literal notranslate"><span class="pre">_make_bmad_ele_str</span></code> in
-<code class="docutils literal notranslate"><span class="pre">src/toBmad.jl</span></code> or <code class="docutils literal notranslate"><span class="pre">_make_scibmad_ele_str</span></code> in <code class="docutils literal notranslate"><span class="pre">src/toSciBmad.jl</span></code> — and to any
-helper it calls (e.g. <code class="docutils literal notranslate"><span class="pre">_ele_to_bmad_str</span></code>, <code class="docutils literal notranslate"><span class="pre">_make_line_str</span></code>, or
-<code class="docutils literal notranslate"><span class="pre">_ele_to_scibmad_str</span></code>, <code class="docutils literal notranslate"><span class="pre">_make_beamline_str</span></code>).</p></li>
+<li><p>Add the mapping to the element builder — <code class="docutils literal notranslate"><span class="pre">_make_bmad_ele</span></code> in
+<code class="docutils literal notranslate"><span class="pre">src/toBmad.jl</span></code> or <code class="docutils literal notranslate"><span class="pre">_make_scibmad_ele</span></code> in <code class="docutils literal notranslate"><span class="pre">src/toSciBmad.jl</span></code> — and to any
+helper it calls (e.g. <code class="docutils literal notranslate"><span class="pre">_ele_to_bmad_str</span></code>, <code class="docutils literal notranslate"><span class="pre">_make_bmad_line</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">_ele_to_scibmad_str</span></code>, <code class="docutils literal notranslate"><span class="pre">_make_scibmad_beamline</span></code>).</p></li>
 <li><p>Translate a lattice that exercises the element and check the output.</p></li>
 </ol>
 </section>

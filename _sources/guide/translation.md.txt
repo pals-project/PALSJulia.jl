@@ -15,18 +15,19 @@ onto the corresponding target-format element.
 ## Running the translators
 
 Translating is a two-step process, exported as two pairs of functions.
-`pals_to_bmad` / `pals_to_scibmad` read a PALS-YAML file and return its parsed
-YAML structure; `write_bmad_file` / `write_scibmad_file` take that structure and
-an output path and write the lattice file:
+`pals_to_bmad` / `pals_to_scibmad` read a PALS-YAML file and translate it into an
+in-memory model of the *target* lattice (a `BmadLattice` / `SciBmadLattice` of
+elements, beamlines, and parameters); `write_bmad_file` / `write_scibmad_file`
+take that structure and an output path and serialize the lattice file:
 
 ```julia
 using PALSJulia
 
-yaml = pals_to_bmad(joinpath("lattice_files", "bta.pals.yaml"))
-write_bmad_file(yaml, joinpath("lattice_files", "bta.pals_out.bmad"))
+bmad = pals_to_bmad(joinpath("lattice_files", "bta.pals.yaml"))
+write_bmad_file(bmad, joinpath("lattice_files", "bta.pals_out.bmad"))
 
-yaml = pals_to_scibmad(joinpath("lattice_files", "convert.pals.yaml"))
-write_scibmad_file(yaml, joinpath("lattice_files", "convert.pals_out.jl"))
+scibmad = pals_to_scibmad(joinpath("lattice_files", "convert.pals.yaml"))
+write_scibmad_file(scibmad, joinpath("lattice_files", "convert.pals_out.jl"))
 ```
 
 The [`examples/`](https://github.com/pals-project/PALSJulia/tree/main/examples)
@@ -51,10 +52,10 @@ To add support for a new element or parameter:
 
 1. Find its PALS definition and decide on the target-format equivalent; record
    it in the [Parameter mapping reference](#parameter-mapping-reference) below.
-2. Add the mapping to the element builder — `_make_bmad_ele_str` in
-   `src/toBmad.jl` or `_make_scibmad_ele_str` in `src/toSciBmad.jl` — and to any
-   helper it calls (e.g. `_ele_to_bmad_str`, `_make_line_str`, or
-   `_ele_to_scibmad_str`, `_make_beamline_str`).
+2. Add the mapping to the element builder — `_make_bmad_ele` in
+   `src/toBmad.jl` or `_make_scibmad_ele` in `src/toSciBmad.jl` — and to any
+   helper it calls (e.g. `_ele_to_bmad_str`, `_make_bmad_line`, or
+   `_ele_to_scibmad_str`, `_make_scibmad_beamline`).
 3. Translate a lattice that exercises the element and check the output.
 
 ## Parameter mapping reference
