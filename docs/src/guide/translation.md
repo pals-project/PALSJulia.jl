@@ -14,14 +14,19 @@ onto the corresponding target-format element.
 
 ## Running the translators
 
-`toBmad` and `toSciBmad` are exported functions. Load the package, then call
-`toBmad` with the path to a PALS-YAML file — it writes `<stem>_out.bmad` beside
-the input — or call `toSciBmad`, which translates the built-in example lattice:
+Translating is a two-step process, exported as two pairs of functions.
+`pals_to_bmad` / `pals_to_scibmad` read a PALS-YAML file and return its parsed
+YAML structure; `write_bmad_file` / `write_scibmad_file` take that structure and
+an output path and write the lattice file:
 
 ```julia
 using PALSJulia
-toBmad(joinpath("lattice_files", "bta.pals.yaml"))  # writes lattice_files/bta.pals_out.bmad
-toSciBmad()                                          # translates the built-in convert.pals.yaml
+
+yaml = pals_to_bmad(joinpath("lattice_files", "bta.pals.yaml"))
+write_bmad_file(yaml, joinpath("lattice_files", "bta.pals_out.bmad"))
+
+yaml = pals_to_scibmad(joinpath("lattice_files", "convert.pals.yaml"))
+write_scibmad_file(yaml, joinpath("lattice_files", "convert.pals_out.jl"))
 ```
 
 The [`examples/`](https://github.com/pals-project/PALSJulia/tree/main/examples)

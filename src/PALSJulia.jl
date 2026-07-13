@@ -49,6 +49,6 @@ include("toSciBmad.jl")
 
 
 
-export toBmad, toSciBmad, export_manipulators
+export pals_to_bmad, write_bmad_file, pals_to_scibmad, write_scibmad_file, export_manipulators
 
 end

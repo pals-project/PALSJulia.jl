@@ -1,15 +1,28 @@
 """
-    toSciBmad()
+    pals_to_scibmad(file_dir::String)
 
-Translate `../lattice_files/convert.pals.yaml` into a SciBmad lattice file.
+Read the PALS-YAML lattice file at `file_dir` and return its parsed YAML structure.
 
-Walk the `PALS/facility` element list and write `../lattice_files/convert_out.jl`: an
-`@elements` block of `LineElement`s, the `Beamline` definitions, and the lattice list.
+Pass the returned structure to [`write_scibmad_file`](@ref) to emit a SciBmad lattice file;
+`write_scibmad_file(pals_to_scibmad(file_dir), filename)` reproduces the former
+`toSciBmad(file_dir)`.
 """
-function toSciBmad()
-  file     = parse_file("../lattice_files/convert.pals.yaml")
-  facility = file["PALS"]["facility"]
-  open("../lattice_files/convert_out.jl", "w") do io
+function pals_to_scibmad(file_dir::String)
+  return parse_file(file_dir)
+end
+
+#---------------------------------------------------------------------------------------------------
+"""
+    write_scibmad_file(yaml::YAMLNode, filename::String)
+
+Write the SciBmad lattice described by the PALS `yaml` structure to `filename`.
+
+Walk the `PALS/facility` element list of `yaml` and write the corresponding SciBmad description:
+an `@elements` block of `LineElement`s, the `Beamline` definitions, and the lattice list.
+"""
+function write_scibmad_file(yaml::YAMLNode, filename::String)
+  facility = yaml["PALS"]["facility"]
+  open(filename, "w") do io
     ele_str     = ""
     bl_str      = ""
     lattice_str = ""
