@@ -1,18 +1,28 @@
 """
-    toBmad(file_dir::String)
+    pals_to_bmad(file_dir::String)
 
-Translate a PALS lattice file into a Bmad lattice file.
+Read the PALS-YAML lattice file at `file_dir` and return its parsed YAML structure.
 
-Read the PALS-YAML file at `file_dir`, walk the `PALS/facility` element list, and write the
-corresponding Bmad description to `<file_dir stem>_out.bmad`: reference and particle-start
-parameters, element definitions, beamline (`line`) definitions, and the branch (`use`) structure.
+Pass the returned structure to [`write_bmad_file`](@ref) to emit a Bmad lattice file;
+`write_bmad_file(pals_to_bmad(file_dir), filename)` reproduces the former `toBmad(file_dir)`.
 """
-function toBmad(file_dir::String)
-  in_path  = file_dir
-  out_path = first(splitext(in_path)) * "_out.bmad"
-  file     = parse_file(in_path)
-  facility = file["PALS"]["facility"]
-  open(out_path, "w") do io
+function pals_to_bmad(file_dir::String)
+  return parse_file(file_dir)
+end
+
+#---------------------------------------------------------------------------------------------------
+"""
+    write_bmad_file(yaml::YAMLNode, filename::String)
+
+Write the Bmad lattice described by the PALS `yaml` structure to `filename`.
+
+Walk the `PALS/facility` element list of `yaml` and write the corresponding Bmad description:
+reference and particle-start parameters, element definitions, beamline (`line`) definitions, and
+the branch (`use`) structure.
+"""
+function write_bmad_file(yaml::YAMLNode, filename::String)
+  facility = yaml["PALS"]["facility"]
+  open(filename, "w") do io
     ref_str     = ""
     particle_str= ""
     ele_str     = ""
@@ -144,7 +154,6 @@ function _ele_to_bmad_str(ele::YAMLNode)
   ref_str, particle_str = "", ""
   for key in keys(props)
     if key == "ReferenceP"
-      println("Translating reference species and energy")
       referenceP = props["ReferenceP"]
       _keys = keys(referenceP)
       isempty(_keys) && continue
@@ -160,7 +169,6 @@ function _ele_to_bmad_str(ele::YAMLNode)
         end
       end
     elseif key == "ParticleP"
-      println("Translating particle init")
       particleP = props["ParticleP"]
       _keys = keys(particleP)
       isempty(_keys) && continue
@@ -480,9 +488,8 @@ function _make_bmad_ele_str(ele::YAMLNode)
   ele_kind = String(props["kind"])
   if ele_kind == "Lattice"
     return ""
-  else
-    println("Translating ele $(node_key(props))")
 
+  else
     ele_kind_bmad, args = _bmad_kind(ele_kind)
 
     eleString *= ele_kind_bmad
