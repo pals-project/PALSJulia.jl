@@ -47,9 +47,9 @@ const _TRANSLATE_FIXTURE = """
       in_path = joinpath(dir, "fixture.pals.yaml")
       write(in_path, _TRANSLATE_FIXTURE)
 
-      yaml = pals_to_bmad(in_path)
+      bmad = pals_to_bmad(in_path)
       out_path = joinpath(dir, "fixture.pals_out.bmad")
-      write_bmad_file(yaml, out_path)
+      write_bmad_file(bmad, out_path)
 
       @test isfile(out_path)
       out = read(out_path, String)
@@ -79,9 +79,9 @@ const _TRANSLATE_FIXTURE = """
       in_path = joinpath(dir, "fixture.pals.yaml")
       write(in_path, _TRANSLATE_FIXTURE)
 
-      yaml = pals_to_scibmad(in_path)
+      scibmad = pals_to_scibmad(in_path)
       out_path = joinpath(dir, "fixture.pals_out.jl")
-      write_scibmad_file(yaml, out_path)
+      write_scibmad_file(scibmad, out_path)
 
       @test isfile(out_path)
       out = read(out_path, String)

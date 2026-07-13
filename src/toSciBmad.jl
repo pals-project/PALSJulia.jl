@@ -1,157 +1,255 @@
 """
-    pals_to_scibmad(file_dir::String)
+    SciBmadEle
 
-Read the PALS-YAML lattice file at `file_dir` and return its parsed YAML structure.
-
-Pass the returned structure to [`write_scibmad_file`](@ref) to emit a SciBmad lattice file;
-`write_scibmad_file(pals_to_scibmad(file_dir), filename)` reproduces the former
-`toSciBmad(file_dir)`.
+A single SciBmad `LineElement`: its `name` and the already-translated keyword-argument
+fragments (`attrs`, each a `"keyword = value"` string).
 """
-function pals_to_scibmad(file_dir::String)
-  return parse_file(file_dir)
+struct SciBmadEle
+  name::String
+  attrs::Vector{String}
 end
 
 #---------------------------------------------------------------------------------------------------
 """
-    write_scibmad_file(yaml::YAMLNode, filename::String)
+    SciBmadBeamline
 
-Write the SciBmad lattice described by the PALS `yaml` structure to `filename`.
-
-Walk the `PALS/facility` element list of `yaml` and write the corresponding SciBmad description:
-an `@elements` block of `LineElement`s, the `Beamline` definitions, and the lattice list.
+A SciBmad `Beamline`: its `name`, the ordered member element `members` (by name), and the
+reference-parameter fragments `ref` taken from the line's first entry.
 """
-function write_scibmad_file(yaml::YAMLNode, filename::String)
+struct SciBmadBeamline
+  name::String
+  members::Vector{String}
+  ref::Vector{String}
+end
+
+#---------------------------------------------------------------------------------------------------
+"""
+    SciBmadLatticeList
+
+A SciBmad lattice list: its `name` and the ordered branch/beamline `branches` (by name).
+"""
+struct SciBmadLatticeList
+  name::String
+  branches::Vector{String}
+end
+
+#---------------------------------------------------------------------------------------------------
+"""
+    SciBmadLattice
+
+An in-memory model of a SciBmad lattice.
+
+Produced by [`pals_to_scibmad`](@ref) and serialized to a file by [`write_scibmad_file`](@ref):
+  - `particle`  : `BeginningEle` particle-coordinate lines (including the `v = [...]` vector).
+  - `elements`  : `LineElement` definitions ([`SciBmadEle`](@ref)).
+  - `beamlines` : `Beamline` definitions ([`SciBmadBeamline`](@ref)).
+  - `lattices`  : lattice lists ([`SciBmadLatticeList`](@ref)).
+"""
+struct SciBmadLattice
+  particle::Vector{String}
+  elements::Vector{SciBmadEle}
+  beamlines::Vector{SciBmadBeamline}
+  lattices::Vector{SciBmadLatticeList}
+end
+SciBmadLattice() = SciBmadLattice(String[], SciBmadEle[], SciBmadBeamline[], SciBmadLatticeList[])
+
+#---------------------------------------------------------------------------------------------------
+"""
+    pals_to_scibmad(file_dir::String)
+
+Read the PALS-YAML lattice file at `file_dir` and translate it into a [`SciBmadLattice`](@ref).
+
+The returned structure is an in-memory model of the *SciBmad* lattice (elements, beamlines,
+lattice lists), not the input PALS tree. Pass it to [`write_scibmad_file`](@ref) to emit a
+SciBmad lattice file; `write_scibmad_file(pals_to_scibmad(file_dir), filename)` performs the
+full translation.
+"""
+function pals_to_scibmad(file_dir::String)
+  yaml = parse_file(file_dir)
   facility = yaml["PALS"]["facility"]
-  open(filename, "w") do io
-    ele_str     = ""
-    bl_str      = ""
-    lattice_str = ""
-    for ele in facility
-      props = ele[keys(ele)[1]]
-      if haskey(props, "kind")
-        kind = String(props["kind"])
-        if kind == "BeginningEle"
-          _, particle_str = _ele_to_scibmad_str(ele)
-          write(io, particle_str * "\n\n")
-        elseif kind == "Lattice"
-          latticees = props["branches"]
-          for bl in latticees
-            lattice_str *= "$(String(bl)),"
-          end
-          name        = keys(ele)[1]
-          # placeholder for when Lattice element in SciBmad is implemented
-          lattice_str = "$name = [$lattice_str]"
-        elseif kind == "BeamLine"
-          bl_str *= _make_beamline_str(ele) * "\n"
-        else
-          ele_str *= _make_scibmad_ele_str(ele) * "\n"
-        end
+  lat = SciBmadLattice()
+  for ele in facility
+    props = ele[keys(ele)[1]]
+    haskey(props, "kind") || continue
+    kind = String(props["kind"])
+    if kind == "BeginningEle"
+      _, particle = _ele_to_scibmad_str(ele)
+      append!(lat.particle, particle)
+    elseif kind == "Lattice"
+      name = String(keys(ele)[1])
+      branches = String[]
+      for bl in props["branches"]
+        push!(branches, String(bl))
       end
+      push!(lat.lattices, SciBmadLatticeList(name, branches))
+    elseif kind == "BeamLine"
+      push!(lat.beamlines, _make_scibmad_beamline(ele))
+    else
+      push!(lat.elements, _make_scibmad_ele(ele))
     end
-    write(io, "@elements begin\n$(ele_str)end\n\n")
-    write(io, bl_str)
-    write(io, lattice_str)
   end
+  return lat
+end
+
+#---------------------------------------------------------------------------------------------------
+"""
+    write_scibmad_file(lat::SciBmadLattice, filename::String)
+
+Serialize the [`SciBmadLattice`](@ref) `lat` to `filename` as a SciBmad lattice file.
+
+Write the particle-start block, the `@elements` block of `LineElement`s, the `Beamline`
+definitions, and the lattice lists.
+"""
+function write_scibmad_file(lat::SciBmadLattice, filename::String)
+  open(filename, "w") do io
+    if !isempty(lat.particle)
+      write(io, join(lat.particle, "\n") * "\n\n")
+    end
+    write(io, "@elements begin\n")
+    for ele in lat.elements
+      write(io, _format_scibmad_ele(ele) * "\n")
+    end
+    write(io, "end\n\n")
+    for bl in lat.beamlines
+      write(io, _format_scibmad_beamline(bl) * "\n")
+    end
+    for latt in lat.lattices
+      write(io, _format_scibmad_lattice(latt) * "\n")
+    end
+  end
+  return nothing
+end
+
+#---------------------------------------------------------------------------------------------------
+"""
+    _format_scibmad_ele(ele::SciBmadEle)
+
+Render a [`SciBmadEle`](@ref) as a `name = LineElement(...)` definition.
+"""
+function _format_scibmad_ele(ele::SciBmadEle)
+  return "$(ele.name) = LineElement($(join(ele.attrs, ", ")))"
+end
+
+#---------------------------------------------------------------------------------------------------
+"""
+    _format_scibmad_beamline(bl::SciBmadBeamline)
+
+Render a [`SciBmadBeamline`](@ref) as a `name = Beamline([members], ref...)` definition.
+"""
+function _format_scibmad_beamline(bl::SciBmadBeamline)
+  members = join([m * "," for m in bl.members])
+  ref     = join([r * "," for r in bl.ref])
+  return "$(bl.name) = Beamline([$members], $ref)"
+end
+
+#---------------------------------------------------------------------------------------------------
+"""
+    _format_scibmad_lattice(latt::SciBmadLatticeList)
+
+Render a [`SciBmadLatticeList`](@ref) as a `name = [branches]` list.
+"""
+function _format_scibmad_lattice(latt::SciBmadLatticeList)
+  inner = join([b * "," for b in latt.branches])
+  return "$(latt.name) = [$inner]"
 end
 
 #---------------------------------------------------------------------------------------------------
 """
     _ele_to_scibmad_str(ele::YAMLNode)
 
-Translate a `BeginningEle` element into SciBmad reference and particle strings.
+Translate a `BeginningEle` element into SciBmad reference and particle fragments.
 
-Return `(ref_str, particle_str)` built from the element's `ReferenceP` (species and energy)
-and `ParticleP` (initial coordinates and the `v = [...]` vector).
+Return `(ref, particle)` where `ref` holds the reference-parameter fragments from the element's
+`ReferenceP` (species and energy) and `particle` holds the coordinate lines from its `ParticleP`
+(followed by the `v = [...]` phase-space vector).
 """
 function _ele_to_scibmad_str(ele::YAMLNode)
   props = ele[keys(ele)[1]]
-  ref_str, particle_str = "", ""
+  ref = String[]
+  particle = String[]
   for key in keys(props)
     if key == "ReferenceP"
       referenceP = props["ReferenceP"]
-      ref_str = ""
       for k in keys(referenceP)
         if k == "species_ref"
-          ref_str *= "species_ref = $(String(referenceP[k])),"
+          push!(ref, "species_ref = $(String(referenceP[k]))")
         elseif k == "pc_ref"
-          ref_str *= "pc_ref = $(String(referenceP[k])),"
+          push!(ref, "pc_ref = $(String(referenceP[k]))")
         elseif k == "E_tot_ref"
-          ref_str *= "E_ref = $(String(referenceP[k])),"
+          push!(ref, "E_ref = $(String(referenceP[k]))")
         elseif k == "time_ref" || k == "location"
           println("$k not supported yet")
         end
       end
     elseif key == "ParticleP"
-      println("particle")
       particleP = props["ParticleP"]
-      particle_str = ""
       for k in keys(particleP)
         val = String(particleP[k])
         if k == "x"
-          particle_str *= "x = $val\n"
+          push!(particle, "x = $val")
         elseif k == "y"
-          particle_str *= "y = $val\n"
+          push!(particle, "y = $val")
         elseif k == "z"
-          particle_str *= "z = $val\n"
+          push!(particle, "z = $val")
         elseif k == "px"
-          particle_str *= "px = $val\n"
+          push!(particle, "px = $val")
         elseif k == "py"
-          particle_str *= "py = $val\n"
+          push!(particle, "py = $val")
         elseif k == "pz"
-          particle_str *= "pz = $val\n"
+          push!(particle, "pz = $val")
         end
       end
-      particle_str *= "v = [ x px y py z pz ]"
+      push!(particle, "v = [ x px y py z pz ]")
     end
   end
-  return ref_str, particle_str
+  return ref, particle
 end
 
 #---------------------------------------------------------------------------------------------------
 """
-    _make_beamline_str(ele::YAMLNode)
+    _make_scibmad_beamline(ele::YAMLNode)
 
-Build a SciBmad `Beamline([...], ref)` definition for a `BeamLine` element.
+Translate a `BeamLine` element into a [`SciBmadBeamline`](@ref).
 
-List each member element by name and prepend the reference parameters from the line's first
-entry.
+Collect the member element names (dropping the leading reference entry, `line[1]`) and the
+reference parameters read from that first entry.
 """
-function _make_beamline_str(ele::YAMLNode)
+function _make_scibmad_beamline(ele::YAMLNode)
+  name = String(keys(ele)[1])
   props = ele[keys(ele)[1]]
   line = props["line"]
-  line_str = ""
-  ref_str, _ = _ele_to_scibmad_str(line[1])
+  ref, _ = _ele_to_scibmad_str(line[1])
+  members = String[]
   for i in 2:length(line)
     line_ele = line[i]
     if is_scalar(line_ele)
-      line_str *= "$(String(line_ele)),"
+      push!(members, String(line_ele))
     elseif is_map(line_ele)
-      name = keys(line_ele)[1]
-      line_str *= "$name,"
+      push!(members, String(keys(line_ele)[1]))
     end
   end
-  return "$(keys(ele)[1]) = Beamline([$line_str], $ref_str)"
+  return SciBmadBeamline(name, members, ref)
 end
 
 #---------------------------------------------------------------------------------------------------
 """
-    _make_scibmad_ele_str(ele::YAMLNode)
+    _make_scibmad_ele(ele::YAMLNode)
 
-Translate a single PALS element into a SciBmad `LineElement(...)` string.
+Translate a single PALS element into a [`SciBmadEle`](@ref).
 
 Dispatch on the element's parameter groups (aperture, bend, body shift, multipoles, patch,
-RF, solenoid, tracking, reference change, ...) to build the keyword arguments of a
-`name = LineElement(...)` definition. Unsupported parameters emit a message.
+RF, solenoid, tracking, reference change, ...) to build the keyword-argument fragments of a
+`LineElement`. Unsupported parameters emit a message.
 """
-function _make_scibmad_ele_str(ele::YAMLNode)
+function _make_scibmad_ele(ele::YAMLNode)
   props = ele[keys(ele)[1]]
-  paramString = ""
+  attrs = String[]
 
   for key in keys(props)
     if key == "kind"
-      paramString *= "kind = $(String(props["kind"])),"
+      push!(attrs, "kind = $(String(props["kind"]))")
     elseif key == "length"
-      paramString *= "L = $(String(props["length"])),"
+      push!(attrs, "L = $(String(props["length"]))")
     elseif key == "ACKickerP"
       println("ACKickerP not yet supported")
     elseif key == "ApertureP"
@@ -163,15 +261,15 @@ function _make_scibmad_ele_str(ele::YAMLNode)
       elseif (has_xmin && !has_xmax) || (has_xmax && !has_xmin)
         println("Both min and max need to be defined.")
       elseif has_xmin && has_xmax
-        paramString *= "x1_limit = $(String(apertureP["x_min"])),"
-        paramString *= "x2_limit = $(String(apertureP["x_max"])),"
+        push!(attrs, "x1_limit = $(String(apertureP["x_min"]))")
+        push!(attrs, "x2_limit = $(String(apertureP["x_max"]))")
       elseif (has_xwidth && !has_xcen) || (has_xcen && !has_xwidth)
         println("Both width and center need to be defined.")
       else
         width  = Float64(apertureP["x_width"])
         center = Float64(apertureP["x_center"])
-        paramString *= "x1_limit = $(center - width / 2),"
-        paramString *= "x2_limit = $(center + width / 2),"
+        push!(attrs, "x1_limit = $(center - width / 2)")
+        push!(attrs, "x2_limit = $(center + width / 2)")
       end
       has_ymin   = haskey(apertureP, "y_min");   has_ymax  = haskey(apertureP, "y_max")
       has_ywidth = haskey(apertureP, "y_width");  has_ycen  = haskey(apertureP, "y_center")
@@ -180,46 +278,46 @@ function _make_scibmad_ele_str(ele::YAMLNode)
       elseif (has_ymin && !has_ymax) || (has_ymax && !has_ymin)
         println("Both min and max need to be defined.")
       elseif has_ymin && has_ymax
-        paramString *= "y1_limit = $(String(apertureP["y_min"])),"
-        paramString *= "y2_limit = $(String(apertureP["y_max"])),"
+        push!(attrs, "y1_limit = $(String(apertureP["y_min"]))")
+        push!(attrs, "y2_limit = $(String(apertureP["y_max"]))")
       elseif (has_ywidth && !has_ycen) || (has_ycen && !has_ywidth)
         println("Both width and center need to be defined.")
       else
         width  = Float64(apertureP["y_width"])
         center = Float64(apertureP["y_center"])
-        paramString *= "y1_limit = $(center - width / 2),"
-        paramString *= "y2_limit = $(center + width / 2),"
+        push!(attrs, "y1_limit = $(center - width / 2)")
+        push!(attrs, "y2_limit = $(center + width / 2)")
       end
       for akey in keys(apertureP)
         if akey == "shape"
           shape = String(apertureP["shape"])
           if shape == "ELLIPTICAL"
-            paramString *= "aperture_shape = ApertureShape.Elliptical,"
+            push!(attrs, "aperture_shape = ApertureShape.Elliptical")
           elseif shape == "RECTANGULAR"
-            paramString *= "aperture_shape = ApertureShape.Rectangular,"
+            push!(attrs, "aperture_shape = ApertureShape.Rectangular")
           else
             println("shape $shape is not supported")
           end
         elseif akey == "location"
           location = String(apertureP["location"])
           if location == "ENTRANCE_END"
-            paramString *= "aperture_at = ApertureAt.Entrance,"
+            push!(attrs, "aperture_at = ApertureAt.Entrance")
           elseif location == "EXIT_END"
-            paramString *= "aperture_at = ApertureAt.Exit,"
+            push!(attrs, "aperture_at = ApertureAt.Exit")
           elseif location == "BOTH_ENDS"
-            paramString *= "aperture_at = ApertureAt.BothEnds,"
+            push!(attrs, "aperture_at = ApertureAt.BothEnds")
           elseif location == "EVERYWHERE" || location == "CENTER"
-            paramString *= "aperture_at = ApertureAt.BothEnds,"
+            push!(attrs, "aperture_at = ApertureAt.BothEnds")
             println("location $location not supported, set to BothEnds")
           elseif location == "NOWHERE"
             println("location $location not supported")
           end
         elseif akey == "aperture_shifts_with_body"
           shifts = lowercase(String(apertureP["aperture_shifts_with_body"]))
-          paramString *= "aperture_shifts_with_body = $(shifts == "true"),"
+          push!(attrs, "aperture_shifts_with_body = $(shifts == "true")")
         elseif akey == "aperture_active"
           active = lowercase(String(apertureP["aperture_active"]))
-          paramString *= "aperture_active = $(active == "true"),"
+          push!(attrs, "aperture_active = $(active == "true")")
         elseif akey == "vertices"
           println("vertices not yet supported")
         elseif akey == "material"
@@ -231,26 +329,9 @@ function _make_scibmad_ele_str(ele::YAMLNode)
     elseif key == "BeamBeamP"
       bbP = props["BeamBeamP"]
       for bbkey in keys(bbP)
-        if bbkey == "sigma_x"
-          paramString *= "$bbkey = $(String(bbP[bbkey])),"
-        elseif bbkey == "sigma_y"
-          paramString *= "$bbkey = $(String(bbP[bbkey])),"
-        elseif bbkey == "sigma_z"
-          paramString *= "$bbkey = $(String(bbP[bbkey])),"
-        elseif bbkey == "alpha_x"
-          paramString *= "$bbkey = $(String(bbP[bbkey])),"
-        elseif bbkey == "beta_x"
-          paramString *= "$bbkey = $(String(bbP[bbkey])),"
-        elseif bbkey == "alpha_y"
-          paramString *= "$bbkey = $(String(bbP[bbkey])),"
-        elseif bbkey == "beta_y"
-          paramString *= "$bbkey = $(String(bbP[bbkey])),"
-        elseif bbkey == "charge"
-          paramString *= "$bbkey = $(String(bbP[bbkey])),"
-        elseif bbkey == "energy"
-          paramString *= "$bbkey = $(String(bbP[bbkey])),"
-        elseif bbkey == "N_particle"
-          paramString *= "$bbkey = $(String(bbP[bbkey])),"
+        if bbkey in ("sigma_x", "sigma_y", "sigma_z", "alpha_x", "beta_x",
+                     "alpha_y", "beta_y", "charge", "energy", "N_particle")
+          push!(attrs, "$bbkey = $(String(bbP[bbkey]))")
         end
       end
     elseif key == "BendP"
@@ -261,19 +342,19 @@ function _make_scibmad_ele_str(ele::YAMLNode)
         elseif bkey == "bend_field_ref"
           println("bend_field_ref not yet supported")
         elseif bkey == "e1"
-          paramString *= "e1 = $(String(bendP["e1"])),"
+          push!(attrs, "e1 = $(String(bendP["e1"]))")
         elseif bkey == "e2"
-          paramString *= "e2 = $(String(bendP["e2"])),"
+          push!(attrs, "e2 = $(String(bendP["e2"]))")
         elseif bkey == "e1_rect"
           println("e1_rect not yet supported")
         elseif bkey == "e2_rect"
           println("e2_rect not yet supported")
         elseif bkey == "edge1_int"
-          paramString *= "edge1_int = $(String(bendP["edge1_int"])),"
+          push!(attrs, "edge1_int = $(String(bendP["edge1_int"]))")
         elseif bkey == "edge2_int"
-          paramString *= "edge2_int = $(String(bendP["edge2_int"])),"
+          push!(attrs, "edge2_int = $(String(bendP["edge2_int"]))")
         elseif bkey == "g_ref"
-          paramString *= "g_ref = $(String(bendP["g_ref"])),"
+          push!(attrs, "g_ref = $(String(bendP["g_ref"]))")
         elseif bkey == "h1"
           println("h1 not yet supported")
         elseif bkey == "h2"
@@ -283,24 +364,24 @@ function _make_scibmad_ele_str(ele::YAMLNode)
         elseif bkey == "L_sagitta"
           println("L_sagitta not yet supported")
         elseif bkey == "tilt_ref"
-          paramString *= "tilt_ref = $(String(bendP["tilt_ref"])),"
+          push!(attrs, "tilt_ref = $(String(bendP["tilt_ref"]))")
         end
       end
     elseif key == "BodyShiftP"
       bodyshiftP = props["BodyShiftP"]
       for bskey in keys(bodyshiftP)
         if bskey == "x_offset"
-          paramString *= "x_offset = $(String(bodyshiftP["x_offset"])),"
+          push!(attrs, "x_offset = $(String(bodyshiftP["x_offset"]))")
         elseif bskey == "y_offset"
-          paramString *= "y_offset = $(String(bodyshiftP["y_offset"])),"
+          push!(attrs, "y_offset = $(String(bodyshiftP["y_offset"]))")
         elseif bskey == "z_offset"
-          paramString *= "z_offset = $(String(bodyshiftP["z_offset"])),"
+          push!(attrs, "z_offset = $(String(bodyshiftP["z_offset"]))")
         elseif bskey == "x_rot"
-          paramString *= "x_rot = $(String(bodyshiftP["x_rot"])),"
+          push!(attrs, "x_rot = $(String(bodyshiftP["x_rot"]))")
         elseif bskey == "y_rot"
-          paramString *= "y_rot = $(String(bodyshiftP["y_rot"])),"
+          push!(attrs, "y_rot = $(String(bodyshiftP["y_rot"]))")
         elseif bskey == "z_rot"
-          paramString *= "tilt = $(String(bodyshiftP["z_rot"])),"
+          push!(attrs, "tilt = $(String(bodyshiftP["z_rot"]))")
         end
       end
     elseif key == "ElectricMultipoleP"
@@ -316,17 +397,17 @@ function _make_scibmad_ele_str(ele::YAMLNode)
     elseif key == "MagneticMultipoleP"
       mmP = props["MagneticMultipoleP"]
       for mmkey in keys(mmP)
-        paramString *= "$mmkey = $(String(mmP[mmkey])),"
+        push!(attrs, "$mmkey = $(String(mmP[mmkey]))")
       end
     elseif key == "MetaP"
       metaP = props["MetaP"]
       for mkey in keys(metaP)
         if mkey == "alias"
-          paramString *= "alias = $(String(metaP["alias"])),"
+          push!(attrs, "alias = $(String(metaP["alias"]))")
         elseif mkey == "label"
-          paramString *= "label = $(String(metaP["label"])),"
+          push!(attrs, "label = $(String(metaP["label"]))")
         elseif mkey == "description"
-          paramString *= "description = $(String(metaP["description"])),"
+          push!(attrs, "description = $(String(metaP["description"]))")
         end
       end
       println("MetaP not yet supported")
@@ -334,19 +415,19 @@ function _make_scibmad_ele_str(ele::YAMLNode)
       patchP = props["PatchP"]
       for pkey in keys(patchP)
         if pkey == "x_offset"
-          paramString *= "dx = $(String(patchP["x_offset"])),"
+          push!(attrs, "dx = $(String(patchP["x_offset"]))")
         elseif pkey == "y_offset"
-          paramString *= "dy = $(String(patchP["y_offset"])),"
+          push!(attrs, "dy = $(String(patchP["y_offset"]))")
         elseif pkey == "z_offset"
-          paramString *= "dz = $(String(patchP["z_offset"])),"
+          push!(attrs, "dz = $(String(patchP["z_offset"]))")
         elseif pkey == "t_offset"
-          paramString *= "dt = $(String(patchP["t_offset"])),"
+          push!(attrs, "dt = $(String(patchP["t_offset"]))")
         elseif pkey == "x_rot"
-          paramString *= "dx_rot = $(String(patchP["x_rot"])),"
+          push!(attrs, "dx_rot = $(String(patchP["x_rot"]))")
         elseif pkey == "y_rot"
-          paramString *= "dy_rot = $(String(patchP["y_rot"])),"
+          push!(attrs, "dy_rot = $(String(patchP["y_rot"]))")
         elseif pkey == "z_rot"
-          paramString *= "dz_rot = $(String(patchP["z_rot"])),"
+          push!(attrs, "dz_rot = $(String(patchP["z_rot"]))")
         elseif pkey == "flexible"
           println("flexible not yet supported")
         elseif pkey == "ref_coords"
@@ -358,27 +439,27 @@ function _make_scibmad_ele_str(ele::YAMLNode)
     elseif key == "RFP"
       rfP = props["RFP"]
       if String(props["kind"]) == "CrabCavity"
-        paramString *= "is_crabcavity = true,"
+        push!(attrs, "is_crabcavity = true")
       end
       num_cells = 0
       L_active  = 0.0
       for rfkey in keys(rfP)
         if rfkey == "frequency"
-          paramString *= "rate = $(String(rfP["frequency"])),"
-          paramString *= "rate_meaning = false,"
+          push!(attrs, "rate = $(String(rfP["frequency"]))")
+          push!(attrs, "rate_meaning = false")
         elseif rfkey == "harmon"
-          paramString *= "rate = $(String(rfP["harmon"])),"
-          paramString *= "rate_meaning = true,"
+          push!(attrs, "rate = $(String(rfP["harmon"]))")
+          push!(attrs, "rate_meaning = true")
         elseif rfkey == "voltage"
-          paramString *= "voltage = $(String(rfP["voltage"])),"
+          push!(attrs, "voltage = $(String(rfP["voltage"]))")
         elseif rfkey == "gradient"
           println("gradient not yet supported")
         elseif rfkey == "phase"
-          paramString *= "phi0 = $(2 * π * Float64(rfP["phase"])),"
+          push!(attrs, "phi0 = $(2 * π * Float64(rfP["phase"]))")
         elseif rfkey == "multipass_phase"
           println("multipass_phase not yet supported")
         elseif rfkey == "cavity_type"
-          paramString *= "traveling_wave = $(String(rfP["cavity_type"]) == "TRAVELING_WAVE"),"
+          push!(attrs, "traveling_wave = $(String(rfP["cavity_type"]) == "TRAVELING_WAVE")")
         elseif rfkey == "num_cells"
           num_cells = Int(rfP["num_cells"])
         elseif rfkey == "L_active"
@@ -386,22 +467,22 @@ function _make_scibmad_ele_str(ele::YAMLNode)
         elseif rfkey == "zero_phase"
           zp = String(rfP["zero_phase"])
           if zp == "ACCELERATING"
-            paramString *= "zero_phase = Accelerating,"
+            push!(attrs, "zero_phase = Accelerating")
           elseif zp == "BELOW_TRANSITION"
-            paramString *= "zero_phase = BelowTransition,"
+            push!(attrs, "zero_phase = BelowTransition")
           elseif zp == "ABOVE_TRANSITION"
-            paramString *= "zero_phase = AboveTransition,"
+            push!(attrs, "zero_phase = AboveTransition")
           end
         end
       end
       if !haskey(rfP, "frequency") && !haskey(rfP, "harmon")
-        paramString *= "rate_meaning = -1,"
+        push!(attrs, "rate_meaning = -1")
       end
-      paramString *= "tracking_method = SaganCavity(num_cells = $num_cells, L_active = $L_active),"
+      push!(attrs, "tracking_method = SaganCavity(num_cells = $num_cells, L_active = $L_active)")
     elseif key == "SolenoidP"
       solP = props["SolenoidP"]
       for skey in keys(solP)
-        paramString *= "$skey = $(String(solP[skey])),"
+        push!(attrs, "$skey = $(String(solP[skey]))")
       end
     elseif key == "TrackingP"
       trackingP = props["TrackingP"]
@@ -411,7 +492,7 @@ function _make_scibmad_ele_str(ele::YAMLNode)
           for sbkey in keys(sbm)
             if sbkey == "tracking_method"
               if String(sbm["tracking_method"]) == "scibmad_standard"
-                paramString *= "tracking_method = SciBmadStandard(),"
+                push!(attrs, "tracking_method = SciBmadStandard()")
               end
             end
           end
@@ -423,15 +504,15 @@ function _make_scibmad_ele_str(ele::YAMLNode)
         if rkey == "extra_dtime_ref"
           println("extra_dtime_ref not yet supported")
         elseif rkey == "dE_ref"
-          paramString *= "dE_ref = $(String(refchangeP["dE_ref"])),"
+          push!(attrs, "dE_ref = $(String(refchangeP["dE_ref"]))")
         elseif rkey == "E_tot_ref"
-          paramString *= "E_ref = $(String(refchangeP["E_tot_ref"])),"
+          push!(attrs, "E_ref = $(String(refchangeP["E_tot_ref"]))")
         elseif rkey == "species_ref"
-          paramString *= "species_ref = $(String(refchangeP["species_ref"])),"
+          push!(attrs, "species_ref = $(String(refchangeP["species_ref"]))")
         end
       end
     end
   end
 
-  return "$(keys(ele)[1]) = LineElement($paramString)"
+  return SciBmadEle(String(keys(ele)[1]), attrs)
 end
