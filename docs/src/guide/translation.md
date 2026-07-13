@@ -8,25 +8,26 @@ formats:
 - **`src/toBmad.jl`** — emits a classic [Bmad](https://www.classe.cornell.edu/bmad/)
   lattice.
 
-Both translators read a lattice with `parse_file`,
+Both translators take a lattice already parsed by `parse_file`,
 walk the element list, and map each PALS element and its parameters
 onto the corresponding target-format element.
 
 ## Running the translators
 
-Translating is a two-step process, exported as two pairs of functions.
-`pals_to_bmad` / `pals_to_scibmad` read a PALS-YAML file and translate it into an
-in-memory model of the *target* lattice (a `BmadLattice` / `SciBmadLattice` of
-elements, beamlines, and parameters); `write_bmad_file` / `write_scibmad_file`
-take that structure and an output path and serialize the lattice file:
+Translating is a three-step process: parse, translate, write. `parse_file` reads a
+PALS-YAML file into a parsed tree (a `YAMLNode`); `pals_to_bmad` / `pals_to_scibmad`
+translate that tree into an in-memory model of the *target* lattice (a `BmadLattice` /
+`SciBmadLattice` of elements, beamlines, and parameters); and `write_bmad_file` /
+`write_scibmad_file` take that structure and an output path and serialize the lattice file:
 
 ```julia
 using PALSJulia
+using PALSJulia: parse_file
 
-bmad = pals_to_bmad(joinpath("lattice_files", "bta.pals.yaml"))
+bmad = pals_to_bmad(parse_file(joinpath("lattice_files", "bta.pals.yaml")))
 write_bmad_file(bmad, joinpath("lattice_files", "bta.pals_out.bmad"))
 
-scibmad = pals_to_scibmad(joinpath("lattice_files", "convert.pals.yaml"))
+scibmad = pals_to_scibmad(parse_file(joinpath("lattice_files", "convert.pals.yaml")))
 write_scibmad_file(scibmad, joinpath("lattice_files", "convert.pals_out.jl"))
 ```
 
