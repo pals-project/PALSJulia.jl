@@ -1,10 +1,23 @@
 - thingB:
     kind: Sextupole
 
-- inc_line:
+- DH1A:
+    kind: SBend
+    length: 0.2666536729738865
+    BendP:
+      g_ref: 0.06818582244610812
+      e1: 0.009091 * a_const
+      edge_int2: 0.02065
+
+- a_subline:
     kind: Beamline
     line:
-      - ele_1: 1
-      - second: 2
-      - third: 3
+      - DH1A
+      - pueh001: 
+          kind: Instrument
+          ApertureP:
+            shape: RECTANGULAR     
+            location: EXIT_END        
+          BmadP:
+            Bmand_key: Monitor
       - include: "include2.pals.yaml"

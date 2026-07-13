@@ -1,4 +1,6 @@
-- line:
-    - fourth: 4
-    - fifth: 5
-    - sixth: 6
+- quad1:
+    kind: Quadrupole
+    MagneticMultipoleP:
+      Bn1: 1.0
+    length: 1.0
+
