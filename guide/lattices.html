@@ -256,7 +256,7 @@ ordered list of elements. It returns a <code class="docutils literal notranslate
 views of the document:</p>
 <ul class="simple">
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">original</span></code></strong> — the lattice exactly as written in the top-level file.</p></li>
-<li><p><strong><code class="docutils literal notranslate"><span class="pre">included</span></code></strong> — the lattice after its <code class="docutils literal notranslate"><span class="pre">include</span></code>d files have been merged in.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">combined</span></code></strong> — the lattice after its <code class="docutils literal notranslate"><span class="pre">include</span></code>d files have been merged in.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">expanded</span></code></strong> — the fully expanded lattice, with lines resolved into a flat
 ordered sequence of elements.</p></li>
 </ul>
@@ -269,7 +269,7 @@ ordered sequence of elements.</p></li>
 <span class="n">lat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">parse_and_expand_pals</span><span class="p">(</span><span class="s">&quot;ex.pals.yaml&quot;</span><span class="p">)</span>
 
 <span class="n">println</span><span class="p">(</span><span class="n">pj</span><span class="o">.</span><span class="n">to_yaml_string</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">original</span><span class="p">))</span>
-<span class="n">println</span><span class="p">(</span><span class="n">pj</span><span class="o">.</span><span class="n">to_yaml_string</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">included</span><span class="p">))</span>
+<span class="n">println</span><span class="p">(</span><span class="n">pj</span><span class="o">.</span><span class="n">to_yaml_string</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">combined</span><span class="p">))</span>
 <span class="n">println</span><span class="p">(</span><span class="n">pj</span><span class="o">.</span><span class="n">to_yaml_string</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">expanded</span><span class="p">))</span>
 </pre></div>
 </div>
@@ -295,7 +295,7 @@ by relative path, <code class="docutils literal notranslate"><span class="pre">c
 <section id="command-line-driver">
 <h2>Command-line driver<a class="headerlink" href="#command-line-driver" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">examples/read_pals.jl</span></code> is a small runnable program that wraps the above: it reads
-a lattice, expands it, and prints the original, included, and expanded views. It
+a lattice, expands it, and prints the original, combined, and expanded views. It
 accepts a file path and an optional <code class="docutils literal notranslate"><span class="pre">-lat</span> <span class="pre">&lt;name&gt;</span></code> flag:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">julia examples/read_pals.jl lattice_files/ex.pals.yaml -lat main_ring</span>
 </pre></div>

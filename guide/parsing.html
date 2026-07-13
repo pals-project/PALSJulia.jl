@@ -298,8 +298,8 @@ tree root:</p>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">create_empty_tree()</span></code></p></td>
 <td><p>Create a new, empty MAP tree to build up from scratch.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">parse_and_expand_pals(filename,</span> <span class="pre">lattice_name=&quot;&quot;)</span></code></p></td>
-<td><p>Parse a PALS lattice file and return original, included, and expanded views.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">parse_and_expand_pals(filename,</span> <span class="pre">root_lattice=&quot;&quot;)</span></code></p></td>
+<td><p>Parse a PALS lattice file and return original, combined, and expanded views.</p></td>
 </tr>
 </tbody>
 </table>
@@ -317,7 +317,7 @@ tree root:</p>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">parse_and_expand_pals</span></code> is PALS-specific: it returns a <code class="docutils literal notranslate"><span class="pre">Lattices</span></code> value holding
-three independent tree views (<code class="docutils literal notranslate"><span class="pre">original</span></code>, <code class="docutils literal notranslate"><span class="pre">included</span></code>, <code class="docutils literal notranslate"><span class="pre">expanded</span></code>), each freed on
+three independent tree views (<code class="docutils literal notranslate"><span class="pre">original</span></code>, <code class="docutils literal notranslate"><span class="pre">combined</span></code>, <code class="docutils literal notranslate"><span class="pre">expanded</span></code>), each freed on
 its own when garbage-collected.</p>
 </section>
 <section id="querying-the-tree">
