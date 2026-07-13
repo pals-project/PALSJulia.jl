@@ -258,22 +258,23 @@ formats:</p>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">src/toBmad.jl</span></code></strong> — emits a classic <a class="reference external" href="https://www.classe.cornell.edu/bmad/">Bmad</a>
 lattice.</p></li>
 </ul>
-<p>Both translators read a lattice with <code class="docutils literal notranslate"><span class="pre">parse_file</span></code>,
+<p>Both translators take a lattice already parsed by <code class="docutils literal notranslate"><span class="pre">parse_file</span></code>,
 walk the element list, and map each PALS element and its parameters
 onto the corresponding target-format element.</p>
 <section id="running-the-translators">
 <h2>Running the translators<a class="headerlink" href="#running-the-translators" title="Link to this heading">¶</a></h2>
-<p>Translating is a two-step process, exported as two pairs of functions.
-<code class="docutils literal notranslate"><span class="pre">pals_to_bmad</span></code> / <code class="docutils literal notranslate"><span class="pre">pals_to_scibmad</span></code> read a PALS-YAML file and translate it into an
-in-memory model of the <em>target</em> lattice (a <code class="docutils literal notranslate"><span class="pre">BmadLattice</span></code> / <code class="docutils literal notranslate"><span class="pre">SciBmadLattice</span></code> of
-elements, beamlines, and parameters); <code class="docutils literal notranslate"><span class="pre">write_bmad_file</span></code> / <code class="docutils literal notranslate"><span class="pre">write_scibmad_file</span></code>
-take that structure and an output path and serialize the lattice file:</p>
+<p>Translating is a three-step process: parse, translate, write. <code class="docutils literal notranslate"><span class="pre">parse_file</span></code> reads a
+PALS-YAML file into a parsed tree (a <code class="docutils literal notranslate"><span class="pre">YAMLNode</span></code>); <code class="docutils literal notranslate"><span class="pre">pals_to_bmad</span></code> / <code class="docutils literal notranslate"><span class="pre">pals_to_scibmad</span></code>
+translate that tree into an in-memory model of the <em>target</em> lattice (a <code class="docutils literal notranslate"><span class="pre">BmadLattice</span></code> /
+<code class="docutils literal notranslate"><span class="pre">SciBmadLattice</span></code> of elements, beamlines, and parameters); and <code class="docutils literal notranslate"><span class="pre">write_bmad_file</span></code> /
+<code class="docutils literal notranslate"><span class="pre">write_scibmad_file</span></code> take that structure and an output path and serialize the lattice file:</p>
 <div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">PALSJulia</span>
+<span class="k">using</span><span class="w"> </span><span class="n">PALSJulia</span><span class="o">:</span><span class="w"> </span><span class="n">parse_file</span>
 
-<span class="n">bmad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pals_to_bmad</span><span class="p">(</span><span class="n">joinpath</span><span class="p">(</span><span class="s">&quot;lattice_files&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;bta.pals.yaml&quot;</span><span class="p">))</span>
+<span class="n">bmad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pals_to_bmad</span><span class="p">(</span><span class="n">parse_file</span><span class="p">(</span><span class="n">joinpath</span><span class="p">(</span><span class="s">&quot;lattice_files&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;bta.pals.yaml&quot;</span><span class="p">)))</span>
 <span class="n">write_bmad_file</span><span class="p">(</span><span class="n">bmad</span><span class="p">,</span><span class="w"> </span><span class="n">joinpath</span><span class="p">(</span><span class="s">&quot;lattice_files&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;bta.pals_out.bmad&quot;</span><span class="p">))</span>
 
-<span class="n">scibmad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pals_to_scibmad</span><span class="p">(</span><span class="n">joinpath</span><span class="p">(</span><span class="s">&quot;lattice_files&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;convert.pals.yaml&quot;</span><span class="p">))</span>
+<span class="n">scibmad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pals_to_scibmad</span><span class="p">(</span><span class="n">parse_file</span><span class="p">(</span><span class="n">joinpath</span><span class="p">(</span><span class="s">&quot;lattice_files&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;convert.pals.yaml&quot;</span><span class="p">)))</span>
 <span class="n">write_scibmad_file</span><span class="p">(</span><span class="n">scibmad</span><span class="p">,</span><span class="w"> </span><span class="n">joinpath</span><span class="p">(</span><span class="s">&quot;lattice_files&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;convert.pals_out.jl&quot;</span><span class="p">))</span>
 </pre></div>
 </div>
