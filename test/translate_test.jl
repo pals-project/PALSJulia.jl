@@ -1,5 +1,6 @@
 using Test
 using PALSJulia   # pals_to_bmad / write_bmad_file / pals_to_scibmad / write_scibmad_file are exported
+using PALSJulia: parse_file   # not exported by default; the translators now take a parsed tree
 
 # A small but structurally complete PALS lattice.  It exercises every branch of
 # the translator dispatch: a BeginningEle (reference / particle-start settings),
@@ -47,7 +48,7 @@ const _TRANSLATE_FIXTURE = """
       in_path = joinpath(dir, "fixture.pals.yaml")
       write(in_path, _TRANSLATE_FIXTURE)
 
-      bmad = pals_to_bmad(in_path)
+      bmad = pals_to_bmad(parse_file(in_path))
       out_path = joinpath(dir, "fixture.pals_out.bmad")
       write_bmad_file(bmad, out_path)
 
@@ -79,7 +80,7 @@ const _TRANSLATE_FIXTURE = """
       in_path = joinpath(dir, "fixture.pals.yaml")
       write(in_path, _TRANSLATE_FIXTURE)
 
-      scibmad = pals_to_scibmad(in_path)
+      scibmad = pals_to_scibmad(parse_file(in_path))
       out_path = joinpath(dir, "fixture.pals_out.jl")
       write_scibmad_file(scibmad, out_path)
 

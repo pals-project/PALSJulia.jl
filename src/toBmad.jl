@@ -50,16 +50,22 @@ BmadLattice() = BmadLattice(String[], String[], BmadEleDef[], BmadBeamline[], St
 
 #---------------------------------------------------------------------------------------------------
 """
-    pals_to_bmad(file_dir::String)
+    pals_to_bmad(yaml::YAMLNode)
 
-Read the PALS-YAML lattice file at `file_dir` and translate it into a [`BmadLattice`](@ref).
+Translate a parsed PALS lattice `yaml` (as returned by [`parse_file`](@ref)) into a
+[`BmadLattice`](@ref).
 
 The returned structure is an in-memory model of the *Bmad* lattice (elements, beamlines,
-parameters), not the input PALS tree. Pass it to [`write_bmad_file`](@ref) to emit a Bmad
-lattice file; `write_bmad_file(pals_to_bmad(file_dir), filename)` performs the full translation.
+parameters), not the input PALS tree. Translation is a three-step process: parse the PALS
+file with `parse_file`, build the target model with `pals_to_bmad`, then emit the Bmad
+lattice file with [`write_bmad_file`](@ref):
+
+```julia
+yaml = parse_file(file_dir)
+write_bmad_file(pals_to_bmad(yaml), filename)
+```
 """
-function pals_to_bmad(file_dir::String)
-  yaml = parse_file(file_dir)
+function pals_to_bmad(yaml::YAMLNode)
   facility = yaml["PALS"]["facility"]
   lat = BmadLattice()
   N_lattices = 0

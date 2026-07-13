@@ -55,17 +55,22 @@ SciBmadLattice() = SciBmadLattice(String[], SciBmadEle[], SciBmadBeamline[], Sci
 
 #---------------------------------------------------------------------------------------------------
 """
-    pals_to_scibmad(file_dir::String)
+    pals_to_scibmad(yaml::YAMLNode)
 
-Read the PALS-YAML lattice file at `file_dir` and translate it into a [`SciBmadLattice`](@ref).
+Translate a parsed PALS lattice `yaml` (as returned by [`parse_file`](@ref)) into a
+[`SciBmadLattice`](@ref).
 
 The returned structure is an in-memory model of the *SciBmad* lattice (elements, beamlines,
-lattice lists), not the input PALS tree. Pass it to [`write_scibmad_file`](@ref) to emit a
-SciBmad lattice file; `write_scibmad_file(pals_to_scibmad(file_dir), filename)` performs the
-full translation.
+lattice lists), not the input PALS tree. Translation is a three-step process: parse the PALS
+file with `parse_file`, build the target model with `pals_to_scibmad`, then emit the SciBmad
+lattice file with [`write_scibmad_file`](@ref):
+
+```julia
+yaml = parse_file(file_dir)
+write_scibmad_file(pals_to_scibmad(yaml), filename)
+```
 """
-function pals_to_scibmad(file_dir::String)
-  yaml = parse_file(file_dir)
+function pals_to_scibmad(yaml::YAMLNode)
   facility = yaml["PALS"]["facility"]
   lat = SciBmadLattice()
   for ele in facility
