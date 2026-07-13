@@ -10,24 +10,43 @@ end
 # ─── parse_and_expand_pals ────────────────────────────────────────────────────
 
 """
-    parse_and_expand_pals(filename, lattice_name="") -> Lattices
+    parse_and_expand_pals(filename, root_lattice="") -> Lattices
 
-Parse a lattice file and return original, included, and expanded views.
-All three are freed independently when their `YAMLNode`s are GC'd.
+Parse a PALS lattice file and return its `original`, `combined`, and `expanded`
+views as a [`Lattices`](@ref).
+
+# Arguments
+- `filename`: Path to the top-level YAML lattice file.
+- `root_lattice`: Name of the lattice to expand. If empty (the default), the
+  lattice to expand is chosen with the following priority:
+    1. the lattice named by the last `use` statement, or
+    2. the last lattice defined in the file if no `use` statement is present.
+
+# Returns
+A `Lattices` with three independent tree views:
+- `Lattices[1]`: The `original` lattice. The tree as read in, mapping each file (including 
+  any `include`d files) to its unparsed contents.
+- `Lattices[2]`: The `combined` lattice: the tree with all `include` directives resolved and spliced inline.
+- `Lattices[3]`: The `expanded` lattice: the tree with the selected lattice fully expanded — scalars
+  substituted with their full definitions, `repeat`ed beamlines unrolled,
+  `inherit`ed ancestors merged in, and forks resolved.
+
+Each view is backed by its own `YAMLNode`; all three are freed independently
+when their nodes are garbage collected.
 """
-function parse_and_expand_pals(filename::String, lattice_name::String="")
+function parse_and_expand_pals(filename::String, root_lattice::String="")
   isfile(filename) || error("File not found: $filename")
   handles = @ccall LIBYAML.parse_and_expand_PALS(
     filename::Cstring,
-    lattice_name::Cstring
+    root_lattice::Cstring
   )::LatticesHandle
 
-  (handles.original == C_NULL || handles.included == C_NULL || handles.expanded == C_NULL) &&
+  (handles.original == C_NULL || handles.combined == C_NULL || handles.expanded == C_NULL) &&
     error("Failed to parse lattice file: $filename")
 
   return Lattices(
     _root_node(handles.original),
-    _root_node(handles.included),
+    _root_node(handles.combined),
     _root_node(handles.expanded),
   )
 end

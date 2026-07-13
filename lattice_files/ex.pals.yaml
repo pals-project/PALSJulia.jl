@@ -1,10 +1,15 @@
 PALS:
   facility:
 
-    - include: "include.pals.yaml"
-
     - constants:
+        a_const: 0.3 * r_electron
+        b_const: 0.45
 
+    - variables:
+        a_var: a_const^2
+        b_var: 0.37 * atan2(0.1, 0.2)
+
+    - include: "include.pals.yaml"
 
     - lat1:
         kind: Lattice
@@ -14,7 +19,7 @@ PALS:
     - lat2:
         kind: Lattice
         branches:
-          - inj_line
+          - a_subline
 
     - inj_line:
         kind: BeamLine
@@ -31,12 +36,7 @@ PALS:
           - a_subline:
               repeat: 2           # Item a_subline is repeated two times
 
-    - a_subline:
-        kind: BeamLine
-        line:
-            - a
-            - b
-            - c
+
 
     - use: "lat2"
     - use: "lat1"

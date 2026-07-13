@@ -5,31 +5,16 @@ import PALSJulia as pj
 
 file_name    = joinpath(@__DIR__, "..", "lattice_files", "ex.pals.yaml")
 lattice_dir  = joinpath(@__DIR__, "..", "lattice_files")
-lattice_name = ""
+root_lattice = ""
 
-# ARGS[1] is the first user-supplied argument (no script name in Julia).
-if length(ARGS) >= 1 && ARGS[1] != "-lat"
-  file_name = ARGS[1]
-end
-
-for i in 1:length(ARGS)
-  if ARGS[i] == "-lat" && i < length(ARGS)
-    global lattice_name = ARGS[i + 1]
-  end
-end
-
-# cd into the lattice directory so that relative include paths inside the
-# YAML files resolve correctly when the C library opens them.
-lat = cd(lattice_dir) do
-  parse_and_expand_pals(file_name, lattice_name)
-end
+parse_and_expand_pals(file_name, root_lattice)
 
 println("Printing original lattice information:")
 println(pj.to_yaml_string(lat.original))
 println("\n", "-"^50)
 
-println("Printing included lattice information:")
-println(pj.to_yaml_string(lat.included))
+println("Printing combined lattice information:")
+println(pj.to_yaml_string(lat.combined))
 println("\n", "-"^50)
 
 println("Printing expanded lattice information:")

@@ -6,7 +6,7 @@ ordered list of elements. It returns a `Lattices` value with three independent
 views of the document:
 
 - **`original`** — the lattice exactly as written in the top-level file.
-- **`included`** — the lattice after its `include`d files have been merged in.
+- **`combined`** — the lattice after its `include`d files have been merged in.
 - **`expanded`** — the fully expanded lattice, with lines resolved into a flat
   ordered sequence of elements.
 
@@ -21,7 +21,7 @@ import PALSJulia as pj
 lat = pj.parse_and_expand_pals("ex.pals.yaml")
 
 println(pj.to_yaml_string(lat.original))
-println(pj.to_yaml_string(lat.included))
+println(pj.to_yaml_string(lat.combined))
 println(pj.to_yaml_string(lat.expanded))
 ```
 
@@ -49,7 +49,7 @@ end
 ## Command-line driver
 
 `examples/read_pals.jl` is a small runnable program that wraps the above: it reads
-a lattice, expands it, and prints the original, included, and expanded views. It
+a lattice, expands it, and prints the original, combined, and expanded views. It
 accepts a file path and an optional `-lat <name>` flag:
 
 ```console
