@@ -46,7 +46,7 @@ end
 # Raw C struct returned by parse_and_expand_pals — three tree handles by value.
 struct LatticesHandle
   original::Ptr{Cvoid}
-  included::Ptr{Cvoid}
+  combined::Ptr{Cvoid}
   expanded::Ptr{Cvoid}
 end
 
@@ -55,6 +55,6 @@ end
 """Three representations of a lattice, each as a root `YAMLNode`."""
 struct Lattices
   original::YAMLNode
-  included::YAMLNode
+  combined::YAMLNode
   expanded::YAMLNode
 end

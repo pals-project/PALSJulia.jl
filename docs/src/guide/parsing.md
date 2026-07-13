@@ -42,7 +42,7 @@ tree root:
 | `parse_file(filename)` | Parse a YAML file from disk. |
 | `parse_string(yaml_str)` | Parse YAML from a string. |
 | `create_empty_tree()` | Create a new, empty MAP tree to build up from scratch. |
-| `parse_and_expand_pals(filename, lattice_name="")` | Parse a PALS lattice file and return original, included, and expanded views. |
+| `parse_and_expand_pals(filename, root_lattice="")` | Parse a PALS lattice file and return original, combined, and expanded views. |
 
 ```julia
 root = parse_file("config.pals.yaml")
@@ -58,7 +58,7 @@ features:
 ```
 
 `parse_and_expand_pals` is PALS-specific: it returns a `Lattices` value holding
-three independent tree views (`original`, `included`, `expanded`), each freed on
+three independent tree views (`original`, `combined`, `expanded`), each freed on
 its own when garbage-collected.
 
 ## Querying the tree
