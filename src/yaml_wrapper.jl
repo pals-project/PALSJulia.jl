@@ -51,6 +51,42 @@ function parse_and_expand_pals(filename::String, root_lattice::String="")
   )
 end
 
+# ─── expression evaluation ────────────────────────────────────────────────────
+
+"""
+    evaluate_pals_expression(expr::AbstractString) -> Float64
+
+Evaluate a single PALS mathematical expression to a `Float64`.
+
+Supports the full PALS expression grammar: arithmetic (`+ - * / ^`), unary
+signs, parentheses, the built-in constants (`pi`, `c_light`, `r_electron`, …),
+the math functions (`sqrt`, `log`, `sin`, `floor`, `modulo`, …), and the
+particle-data functions `mass_of`, `charge_of`, and `anomalous_moment_of`
+(backed by AtomicAndPhysicalConstantsCLib). A leading `expr(...)` wrapper is
+accepted and unwrapped.
+
+This evaluates a standalone string, so user-defined constants and variables are
+**not** in scope — use [`parse_and_expand_pals`](@ref) for whole-lattice
+evaluation, whose `expanded` tree already has every expression resolved to a
+number. Throws `ArgumentError` if `expr` is not evaluable: a parse error, an
+unknown identifier or species, a `random()`/`random_gauss()` expression (which
+is intentionally deferred), or a non-finite result.
+
+# Example
+```julia
+evaluate_pals_expression("3.75e7 / c_light^2")   # 4.172…e-10
+evaluate_pals_expression("mass_of(electron)")    # 510998.95069…
+evaluate_pals_expression("expr(2 * pi)")         # 6.283…
+```
+"""
+function evaluate_pals_expression(expr::AbstractString)
+  ok = Ref{Bool}(false)
+  val = @ccall LIBYAML.evaluate_pals_expression(
+    String(expr)::Cstring, ok::Ref{Bool})::Cdouble
+  ok[] || throw(ArgumentError("Not an evaluable PALS expression: \"$expr\""))
+  return val
+end
+
 # ─── node correspondence ──────────────────────────────────────────────────────
 
 # Concrete value type stored in the correspondence Dict: the corresponding nodes
@@ -741,4 +777,12 @@ function Base.show(io::IO, node::YAMLNode)
   else
     print(io, "YAMLNode(unknown)")
   end
+end
+
+# Multi-line display used by the REPL (and anywhere that requests the
+# `text/plain` MIME). Prints the node's contents as YAML so a `YAMLNode`
+# shows its full tree automatically, while the compact `show` above is
+# still used for nested contexts such as arrays and dicts.
+function Base.show(io::IO, ::MIME"text/plain", node::YAMLNode)
+  print(io, rstrip(to_yaml_string(node)))
 end

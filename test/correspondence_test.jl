@@ -55,7 +55,9 @@ PALS:
       @test length(entry.expanded) == 1
       @test String(entry.original[1]) == "0.3 * r_electron"
       @test String(entry.combined[1]) == "0.3 * r_electron"
-      @test String(entry.expanded[1]) == "0.3 * r_electron"
+      # The expanded copy has its expression evaluated to a number, while the
+      # original/combined copies keep the original expression text.
+      @test Float64(entry.expanded[1]) == evaluate_pals_expression("0.3 * r_electron")
       # The queried node appears in its own tree's vector.
       @test entry.combined[1] == a_const
     end
