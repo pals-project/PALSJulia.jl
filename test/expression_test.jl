@@ -19,7 +19,7 @@ PALS:
           Kn2: 0.01 + 0.003*random_gauss()
     - m_e:
         kind: constant
-        value: mass_of(electron)
+        value: mass_of("electron")
     - main_line:
         kind: BeamLine
         line:
@@ -88,17 +88,22 @@ PALS:
   end
 
   @testset "evaluate_pals_expression: particle-data functions" begin
-    # Values mirror AtomicAndPhysicalConstantsCLib (CODATA 2022).
-    @test evaluate_pals_expression("mass_of(electron)") ≈ 510998.95069000003
-    @test evaluate_pals_expression("mass_of(proton)") ≈ 938272089.43000007
-    @test evaluate_pals_expression("charge_of(electron)") == -1.0
-    @test evaluate_pals_expression("charge_of(anti-proton)") == -1.0
-    @test evaluate_pals_expression("charge_of(helion)") == 2.0
+    # Species names must always be quoted (single or double). Values mirror
+    # AtomicAndPhysicalConstantsCLib (CODATA 2022).
+    @test evaluate_pals_expression("mass_of(\"electron\")") ≈ 510998.95069000003
+    @test evaluate_pals_expression("mass_of('proton')") ≈ 938272089.43000007
+    @test evaluate_pals_expression("charge_of(\"electron\")") == -1.0
+    @test evaluate_pals_expression("charge_of(\"anti-proton\")") == -1.0
+    @test evaluate_pals_expression("charge_of(\"helion\")") == 2.0
+    # The `#` isotope form works once quoted.
+    @test evaluate_pals_expression("mass_of(\"#3He\")") ≈
+          evaluate_pals_expression("mass_of(\"3He\")")
   end
 
   @testset "evaluate_pals_expression: non-evaluable inputs throw" begin
     @test_throws ArgumentError evaluate_pals_expression("thingB")            # unknown identifier
-    @test_throws ArgumentError evaluate_pals_expression("mass_of(nonsense)") # unknown species
+    @test_throws ArgumentError evaluate_pals_expression("mass_of(\"nonsense\")") # unknown species
+    @test_throws ArgumentError evaluate_pals_expression("mass_of(electron)") # unquoted species
     @test_throws ArgumentError evaluate_pals_expression("0.01 + random_gauss()")  # deferred
     @test_throws ArgumentError evaluate_pals_expression("1 +")              # parse error
   end
