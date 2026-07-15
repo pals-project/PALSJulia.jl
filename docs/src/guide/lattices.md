@@ -111,6 +111,78 @@ its `original` and `combined` vectors are empty.
 
 A runnable version of these examples is in `examples/node_correspondence.jl`.
 
+## Matching constructs by name
+
+Once a lattice is expanded, `match_names` finds every named construct that a
+PALS *Name Matching* string refers to — elements, parameter groups, parameters,
+constants, and variables — and returns them as a `Vector{YAMLNode}`. The syntax
+is:
+
+```text
+[{lattice}>>>][{branch}>>][{kind}::]{name}[>{group}.{subgroup}. … .{parameter}]
+```
+
+`{lattice}`, `{branch}`, and `{name}` are [PCRE2](https://www.pcre.org) patterns
+matched against the *whole* name (anchored at both ends), so `B1.*` matches `B1a`
+and `B1b` but `B1` on its own matches neither. `{kind}` is matched exactly, and
+the dotted parameter path after the single `>` is matched exactly, key by key.
+An omitted or empty pattern matches every name at that level, and `{branch}`
+matches an element if any enclosing BeamLine/Branch name matches — so elements in
+sub-lines are included.
+
+```julia
+lat = pj.parse_and_expand_pals("ex.pals.yaml")
+
+# The `e1` bend parameter of every element whose name begins with `B1`:
+pj.match_names(lat.expanded, "B1.*>BendP.e1")
+
+# Restrict to an element kind with `::`:
+pj.match_names(lat.expanded, "Quadrupole::.*>length")
+
+# Restrict to a named beamline/branch (`>>`) or lattice (`>>>`):
+pj.match_names(lat.expanded, "inj_line>>Q.*>length")
+pj.match_names(lat.expanded, "ring>>>inj_line>>Q.*>length")
+
+# Omit the parameter path to match the element itself, or the group:
+pj.match_names(lat.expanded, "Q1a")             # the element node
+pj.match_names(lat.expanded, "Q1a>BendP")       # a parameter-group node
+```
+
+Pass any node of the tree you want to search — normally `lat.expanded`, since
+beamlines and elements are only fully realised after expansion. The returned
+nodes belong to that same tree, so you can read or modify them in place:
+
+```julia
+for n in pj.match_names(lat.expanded, "B1.*>BendP.e1")
+    pj.set_scalar!(n, "0.0")   # zero the entrance-face angle of each B1… bend
+end
+```
+
+### Constants and variables
+
+Lattice parameters include constant and variable names. A *bare* name — no
+lattice/branch/kind qualifier and no parameter path — also matches every
+constant and variable defined directly under the `PALS` or `facility` node, in
+both the full (`kind: constant` / `kind: variable`) and compact
+(`constants:` / `variables:` list) forms:
+
+```julia
+pj.match_names(lat.expanded, "a_const")   # one named constant
+pj.match_names(lat.expanded, "a_.*")      # every constant/var named a_…
+```
+
+For a compact-form entry the matched node is the `name: value` scalar; for a
+full-form entry it is the named node, underneath which `kind`/`value` live.
+
+!!! note "Not yet implemented"
+    The full *Element Name Matching* grammar also defines `#N` instance
+    selection, `{e1}:{e2}` ranges, `,` unions, and `&` intersections. These are
+    not yet handled by `match_names`.
+
+Results are de-duplicated and returned in document order, and a malformed
+pattern yields an empty vector. A runnable version of these examples is in
+`examples/match_names.jl`.
+
 ## Command-line driver
 
 `examples/read_pals.jl` is a small runnable program that wraps the above: it reads

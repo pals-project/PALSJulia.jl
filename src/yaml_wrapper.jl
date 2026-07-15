@@ -161,6 +161,66 @@ function node_correspondence(lat::Lattices)
   return result
 end
 
+# ─── name matching ────────────────────────────────────────────────────────────
+
+"""
+    match_names(node, match_string) -> Vector{YAMLNode}
+
+Return every named construct in `node`'s tree that is matched by `match_string`,
+following PALS *Name Matching*. `node` may be any node of the tree to search
+(typically a lattice-view root such as `lat.expanded`); the whole tree is
+searched and the returned nodes belong to that same tree.
+
+`match_string` has the form
+
+    [{lattice}>>>][{branch}>>][{kind}::]{name}[>{group}.{sub}. … .{parameter}]
+
+`{lattice}`, `{branch}`, and `{name}` are [PCRE2](https://www.pcre.org) patterns
+matched against the whole name (anchored at both ends); `{kind}` is matched
+exactly; the parameter path after the single `>` is matched exactly, key by key.
+An omitted or empty pattern matches any name at that level. `{branch}` matches an
+element if any enclosing BeamLine/Branch name matches, so elements in sub-lines
+are included.
+
+The node returned for each match is whatever the string resolves to: the element
+node (no parameter path), the parameter-group or parameter node (with a path),
+or — for a bare name (no lattice/branch/kind qualifier and no parameter path) —
+additionally each matching constant and variable defined directly under the
+`PALS` or `facility` node (both the full `kind: constant`/`kind: variable` and
+the compact `constants:`/`variables:` forms). Lattice parameters therefore
+include constant and variable names.
+
+Not yet implemented from *Element Name Matching*: `#N` instance selection,
+`{e1}:{e2}` ranges, `,` unions, and `&` intersections.
+
+Results are de-duplicated and returned in document order. A malformed pattern
+yields an empty vector.
+
+# Example
+```julia
+lat = parse_and_expand_pals("lattice.pals.yaml")
+
+match_names(lat.expanded, "B1.*>BendP.e1")       # e1 of every B1… bend
+match_names(lat.expanded, "Quadrupole::.*")      # every quadrupole element
+match_names(lat.expanded, "inj>>>arc>>Q.*>length")  # length of arc's Q… in lattice inj
+match_names(lat.expanded, "a_.*")                # constants/variables named a_…
+```
+"""
+function match_names(node::YAMLNode, match_string::AbstractString)
+  tree = node.tree
+  m = @ccall LIBYAML.match_names(
+    tree.handle::Ptr{Cvoid}, String(match_string)::Cstring)::NameMatchesC
+
+  ids = try
+    n = Int(m.count)
+    n == 0 ? Csize_t[] : copy(unsafe_wrap(Array, m.nodes, n))
+  finally
+    @ccall LIBYAML.free_name_matches(m::NameMatchesC)::Cvoid
+  end
+
+  return YAMLNode[YAMLNode(tree, id) for id in ids]
+end
+
 # ─── parsing & memory ────────────────────────────────────────────────────────
 
 """

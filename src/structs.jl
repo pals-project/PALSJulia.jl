@@ -72,6 +72,15 @@ end
 
 #---------------------------------------------------------------------------------------------------
 
+# Raw C struct for match_names. Mirrors `struct name_matches` from
+# yaml_c_wrapper.h: a flat array of matched node ids and its length.
+struct NameMatchesC
+  nodes::Ptr{Csize_t}
+  count::Csize_t
+end
+
+#---------------------------------------------------------------------------------------------------
+
 """Three representations of a lattice, each as a root `YAMLNode`."""
 struct Lattices
   original::YAMLNode
