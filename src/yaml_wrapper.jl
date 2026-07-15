@@ -29,7 +29,11 @@ A `Lattices` with three independent tree views:
 - `Lattices[2]`: The `combined` lattice: the tree with all `include` directives resolved and spliced inline.
 - `Lattices[3]`: The `expanded` lattice: the tree with the selected lattice fully expanded — scalars
   substituted with their full definitions, `repeat`ed beamlines unrolled,
-  `inherit`ed ancestors merged in, and forks resolved.
+  `inherit`ed ancestors merged in, forks resolved, and every mathematical
+  expression evaluated to a number (see [`evaluate_pals_expression`](@ref);
+  `random()`/`random_gauss()` are left as text). `Controller` elements are
+  evaluated against their own scoped variable tables, with each control
+  `expression` computed and stored back in its control entry.
 
 Each view is backed by its own `YAMLNode`; all three are freed independently
 when their nodes are garbage collected.
