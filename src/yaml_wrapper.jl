@@ -742,3 +742,11 @@ function Base.show(io::IO, node::YAMLNode)
     print(io, "YAMLNode(unknown)")
   end
 end
+
+# Multi-line display used by the REPL (and anywhere that requests the
+# `text/plain` MIME). Prints the node's contents as YAML so a `YAMLNode`
+# shows its full tree automatically, while the compact `show` above is
+# still used for nested contexts such as arrays and dicts.
+function Base.show(io::IO, ::MIME"text/plain", node::YAMLNode)
+  print(io, rstrip(to_yaml_string(node)))
+end
