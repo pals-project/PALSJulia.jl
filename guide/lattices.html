@@ -348,6 +348,69 @@ merged, or renamed during expansion.</p>
 <p>A runnable version of these examples is in <code class="docutils literal notranslate"><span class="pre">examples/node_correspondence.jl</span></code>.</p>
 </section>
 </section>
+<section id="matching-constructs-by-name">
+<h2>Matching constructs by name<a class="headerlink" href="#matching-constructs-by-name" title="Link to this heading">¶</a></h2>
+<p>Once a lattice is expanded, <code class="docutils literal notranslate"><span class="pre">match_names</span></code> finds every named construct that a
+PALS <em>Name Matching</em> string refers to — elements, parameter groups, parameters,
+constants, and variables — and returns them as a <code class="docutils literal notranslate"><span class="pre">Vector{YAMLNode}</span></code>. The syntax
+is:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[{lattice}&gt;&gt;&gt;][{branch}&gt;&gt;][{kind}::]{name}[&gt;{group}.{subgroup}. … .{parameter}]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">{lattice}</span></code>, <code class="docutils literal notranslate"><span class="pre">{branch}</span></code>, and <code class="docutils literal notranslate"><span class="pre">{name}</span></code> are <a class="reference external" href="https://www.pcre.org">PCRE2</a> patterns
+matched against the <em>whole</em> name (anchored at both ends), so <code class="docutils literal notranslate"><span class="pre">B1.*</span></code> matches <code class="docutils literal notranslate"><span class="pre">B1a</span></code>
+and <code class="docutils literal notranslate"><span class="pre">B1b</span></code> but <code class="docutils literal notranslate"><span class="pre">B1</span></code> on its own matches neither. <code class="docutils literal notranslate"><span class="pre">{kind}</span></code> is matched exactly, and
+the dotted parameter path after the single <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> is matched exactly, key by key.
+An omitted or empty pattern matches every name at that level, and <code class="docutils literal notranslate"><span class="pre">{branch}</span></code>
+matches an element if any enclosing BeamLine/Branch name matches — so elements in
+sub-lines are included.</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">lat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">parse_and_expand_pals</span><span class="p">(</span><span class="s">&quot;ex.pals.yaml&quot;</span><span class="p">)</span>
+
+<span class="c"># The `e1` bend parameter of every element whose name begins with `B1`:</span>
+<span class="n">pj</span><span class="o">.</span><span class="n">match_names</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">expanded</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B1.*&gt;BendP.e1&quot;</span><span class="p">)</span>
+
+<span class="c"># Restrict to an element kind with `::`:</span>
+<span class="n">pj</span><span class="o">.</span><span class="n">match_names</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">expanded</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Quadrupole::.*&gt;length&quot;</span><span class="p">)</span>
+
+<span class="c"># Restrict to a named beamline/branch (`&gt;&gt;`) or lattice (`&gt;&gt;&gt;`):</span>
+<span class="n">pj</span><span class="o">.</span><span class="n">match_names</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">expanded</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;inj_line&gt;&gt;Q.*&gt;length&quot;</span><span class="p">)</span>
+<span class="n">pj</span><span class="o">.</span><span class="n">match_names</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">expanded</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;ring&gt;&gt;&gt;inj_line&gt;&gt;Q.*&gt;length&quot;</span><span class="p">)</span>
+
+<span class="c"># Omit the parameter path to match the element itself, or the group:</span>
+<span class="n">pj</span><span class="o">.</span><span class="n">match_names</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">expanded</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q1a&quot;</span><span class="p">)</span><span class="w">             </span><span class="c"># the element node</span>
+<span class="n">pj</span><span class="o">.</span><span class="n">match_names</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">expanded</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q1a&gt;BendP&quot;</span><span class="p">)</span><span class="w">       </span><span class="c"># a parameter-group node</span>
+</pre></div>
+</div>
+<p>Pass any node of the tree you want to search — normally <code class="docutils literal notranslate"><span class="pre">lat.expanded</span></code>, since
+beamlines and elements are only fully realised after expansion. The returned
+nodes belong to that same tree, so you can read or modify them in place:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">match_names</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">expanded</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B1.*&gt;BendP.e1&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">pj</span><span class="o">.</span><span class="n">set_scalar!</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;0.0&quot;</span><span class="p">)</span><span class="w">   </span><span class="c"># zero the entrance-face angle of each B1… bend</span>
+<span class="k">end</span>
+</pre></div>
+</div>
+<section id="constants-and-variables">
+<h3>Constants and variables<a class="headerlink" href="#constants-and-variables" title="Link to this heading">¶</a></h3>
+<p>Lattice parameters include constant and variable names. A <em>bare</em> name — no
+lattice/branch/kind qualifier and no parameter path — also matches every
+constant and variable defined directly under the <code class="docutils literal notranslate"><span class="pre">PALS</span></code> or <code class="docutils literal notranslate"><span class="pre">facility</span></code> node, in
+both the full (<code class="docutils literal notranslate"><span class="pre">kind:</span> <span class="pre">constant</span></code> / <code class="docutils literal notranslate"><span class="pre">kind:</span> <span class="pre">variable</span></code>) and compact
+(<code class="docutils literal notranslate"><span class="pre">constants:</span></code> / <code class="docutils literal notranslate"><span class="pre">variables:</span></code> list) forms:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">pj</span><span class="o">.</span><span class="n">match_names</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">expanded</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a_const&quot;</span><span class="p">)</span><span class="w">   </span><span class="c"># one named constant</span>
+<span class="n">pj</span><span class="o">.</span><span class="n">match_names</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">expanded</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a_.*&quot;</span><span class="p">)</span><span class="w">      </span><span class="c"># every constant/var named a_…</span>
+</pre></div>
+</div>
+<p>For a compact-form entry the matched node is the <code class="docutils literal notranslate"><span class="pre">name:</span> <span class="pre">value</span></code> scalar; for a
+full-form entry it is the named node, underneath which <code class="docutils literal notranslate"><span class="pre">kind</span></code>/<code class="docutils literal notranslate"><span class="pre">value</span></code> live.</p>
+<p>!!! note “Not yet implemented”
+The full <em>Element Name Matching</em> grammar also defines <code class="docutils literal notranslate"><span class="pre">#N</span></code> instance
+selection, <code class="docutils literal notranslate"><span class="pre">{e1}:{e2}</span></code> ranges, <code class="docutils literal notranslate"><span class="pre">,</span></code> unions, and <code class="docutils literal notranslate"><span class="pre">&amp;</span></code> intersections. These are
+not yet handled by <code class="docutils literal notranslate"><span class="pre">match_names</span></code>.</p>
+<p>Results are de-duplicated and returned in document order, and a malformed
+pattern yields an empty vector. A runnable version of these examples is in
+<code class="docutils literal notranslate"><span class="pre">examples/match_names.jl</span></code>.</p>
+</section>
+</section>
 <section id="command-line-driver">
 <h2>Command-line driver<a class="headerlink" href="#command-line-driver" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">examples/read_pals.jl</span></code> is a small runnable program that wraps the above: it reads
@@ -420,6 +483,10 @@ accepts a file path and an optional <code class="docutils literal notranslate"><
 <li><a class="reference internal" href="#relative-includes">Relative includes</a></li>
 <li><a class="reference internal" href="#correspondence-between-the-three-views">Correspondence between the three views</a><ul>
 <li><a class="reference internal" href="#one-to-many-correspondences">One-to-many correspondences</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#matching-constructs-by-name">Matching constructs by name</a><ul>
+<li><a class="reference internal" href="#constants-and-variables">Constants and variables</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#command-line-driver">Command-line driver</a></li>
