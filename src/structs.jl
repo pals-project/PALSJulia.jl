@@ -41,6 +41,11 @@ struct YAMLNode
   id::Csize_t      # node id within the tree
 end
 
+# Two YAMLNodes are equal when they point at the same id in the same tree.
+# Defining these lets YAMLNode be used as a Dict key (e.g. in node_correspondence).
+Base.:(==)(a::YAMLNode, b::YAMLNode) = (a.tree === b.tree) && (a.id == b.id)
+Base.hash(n::YAMLNode, h::UInt) = hash(n.id, hash(objectid(n.tree), h))
+
 #---------------------------------------------------------------------------------------------------
 
 # Raw C struct returned by parse_and_expand_pals — three tree handles by value.
@@ -48,6 +53,21 @@ struct LatticesHandle
   original::Ptr{Cvoid}
   combined::Ptr{Cvoid}
   expanded::Ptr{Cvoid}
+end
+
+#---------------------------------------------------------------------------------------------------
+
+# Raw C structs for build_correspondence_map. NodeLinkC mirrors `struct node_link`
+# and CorrespondenceMapC mirrors `struct correspondence_map` from yaml_c_wrapper.h.
+struct NodeLinkC
+  original::Csize_t
+  combined::Csize_t
+  expanded::Csize_t
+end
+
+struct CorrespondenceMapC
+  links::Ptr{NodeLinkC}
+  count::Csize_t
 end
 
 #---------------------------------------------------------------------------------------------------
