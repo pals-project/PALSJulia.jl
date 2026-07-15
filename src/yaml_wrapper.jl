@@ -51,6 +51,116 @@ function parse_and_expand_pals(filename::String, root_lattice::String="")
   )
 end
 
+# ─── node correspondence ──────────────────────────────────────────────────────
+
+# Concrete value type stored in the correspondence Dict: the corresponding nodes
+# in each of the three trees, grouped by tree.
+const NodeCorrespondence = @NamedTuple{
+  original::Vector{YAMLNode},
+  combined::Vector{YAMLNode},
+  expanded::Vector{YAMLNode}}
+
+"""
+    node_correspondence(lat::Lattices) -> Dict{YAMLNode, NodeCorrespondence}
+
+Map every node of a [`Lattices`](@ref) to the nodes it corresponds to across the
+`original`, `combined`, and `expanded` trees.
+
+The correspondence is exact: it is computed from provenance recorded while the
+three trees were derived from one another (`original` → `combined` → `expanded`),
+not by re-matching after the fact. Because expansion can duplicate a node
+(scalar substitution, `repeat`, `inherit`, forks), the correspondence is
+one-to-many — a single `combined`/`original` node can map to several `expanded`
+copies — so each field of the returned value is a `Vector{YAMLNode}`.
+
+# Returns
+A `Dict` keyed by `YAMLNode`. For any node that participates in the
+correspondence, `map[node]` is a named tuple `(; original, combined, expanded)`
+of `Vector{YAMLNode}`, listing every corresponding node grouped by tree. The
+queried node appears in its own tree's vector, so the three vectors together are
+the full equivalence class of `node`. A vector is empty when a tree has no
+corresponding node (e.g. the synthesised `fork_pointer` scalar exists only in
+`expanded`).
+
+# Example
+```julia
+lat = parse_and_expand_pals("lattice.pals.yaml")
+corr = node_correspondence(lat)
+
+a_const = lat.combined["PALS"]["facility"][1]["constants"]["a_const"]
+corr[a_const].original   # the same constant in the original tree
+corr[a_const].expanded   # its copies in the expanded tree
+```
+"""
+function node_correspondence(lat::Lattices)
+  ot = lat.original.tree
+  ct = lat.combined.tree
+  et = lat.expanded.tree
+
+  cmap = @ccall LIBYAML.build_correspondence_map(
+    ot.handle::Ptr{Cvoid}, ct.handle::Ptr{Cvoid}, et.handle::Ptr{Cvoid})::CorrespondenceMapC
+
+  links = try
+    n = Int(cmap.count)
+    n == 0 ? NodeLinkC[] : copy(unsafe_wrap(Array, cmap.links, n))
+  finally
+    @ccall LIBYAML.free_correspondence_map(cmap::CorrespondenceMapC)::Cvoid
+  end
+
+  # Each participating node is a (tree tag, id) key. A link ties together the
+  # original/combined/expanded nodes of one logical entity; union those keys and
+  # then read off the connected components.
+  Key = Tuple{Symbol,Csize_t}
+  parent = Dict{Key,Key}()
+
+  add!(x) = (haskey(parent, x) || (parent[x] = x); x)
+  function find!(x)
+    root = x
+    while parent[root] != root
+      root = parent[root]
+    end
+    while parent[x] != root      # path compression
+      parent[x], x = root, parent[x]
+    end
+    return root
+  end
+  uni!(a, b) = (parent[find!(a)] = find!(b))
+
+  for l in links
+    ke = add!((:expanded, l.expanded))
+    if l.combined != YAML_NULL_ID
+      kc = add!((:combined, l.combined))
+      uni!(ke, kc)
+      if l.original != YAML_NULL_ID
+        uni!(kc, add!((:original, l.original)))
+      end
+    end
+  end
+
+  # Gather the members of each connected component.
+  groups = Dict{Key,Vector{Key}}()
+  for k in keys(parent)
+    push!(get!(groups, find!(k), Key[]), k)
+  end
+
+  treeof(tag) = tag === :original ? lat.original.tree :
+                tag === :combined ? lat.combined.tree : lat.expanded.tree
+  nodeof(k) = YAMLNode(treeof(k[1]), k[2])
+
+  result = Dict{YAMLNode,NodeCorrespondence}()
+  for members in values(groups)
+    entry = (
+      original = YAMLNode[nodeof(k) for k in members if k[1] === :original],
+      combined = YAMLNode[nodeof(k) for k in members if k[1] === :combined],
+      expanded = YAMLNode[nodeof(k) for k in members if k[1] === :expanded],
+    )
+    for k in members
+      result[nodeof(k)] = entry
+    end
+  end
+  return result
+end
+
 # ─── parsing & memory ────────────────────────────────────────────────────────
 
 """

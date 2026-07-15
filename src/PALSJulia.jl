@@ -20,7 +20,6 @@ Export the public functions from yaml_wrapper.jl (Base/Core method extensions
 such as getindex, length, keys, ... are intentionally omitted).
 """
 function export_manipulators()
-  @eval export parse_and_expand_pals
   @eval export parse_file
   @eval export parse_string
   @eval export create_empty_tree
@@ -49,6 +48,6 @@ include("toSciBmad.jl")
 
 
 
-export pals_to_bmad, write_bmad_file, pals_to_scibmad, write_scibmad_file, export_manipulators
+export parse_and_expand_pals, node_correspondence, pals_to_bmad, write_bmad_file, pals_to_scibmad, write_scibmad_file, export_manipulators
 
 end
