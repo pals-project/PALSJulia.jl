@@ -292,6 +292,62 @@ by relative path, <code class="docutils literal notranslate"><span class="pre">c
 </pre></div>
 </div>
 </section>
+<section id="correspondence-between-the-three-views">
+<h2>Correspondence between the three views<a class="headerlink" href="#correspondence-between-the-three-views" title="Link to this heading">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">original</span></code>, <code class="docutils literal notranslate"><span class="pre">combined</span></code>, and <code class="docutils literal notranslate"><span class="pre">expanded</span></code> trees describe the same lattice at
+three stages of processing, so most of their nodes correspond: the constant
+<code class="docutils literal notranslate"><span class="pre">a_const</span></code>, for instance, exists in all three. <code class="docutils literal notranslate"><span class="pre">node_correspondence</span></code> builds that
+mapping — given any node, it returns the nodes it corresponds to in the other
+two views.</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">lat</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">parse_and_expand_pals</span><span class="p">(</span><span class="s">&quot;ex.pals.yaml&quot;</span><span class="p">)</span>
+<span class="n">corr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">node_correspondence</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The result is a <code class="docutils literal notranslate"><span class="pre">Dict</span></code> keyed by <code class="docutils literal notranslate"><span class="pre">YAMLNode</span></code>. Looking up a node returns a named
+tuple whose fields — <code class="docutils literal notranslate"><span class="pre">original</span></code>, <code class="docutils literal notranslate"><span class="pre">combined</span></code>, <code class="docutils literal notranslate"><span class="pre">expanded</span></code> — are each a
+<code class="docutils literal notranslate"><span class="pre">Vector{YAMLNode}</span></code> listing the corresponding nodes in that view:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">a_const</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lat</span><span class="o">.</span><span class="n">combined</span><span class="p">[</span><span class="s">&quot;PALS&quot;</span><span class="p">][</span><span class="s">&quot;facility&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="s">&quot;constants&quot;</span><span class="p">][</span><span class="s">&quot;a_const&quot;</span><span class="p">]</span>
+
+<span class="n">corr</span><span class="p">[</span><span class="n">a_const</span><span class="p">]</span><span class="o">.</span><span class="n">original</span><span class="w">   </span><span class="c"># [ the a_const node in the original tree ]</span>
+<span class="n">corr</span><span class="p">[</span><span class="n">a_const</span><span class="p">]</span><span class="o">.</span><span class="n">expanded</span><span class="w">   </span><span class="c"># [ the a_const node in the expanded tree ]</span>
+</pre></div>
+</div>
+<p>The queried node is included in its own view’s vector, so the three vectors
+together form the complete set of nodes that correspond to one another. You can
+look a class up starting from <em>any</em> of the three trees and get the same result:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">corr</span><span class="p">[</span><span class="n">corr</span><span class="p">[</span><span class="n">a_const</span><span class="p">]</span><span class="o">.</span><span class="n">original</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">corr</span><span class="p">[</span><span class="n">a_const</span><span class="p">]</span><span class="w">   </span><span class="c"># true</span>
+</pre></div>
+</div>
+<section id="one-to-many-correspondences">
+<h3>One-to-many correspondences<a class="headerlink" href="#one-to-many-correspondences" title="Link to this heading">¶</a></h3>
+<p>Expansion can turn a single node into several — a <code class="docutils literal notranslate"><span class="pre">repeat</span></code> unrolls a line, an
+<code class="docutils literal notranslate"><span class="pre">inherit</span></code> copies fields in, a bare element name is substituted with its full
+definition, and a fork spawns a new branch. The correspondence follows every
+copy, which is why each field is a <em>vector</em>: one <code class="docutils literal notranslate"><span class="pre">combined</span></code> node can map to many
+<code class="docutils literal notranslate"><span class="pre">expanded</span></code> nodes.</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="c"># The sub-line repeated inside inj_line appears once in `combined`</span>
+<span class="c"># but several times in `expanded`.</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">node</span><span class="p">,</span><span class="w"> </span><span class="n">class</span><span class="p">)</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">corr</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="n">length</span><span class="p">(</span><span class="n">class</span><span class="o">.</span><span class="n">combined</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">node</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">class</span><span class="o">.</span><span class="n">combined</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;&amp;</span>
+<span class="w">       </span><span class="n">length</span><span class="p">(</span><span class="n">class</span><span class="o">.</span><span class="n">expanded</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">        </span><span class="n">println</span><span class="p">(</span><span class="s">&quot;combined node → &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">length</span><span class="p">(</span><span class="n">class</span><span class="o">.</span><span class="n">expanded</span><span class="p">),</span><span class="w"> </span><span class="s">&quot; expanded copies&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+</div>
+<p>A vector is empty when a view has no corresponding node. For example, the
+<code class="docutils literal notranslate"><span class="pre">fork_pointer</span></code> scalar that expansion synthesises exists only in <code class="docutils literal notranslate"><span class="pre">expanded</span></code>, so
+its <code class="docutils literal notranslate"><span class="pre">original</span></code> and <code class="docutils literal notranslate"><span class="pre">combined</span></code> vectors are empty.</p>
+<p>!!! note “The mapping is exact, not heuristic”
+The correspondence is not recovered by re-matching the finished trees. The
+three views are built as a derivation chain
+(<code class="docutils literal notranslate"><span class="pre">original</span></code> → <code class="docutils literal notranslate"><span class="pre">combined</span></code> → <code class="docutils literal notranslate"><span class="pre">expanded</span></code>), and the provenance of every node is
+recorded as it is copied. <code class="docutils literal notranslate"><span class="pre">node_correspondence</span></code> reads back that recorded
+provenance, so the mapping is exact even where nodes are duplicated,
+merged, or renamed during expansion.</p>
+<p>A runnable version of these examples is in <code class="docutils literal notranslate"><span class="pre">examples/node_correspondence.jl</span></code>.</p>
+</section>
+</section>
 <section id="command-line-driver">
 <h2>Command-line driver<a class="headerlink" href="#command-line-driver" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">examples/read_pals.jl</span></code> is a small runnable program that wraps the above: it reads
@@ -362,6 +418,10 @@ accepts a file path and an optional <code class="docutils literal notranslate"><
 <li><a class="reference internal" href="#">Reading and expanding lattices</a><ul>
 <li><a class="reference internal" href="#basic-use">Basic use</a></li>
 <li><a class="reference internal" href="#relative-includes">Relative includes</a></li>
+<li><a class="reference internal" href="#correspondence-between-the-three-views">Correspondence between the three views</a><ul>
+<li><a class="reference internal" href="#one-to-many-correspondences">One-to-many correspondences</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#command-line-driver">Command-line driver</a></li>
 </ul>
 </li>
