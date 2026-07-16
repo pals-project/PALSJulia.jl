@@ -280,6 +280,36 @@ name as the second argument:</p>
 </pre></div>
 </div>
 </section>
+<section id="reporting-problems">
+<h2>Reporting problems<a class="headerlink" href="#reporting-problems" title="Link to this heading">¶</a></h2>
+<p>Expanding a lattice can hit problems that are not fatal but are worth knowing
+about: a <code class="docutils literal notranslate"><span class="pre">line</span></code> that references an element which was never defined, an
+<code class="docutils literal notranslate"><span class="pre">inherit</span></code>/<code class="docutils literal notranslate"><span class="pre">repeat</span></code>/<code class="docutils literal notranslate"><span class="pre">Fork</span></code> whose target is missing, or an expression that could
+not be evaluated (an unknown constant, a dangling element‑parameter reference, a
+dependency cycle). Rather than abort, expansion keeps going — leaving the
+offending value as text — and collects a list of every such problem.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">problems</span></code> keyword controls what is done with that list:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="c"># Default: print the problems to stderr (nothing prints when there are none).</span>
+<span class="n">lat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">parse_and_expand_pals</span><span class="p">(</span><span class="s">&quot;ex.pals.yaml&quot;</span><span class="p">)</span>
+
+<span class="c"># Write the problems to a file instead, printing nothing.</span>
+<span class="n">lat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">parse_and_expand_pals</span><span class="p">(</span><span class="s">&quot;ex.pals.yaml&quot;</span><span class="p">;</span><span class="w"> </span><span class="n">problems</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;problems.txt&quot;</span><span class="p">)</span>
+
+<span class="c"># Say nothing at all.</span>
+<span class="n">lat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">parse_and_expand_pals</span><span class="p">(</span><span class="s">&quot;ex.pals.yaml&quot;</span><span class="p">;</span><span class="w"> </span><span class="n">problems</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ss">:none</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A typical report looks like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">parse_and_expand_pals</span><span class="p">:</span> <span class="mi">2</span> <span class="n">problem</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="n">encountered</span> <span class="n">during</span> <span class="n">lattice</span> <span class="n">expansion</span><span class="p">:</span>
+  <span class="o">-</span> <span class="n">reference</span> <span class="n">to</span> <span class="n">undefined</span> <span class="n">element</span> <span class="ow">or</span> <span class="n">line</span> <span class="s1">&#39;NoSuchElement&#39;</span>
+  <span class="o">-</span> <span class="n">could</span> <span class="ow">not</span> <span class="n">evaluate</span> <span class="n">expression</span> <span class="k">for</span> <span class="n">BendP</span><span class="o">.</span><span class="n">edge_int2</span><span class="p">:</span> <span class="mf">0.02</span> <span class="o">*</span> <span class="n">thingB</span><span class="o">&gt;</span><span class="n">MagneticMultipoleP</span><span class="o">.</span><span class="n">NotThere</span>
+</pre></div>
+</div>
+<p>Only values that look like expressions (an operator, a parenthesis, an
+element‑parameter <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> reference, or an explicit <code class="docutils literal notranslate"><span class="pre">expr(...)</span></code>) are flagged when
+they fail to evaluate; a plain name, label, or boolean that happens not to be a
+number is left alone.</p>
+</section>
 <section id="relative-includes">
 <h2>Relative includes<a class="headerlink" href="#relative-includes" title="Link to this heading">¶</a></h2>
 <p>Include paths inside a lattice file are resolved relative to the working
@@ -481,6 +511,7 @@ accepts a file path and an optional <code class="docutils literal notranslate"><
             <ul>
 <li><a class="reference internal" href="#">Reading and expanding lattices</a><ul>
 <li><a class="reference internal" href="#basic-use">Basic use</a></li>
+<li><a class="reference internal" href="#reporting-problems">Reporting problems</a></li>
 <li><a class="reference internal" href="#relative-includes">Relative includes</a></li>
 <li><a class="reference internal" href="#correspondence-between-the-three-views">Correspondence between the three views</a><ul>
 <li><a class="reference internal" href="#one-to-many-correspondences">One-to-many correspondences</a></li>
