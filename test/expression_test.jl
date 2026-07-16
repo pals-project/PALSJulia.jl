@@ -73,6 +73,32 @@ PALS:
     - use: "lat1"
 """
 
+# A lattice where one element's parameter references another element's parameter
+# via the `element>group.param` syntax inside an expression.
+const ELEMENT_PARAM_REF_LATTICE = """
+PALS:
+  facility:
+    - thingB:
+        kind: Sextupole
+        length: 0.3
+        MagneticMultipoleP:
+          Kn2L: 0.1
+    - DH1A:
+        kind: Bend
+        length: 0.2
+        BendP:
+          edge_int2: 0.02 * thingB>MagneticMultipoleP.Kn2L
+    - main_line:
+        kind: BeamLine
+        line:
+          - DH1A
+    - lat1:
+        kind: Lattice
+        branches:
+          - main_line
+    - use: "lat1"
+"""
+
 @testset "Expression Evaluation" begin
 
   @testset "evaluate_pals_expression: standalone" begin
@@ -131,6 +157,18 @@ PALS:
       # The combined tree keeps the original expression text.
       @test String(lat.combined["PALS"]["facility"][2]["cleo"]["length"]) ==
             "0.1*log(abs(b_var))"
+    end
+  end
+
+  @testset "parse_and_expand_pals resolves element-parameter references" begin
+    mktempdir() do dir
+      path = joinpath(dir, "eleparamref.pals.yaml")
+      write(path, ELEMENT_PARAM_REF_LATTICE)
+      lat = parse_and_expand_pals(path)
+
+      fac = lat.expanded["PALS"]["facility"]
+      # edge_int2 references thingB's Kn2L (0.1) via element>group.param syntax.
+      @test Float64(fac[2]["DH1A"]["BendP"]["edge_int2"]) ≈ 0.02 * 0.1
     end
   end
 
