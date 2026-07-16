@@ -131,6 +131,29 @@ PALS:
     - use: "lat1"
 """
 
+# A lattice that names a species with a string constant and feeds it to the
+# particle-data functions by symbol (mass_of(species)), not a quoted literal.
+const SPECIES_CONST_LATTICE = """
+PALS:
+  facility:
+    - constants:
+        species: "#3He"
+        b_const: 0.45 * mass_of(species)
+    - DH1A:
+        kind: Bend
+        BendP:
+          e_tot: 1.1 * mass_of(species)
+    - main_line:
+        kind: BeamLine
+        line:
+          - DH1A
+    - lat1:
+        kind: Lattice
+        branches:
+          - main_line
+    - use: "lat1"
+"""
+
 @testset "Expression Evaluation" begin
 
   @testset "evaluate_pals_expression: standalone" begin
@@ -201,6 +224,23 @@ PALS:
       fac = lat.expanded["PALS"]["facility"]
       # edge_int2 references thingB's Kn2L (0.1) via element>group.param syntax.
       @test Float64(fac[2]["DH1A"]["BendP"]["edge_int2"]) ≈ 0.02 * 0.1
+    end
+  end
+
+  @testset "parse_and_expand_pals resolves a species-name constant" begin
+    mktempdir() do dir
+      path = joinpath(dir, "species.pals.yaml")
+      write(path, SPECIES_CONST_LATTICE)
+      lat = parse_and_expand_pals(path; problems=:none)
+
+      m_3he = evaluate_pals_expression("mass_of(\"#3He\")")
+      fac = lat.expanded["PALS"]["facility"]
+
+      # mass_of(species) resolves the `species: "#3He"` constant by name.
+      @test Float64(fac[1]["constants"]["b_const"]) ≈ 0.45 * m_3he
+      @test Float64(fac[2]["DH1A"]["BendP"]["e_tot"]) ≈ 1.1 * m_3he
+      # The species constant itself keeps its string species name.
+      @test String(fac[1]["constants"]["species"]) == "#3He"
     end
   end
 
