@@ -95,9 +95,9 @@ PALS:
     @test evaluate_pals_expression("charge_of(\"electron\")") == -1.0
     @test evaluate_pals_expression("charge_of(\"anti-proton\")") == -1.0
     @test evaluate_pals_expression("charge_of(\"helion\")") == 2.0
-    # The `#` isotope form works once quoted.
-    @test evaluate_pals_expression("mass_of(\"#3He\")") ≈
-          evaluate_pals_expression("mass_of(\"3He\")")
+    # A mass number must carry a leading `#` (e.g. "#3He", not "3He").
+    @test evaluate_pals_expression("mass_of(\"#3He\")") ≈ 2809413524.398952
+    @test_throws ArgumentError evaluate_pals_expression("mass_of(\"3He\")")
   end
 
   @testset "evaluate_pals_expression: non-evaluable inputs throw" begin
