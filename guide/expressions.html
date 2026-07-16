@@ -393,6 +393,26 @@ from later expressions. Both the full form and the compact form are recognised:<
 earlier one (<code class="docutils literal notranslate"><span class="pre">a_var</span></code> uses <code class="docutils literal notranslate"><span class="pre">a_const</span></code> above). A reference that cannot be resolved,
 or a genuine cycle, leaves the value as text rather than raising.</p>
 </section>
+<section id="element-parameter-references">
+<h2>Element-parameter references<a class="headerlink" href="#element-parameter-references" title="Link to this heading">¶</a></h2>
+<p>An expression may also reference another element’s parameter by name, using the
+<code class="docutils literal notranslate"><span class="pre">element&gt;group.sub.</span> <span class="pre">…</span> <span class="pre">.param</span></code> syntax (the same parameter path used elsewhere in
+the standard). It resolves to that parameter’s value, itself evaluated as an
+expression:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">thingB</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Sextupole</span>
+<span class="w">    </span><span class="nt">MagneticMultipoleP</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">Kn2L</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.1</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">DH1A</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Bend</span>
+<span class="w">    </span><span class="nt">BendP</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">edge_int2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.02 * thingB&gt;MagneticMultipoleP.Kn2L</span><span class="w">   </span><span class="c1"># → 0.002</span>
+</pre></div>
+</div>
+<p>The reference names one specific element (an exact name — pattern matching is
+not used in a value expression) and its full parameter path. As with any other
+reference, one that cannot be resolved leaves the value as text.</p>
+</section>
 <section id="controllers">
 <h2>Controllers<a class="headerlink" href="#controllers" title="Link to this heading">¶</a></h2>
 <p>A <code class="docutils literal notranslate"><span class="pre">Controller</span></code> element bundles expressions that drive lattice parameters. Its
@@ -501,6 +521,7 @@ non-finite result.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#user-constants-and-variables">User constants and variables</a></li>
+<li><a class="reference internal" href="#element-parameter-references">Element-parameter references</a></li>
 <li><a class="reference internal" href="#controllers">Controllers</a></li>
 <li><a class="reference internal" href="#evaluating-a-single-expression">Evaluating a single expression</a></li>
 </ul>
