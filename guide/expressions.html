@@ -378,6 +378,15 @@ and every expression refer to it:</p>
 <span class="w">    </span><span class="nt">b_const</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.45 * mass_of(species)</span><span class="w"> </span><span class="c1"># resolves species -&gt; &quot;#3He&quot;</span>
 </pre></div>
 </div>
+<p>Such a species-valued constant may also be referenced <strong>directly</strong> wherever a
+species name is expected: a bare identifier used as a parameter value is
+replaced by the constant’s species string in the expanded tree.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">begin</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BeginningEle</span>
+<span class="w">    </span><span class="nt">ReferenceP</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">species_ref</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">species</span><span class="w">           </span><span class="c1"># -&gt; &quot;#3He&quot; in `expanded`</span>
+</pre></div>
+</div>
 </section>
 </section>
 <section id="user-constants-and-variables">
