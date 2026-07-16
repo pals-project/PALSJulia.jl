@@ -9,8 +9,50 @@ end
 
 # ─── parse_and_expand_pals ────────────────────────────────────────────────────
 
+# Copy the C-owned problem strings into a Julia Vector{String} and free the
+# underlying C array. Always frees, even when the list is empty.
+function _take_problem_list(sl::StringListC)
+  n = Int(sl.count)
+  out = Vector{String}(undef, n)
+  if n > 0
+    ptrs = unsafe_wrap(Array, sl.items, n)
+    for i in 1:n
+      out[i] = unsafe_string(ptrs[i])
+    end
+  end
+  @ccall LIBYAML.free_lattice_problems(sl::StringListC)::Cvoid
+  return out
+end
+
+# Apply the `problems` output policy: `:print` (default) writes to stderr,
+# a filename string writes to that file, `:none` does nothing.
+function _report_problems(problems::Vector{String}, mode)
+  if mode isa AbstractString
+    open(mode, "w") do io
+      if isempty(problems)
+        println(io, "No problems encountered during lattice expansion.")
+      else
+        println(io, "$(length(problems)) problem(s) encountered during lattice expansion:")
+        for p in problems
+          println(io, "  - ", p)
+        end
+      end
+    end
+  elseif mode === :none
+    # do nothing
+  else  # :print
+    if !isempty(problems)
+      println(stderr, "parse_and_expand_pals: $(length(problems)) problem(s) encountered during lattice expansion:")
+      for p in problems
+        println(stderr, "  - ", p)
+      end
+    end
+  end
+  return nothing
+end
+
 """
-    parse_and_expand_pals(filename, root_lattice="") -> Lattices
+    parse_and_expand_pals(filename, root_lattice=""; problems=:print) -> Lattices
 
 Parse a PALS lattice file and return its `original`, `combined`, and `expanded`
 views as a [`Lattices`](@ref).
@@ -21,10 +63,18 @@ views as a [`Lattices`](@ref).
   lattice to expand is chosen with the following priority:
     1. the lattice named by the last `use` statement, or
     2. the last lattice defined in the file if no `use` statement is present.
+- `problems`: What to do with the list of problems found while building the
+  `expanded` tree (undefined lattice, dangling element/line references,
+  undefined `inherit`/`repeat`/`Fork` targets, and expressions that could not
+  be evaluated). One of:
+    - `:print` (the default) — print the problems to `stderr` (nothing is
+      printed when there are none);
+    - a filename `String` — write the problems to that file, printing nothing;
+    - `:none` — do nothing (no printing, no file).
 
 # Returns
 A `Lattices` with three independent tree views:
-- `Lattices[1]`: The `original` lattice. The tree as read in, mapping each file (including 
+- `Lattices[1]`: The `original` lattice. The tree as read in, mapping each file (including
   any `include`d files) to its unparsed contents.
 - `Lattices[2]`: The `combined` lattice: the tree with all `include` directives resolved and spliced inline.
 - `Lattices[3]`: The `expanded` lattice: the tree with the selected lattice fully expanded — scalars
@@ -38,15 +88,24 @@ A `Lattices` with three independent tree views:
 Each view is backed by its own `YAMLNode`; all three are freed independently
 when their nodes are garbage collected.
 """
-function parse_and_expand_pals(filename::String, root_lattice::String="")
+function parse_and_expand_pals(filename::String, root_lattice::String="";
+                               problems::Union{Symbol,AbstractString}=:print)
   isfile(filename) || error("File not found: $filename")
+  (problems isa AbstractString || problems === :print || problems === :none) ||
+    throw(ArgumentError("`problems` must be :print, :none, or a filename string"))
+
   handles = @ccall LIBYAML.parse_and_expand_PALS(
     filename::Cstring,
     root_lattice::Cstring
   )::LatticesHandle
 
+  # Take ownership of the problem list before anything can error out.
+  problem_list = _take_problem_list(handles.problems)
+
   (handles.original == C_NULL || handles.combined == C_NULL || handles.expanded == C_NULL) &&
     error("Failed to parse lattice file: $filename")
+
+  _report_problems(problem_list, problems)
 
   return Lattices(
     _root_node(handles.original),

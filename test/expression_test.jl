@@ -99,6 +99,38 @@ PALS:
     - use: "lat1"
 """
 
+# A lattice that deliberately fails several ways during expansion: an undefined
+# constant reference, a dangling element-parameter reference, a dangling line
+# reference, and an undefined `inherit` ancestor.
+const BROKEN_LATTICE = """
+PALS:
+  facility:
+    - constants:
+        a_const: 0.3 * undefined_thing
+    - thingB:
+        kind: Sextupole
+        MagneticMultipoleP:
+          Kn2L: 0.1
+    - DH1A:
+        kind: Bend
+        BendP:
+          edge_int2: 0.02 * thingB>MagneticMultipoleP.NotThere
+    - ghost_child:
+        kind: Bend
+        inherit: ghost_ancestor
+    - main_line:
+        kind: BeamLine
+        line:
+          - DH1A
+          - ghost_child
+          - NoSuchElement
+    - lat1:
+        kind: Lattice
+        branches:
+          - main_line
+    - use: "lat1"
+"""
+
 @testset "Expression Evaluation" begin
 
   @testset "evaluate_pals_expression: standalone" begin
@@ -203,6 +235,47 @@ PALS:
       # The combined tree keeps the original controller expression text.
       c_ps27 = lat.combined["PALS"]["facility"][2]["ps27"]
       @test String(c_ps27["controls"][1]["expression"]) == "0.075*sin(cur1) + 0.3*cur2"
+    end
+  end
+
+  @testset "parse_and_expand_pals reports expansion problems" begin
+    mktempdir() do dir
+      # Run `f` with stderr redirected to a temp file; return what was written.
+      capture_stderr(f) = begin
+        log = joinpath(dir, "stderr.log")
+        open(log, "w") do io
+          redirect_stderr(f, io)
+        end
+        read(log, String)
+      end
+
+      path = joinpath(dir, "broken.pals.yaml")
+      write(path, BROKEN_LATTICE)
+
+      # A clean lattice prints nothing by default.
+      clean = joinpath(dir, "clean.pals.yaml")
+      write(clean, ELEMENT_PARAM_REF_LATTICE)
+      @test isempty(capture_stderr(() -> parse_and_expand_pals(clean)))
+
+      # `:print` (default) writes the problems to stderr.
+      printed = capture_stderr(() -> parse_and_expand_pals(path))
+      @test occursin("problem(s)", printed)
+      @test occursin("NoSuchElement", printed)
+
+      # A filename writes the problems to that file and prints nothing.
+      report = joinpath(dir, "problems.txt")
+      @test isempty(capture_stderr(() -> parse_and_expand_pals(path; problems=report)))
+      contents = read(report, String)
+      @test occursin("reference to undefined element or line 'NoSuchElement'", contents)
+      @test occursin("inherit: 'ghost_ancestor' is not defined", contents)
+      @test occursin("could not evaluate expression for constants.a_const", contents)
+      @test occursin("could not evaluate expression for BendP.edge_int2", contents)
+
+      # `:none` prints nothing.
+      @test isempty(capture_stderr(() -> parse_and_expand_pals(path; problems=:none)))
+
+      # An invalid `problems` value is rejected.
+      @test_throws ArgumentError parse_and_expand_pals(path; problems=:bogus)
     end
   end
 
