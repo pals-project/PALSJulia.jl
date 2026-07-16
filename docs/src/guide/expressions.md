@@ -86,8 +86,8 @@ helpers `int` (toward zero), `nint` (nearest), `floor`, `ceiling`, and
 `mass_of`, `charge_of`, and `anomalous_moment_of` look a particle up by name and
 return its mass (eV), charge (units of `e`), or anomalous magnetic moment. **The
 species name must be quoted** (single or double quotes); an unquoted name is an
-error. Quoting also lets an isotope name that contains a `#` be written without
-tripping YAML's comment rule:
+error. A mass number must carry a leading `#` — write `"#3He"`, not `"3He"`.
+Quoting also lets that `#` be written without tripping YAML's comment rule:
 
 ```yaml
 m_e:     mass_of("electron")

@@ -67,8 +67,8 @@ signs, parentheses, the built-in constants (`pi`, `c_light`, `r_electron`, …),
 the math functions (`sqrt`, `log`, `sin`, `floor`, `modulo`, …), and the
 particle-data functions `mass_of`, `charge_of`, and `anomalous_moment_of`
 (backed by AtomicAndPhysicalConstantsCLib), whose species-name argument must be
-quoted, e.g. `mass_of("3He")`. A leading `expr(...)` wrapper is accepted and
-unwrapped.
+quoted, e.g. `mass_of("#3He")` (a mass number carries a leading `#`). A leading
+`expr(...)` wrapper is accepted and unwrapped.
 
 This evaluates a standalone string, so user-defined constants and variables are
 **not** in scope — use [`parse_and_expand_pals`](@ref) for whole-lattice
