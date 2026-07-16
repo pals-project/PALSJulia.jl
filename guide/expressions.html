@@ -363,8 +363,8 @@ helpers <code class="docutils literal notranslate"><span class="pre">int</span><
 <p><code class="docutils literal notranslate"><span class="pre">mass_of</span></code>, <code class="docutils literal notranslate"><span class="pre">charge_of</span></code>, and <code class="docutils literal notranslate"><span class="pre">anomalous_moment_of</span></code> look a particle up by name and
 return its mass (eV), charge (units of <code class="docutils literal notranslate"><span class="pre">e</span></code>), or anomalous magnetic moment. <strong>The
 species name must be quoted</strong> (single or double quotes); an unquoted name is an
-error. Quoting also lets an isotope name that contains a <code class="docutils literal notranslate"><span class="pre">#</span></code> be written without
-tripping YAML’s comment rule:</p>
+error. A mass number must carry a leading <code class="docutils literal notranslate"><span class="pre">#</span></code> — write <code class="docutils literal notranslate"><span class="pre">&quot;#3He&quot;</span></code>, not <code class="docutils literal notranslate"><span class="pre">&quot;3He&quot;</span></code>.
+Quoting also lets that <code class="docutils literal notranslate"><span class="pre">#</span></code> be written without tripping YAML’s comment rule:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">m_e</span><span class="p">:</span><span class="w">     </span><span class="l l-Scalar l-Scalar-Plain">mass_of(&quot;electron&quot;)</span>
 <span class="nt">q_he</span><span class="p">:</span><span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">charge_of(&quot;helion&quot;)</span>
 <span class="nt">b_const</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.45 * mass_of(&quot;#3He&quot;)</span>
