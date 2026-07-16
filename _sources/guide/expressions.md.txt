@@ -95,6 +95,16 @@ q_he:    charge_of("helion")
 b_const: 0.45 * mass_of("#3He")
 ```
 
+The argument may also be a **user constant or variable whose value is a species
+name**, passed by name (without quotes), so one definition can fix the species
+and every expression refer to it:
+
+```yaml
+- constants:
+    species: "#3He"                  # a species-valued constant
+    b_const: 0.45 * mass_of(species) # resolves species -> "#3He"
+```
+
 ## User constants and variables
 
 A lattice can define its own constants and variables and refer to them by name

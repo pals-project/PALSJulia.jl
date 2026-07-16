@@ -370,6 +370,14 @@ Quoting also lets that <code class="docutils literal notranslate"><span class="p
 <span class="nt">b_const</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.45 * mass_of(&quot;#3He&quot;)</span>
 </pre></div>
 </div>
+<p>The argument may also be a <strong>user constant or variable whose value is a species
+name</strong>, passed by name (without quotes), so one definition can fix the species
+and every expression refer to it:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">constants</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">species</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;#3He&quot;</span><span class="w">                  </span><span class="c1"># a species-valued constant</span>
+<span class="w">    </span><span class="nt">b_const</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.45 * mass_of(species)</span><span class="w"> </span><span class="c1"># resolves species -&gt; &quot;#3He&quot;</span>
+</pre></div>
+</div>
 </section>
 </section>
 <section id="user-constants-and-variables">
