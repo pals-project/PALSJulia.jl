@@ -32,6 +32,41 @@ name as the second argument:
 lat = pj.parse_and_expand_pals("ex.pals.yaml", "main_ring")
 ```
 
+## Reporting problems
+
+Expanding a lattice can hit problems that are not fatal but are worth knowing
+about: a `line` that references an element which was never defined, an
+`inherit`/`repeat`/`Fork` whose target is missing, or an expression that could
+not be evaluated (an unknown constant, a dangling element‑parameter reference, a
+dependency cycle). Rather than abort, expansion keeps going — leaving the
+offending value as text — and collects a list of every such problem.
+
+The `problems` keyword controls what is done with that list:
+
+```julia
+# Default: print the problems to stderr (nothing prints when there are none).
+lat = pj.parse_and_expand_pals("ex.pals.yaml")
+
+# Write the problems to a file instead, printing nothing.
+lat = pj.parse_and_expand_pals("ex.pals.yaml"; problems = "problems.txt")
+
+# Say nothing at all.
+lat = pj.parse_and_expand_pals("ex.pals.yaml"; problems = :none)
+```
+
+A typical report looks like:
+
+```
+parse_and_expand_pals: 2 problem(s) encountered during lattice expansion:
+  - reference to undefined element or line 'NoSuchElement'
+  - could not evaluate expression for BendP.edge_int2: 0.02 * thingB>MagneticMultipoleP.NotThere
+```
+
+Only values that look like expressions (an operator, a parenthesis, an
+element‑parameter `>` reference, or an explicit `expr(...)`) are flagged when
+they fail to evaluate; a plain name, label, or boolean that happens not to be a
+number is left alone.
+
 ## Relative includes
 
 Include paths inside a lattice file are resolved relative to the working

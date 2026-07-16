@@ -48,11 +48,21 @@ Base.hash(n::YAMLNode, h::UInt) = hash(n.id, hash(objectid(n.tree), h))
 
 #---------------------------------------------------------------------------------------------------
 
-# Raw C struct returned by parse_and_expand_pals — three tree handles by value.
+# Raw C struct mirroring `struct string_list` from yaml_c_wrapper.h: an owning
+# array of C strings and its length. Carries the problems found while building
+# the expanded tree; freed with free_lattice_problems.
+struct StringListC
+  items::Ptr{Cstring}
+  count::Csize_t
+end
+
+# Raw C struct returned by parse_and_expand_pals — three tree handles plus the
+# problem list, all by value. Layout must match `struct lattices`.
 struct LatticesHandle
   original::Ptr{Cvoid}
   combined::Ptr{Cvoid}
   expanded::Ptr{Cvoid}
+  problems::StringListC
 end
 
 #---------------------------------------------------------------------------------------------------
