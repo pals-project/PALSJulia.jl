@@ -141,6 +141,8 @@ PALS:
         b_const: 0.45 * mass_of(species)
     - DH1A:
         kind: Bend
+        ReferenceP:
+          species_ref: species
         BendP:
           e_tot: 1.1 * mass_of(species)
     - main_line:
@@ -239,6 +241,9 @@ PALS:
       # mass_of(species) resolves the `species: "#3He"` constant by name.
       @test Float64(fac[1]["constants"]["b_const"]) ≈ 0.45 * m_3he
       @test Float64(fac[2]["DH1A"]["BendP"]["e_tot"]) ≈ 1.1 * m_3he
+      # A bare identifier naming the species constant (species_ref: species) is
+      # replaced by its species-name string in the expanded tree.
+      @test String(fac[2]["DH1A"]["ReferenceP"]["species_ref"]) == "#3He"
       # The species constant itself keeps its string species name.
       @test String(fac[1]["constants"]["species"]) == "#3He"
     end
