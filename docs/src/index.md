@@ -20,6 +20,7 @@ tree of `YAMLNode` values that you index and mutate with familiar Julia idioms
 guide/installation
 guide/parsing
 guide/lattices
+guide/expressions
 guide/translation
 ```
 
@@ -30,7 +31,9 @@ guide/translation
 2. **Expand** a lattice — read a lattice file, resolve its includes, and
    expand the line into an ordered list of elements — see
    [Reading and expanding lattices](guide/lattices.md).
-3. **Translate** a PALS lattice to SciBmad or Bmad format — see
+3. **Evaluate** the mathematical expressions in the expanded lattice to
+   numbers — see [Evaluating expressions](guide/expressions.md).
+4. **Translate** a PALS lattice to SciBmad or Bmad format — see
    [Translating to SciBmad and Bmad](guide/translation.md).
 
 The complete docstring reference is in the **API Reference** (linked in the
