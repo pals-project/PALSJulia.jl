@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["David Sagan <david.sagan@gmail.com>", "Alex He <adh236@cornell.edu>"]
 
 [deps]
+Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 
 [compat]
 julia = "1.10"

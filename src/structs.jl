@@ -1,4 +1,75 @@
-const LIBYAML = joinpath(@__DIR__, "..", "..", "pals-cpp", "build", "libyaml_c_wrapper.dylib")
+using Libdl
+
+# Cached path to the pals-cpp shared library; empty until first resolved by
+# libyaml(). A Ref rather than a const String so the path is read at call time
+# rather than frozen into the precompile cache, which keeps the cache valid
+# across machines and lets the environment variables below take effect without
+# a forced recompile.
+const LIBYAML = Ref{String}("")
+
+# Every place the library might be. The library is built by pals-cpp and is not
+# shipped with this package, so it has to be searched for. In order:
+#   1. $PALS_CPP_LIB — full path to the shared library itself
+#   2. $PALS_CPP_DIR — a pals-cpp checkout; its build directory is searched
+#   3. a pals-cpp checkout beside this one (the layout the installation guide
+#      describes)
+function _libyaml_candidates()
+  # dlext is "dylib" on macOS, "so" on Linux, "dll" on Windows. MSVC drops the
+  # "lib" prefix and writes into a per-configuration subdirectory; the
+  # single-config generators used elsewhere write straight into build/.
+  names = ("libyaml_c_wrapper.$(Libdl.dlext)", "yaml_c_wrapper.$(Libdl.dlext)")
+  subdirs = ("", "Release", "Debug")
+
+  out = String[]
+  haskey(ENV, "PALS_CPP_LIB") && push!(out, ENV["PALS_CPP_LIB"])
+
+  roots = String[]
+  haskey(ENV, "PALS_CPP_DIR") && push!(roots, ENV["PALS_CPP_DIR"])
+  push!(roots, normpath(joinpath(@__DIR__, "..", "..", "pals-cpp")))
+
+  for r in roots, s in subdirs, n in names
+    push!(out, normpath(joinpath(r, "build", s, n)))
+  end
+  return out
+end
+
+# Locate the library, or explain exactly what was looked for and how to fix it.
+function _find_libyaml()
+  candidates = _libyaml_candidates()
+  for c in candidates
+    isfile(c) && return c
+  end
+  error("""
+        PALSJulia could not find the pals-cpp shared library \
+        (libyaml_c_wrapper.$(Libdl.dlext)).
+
+        Build it from a pals-cpp checkout:
+            cmake -S . -B build && cmake --build build
+
+        Then either clone pals-cpp next to PALSJulia, or point PALSJulia at it:
+            ENV["PALS_CPP_DIR"] = "/path/to/pals-cpp"
+            ENV["PALS_CPP_LIB"] = "/path/to/libyaml_c_wrapper.$(Libdl.dlext)"
+
+        Searched:
+        """ * join("  " .* candidates, "\n"))
+end
+
+"""
+    PALSJulia.libyaml() -> String
+
+Absolute path to the pals-cpp shared library every `@ccall` here targets,
+resolved on first use and cached thereafter. Throws a descriptive error listing
+every path tried if the library cannot be found.
+
+Resolution is deliberately lazy rather than done in `__init__`: `using
+PALSJulia` must succeed without the C library present, so that documentation and
+other tooling can read the package without a C++ toolchain. The cost is that a
+missing library is reported at the first call rather than at load.
+"""
+function libyaml()
+  isempty(LIBYAML[]) && (LIBYAML[] = _find_libyaml())
+  return LIBYAML[]
+end
 
 # ─── constants matching the C header ────────────────────────────────────────
 # Sentinel meaning "no node" / "append at the end"; (size_t)-1 in C.
@@ -20,7 +91,7 @@ mutable struct YAMLTree
     t = new(handle)
     finalizer(t) do tree
       if tree.handle != C_NULL
-        @ccall LIBYAML.delete_tree(tree.handle::Ptr{Cvoid})::Cvoid
+        @ccall (libyaml()).delete_tree(tree.handle::Ptr{Cvoid})::Cvoid
         tree.handle = C_NULL
       end
     end
