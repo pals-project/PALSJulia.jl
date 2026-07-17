@@ -15,7 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         julia-version: ['1.11', '1.12']
-        os: [macos-latest]
+        os: [macos-latest, ubuntu-latest]
     
     steps: 
       - name: Checkout PALSJulia repository
@@ -35,16 +35,14 @@ jobs:
         with:
           version: ${{ matrix.julia-version }}
 
+      # pals-cpp fetches rapidyaml (and the rest) itself via CMake FetchContent,
+      # so a compiler and CMake are all that is needed. Both runners ship CMake
+      # preinstalled; only Linux needs a compiler pulled in explicitly.
       - name: Install system dependencies (Ubuntu)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake build-essential libyaml-dev
-
-      - name: Install system dependencies (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          brew install cmake yaml-cpp
+          sudo apt-get install -y cmake build-essential
 
       - name: Build C++ library
         run: |

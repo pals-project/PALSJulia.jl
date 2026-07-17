@@ -46,6 +46,15 @@ include("yaml_wrapper.jl")
 include("toBmad.jl")
 include("toSciBmad.jl")
 
+# Locate the pals-cpp shared library. Done here rather than at include time so
+# the path is resolved per session instead of being frozen into the precompile
+# cache. Every entry point ccalls into the library, so failing to find it is
+# fatal and is reported immediately with the search path.
+function __init__()
+  LIBYAML[] = _find_libyaml()
+  return nothing
+end
+
 
 
 export parse_and_expand_pals, evaluate_pals_expression, node_correspondence, match_names, pals_to_bmad, write_bmad_file, pals_to_scibmad, write_scibmad_file, export_manipulators
