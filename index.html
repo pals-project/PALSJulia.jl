@@ -287,7 +287,8 @@ sidebar).</p>
 <span class="c"># Read a lattice file and expand it.</span>
 <span class="n">lat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">parse_and_expand_pals</span><span class="p">(</span><span class="s">&quot;ex.pals.yaml&quot;</span><span class="p">)</span>
 
-<span class="n">println</span><span class="p">(</span><span class="n">pj</span><span class="o">.</span><span class="n">to_yaml_string</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">expanded</span><span class="p">))</span><span class="w">   </span><span class="c"># the expanded lattice as YAML</span>
+<span class="n">println</span><span class="p">(</span><span class="n">pj</span><span class="o">.</span><span class="n">to_yaml_string</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">expanded</span><span class="p">))</span><span class="w">   </span><span class="c"># the expanded root lattice as YAML</span>
+<span class="n">println</span><span class="p">(</span><span class="n">pj</span><span class="o">.</span><span class="n">to_yaml_string</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">leftover</span><span class="p">))</span><span class="w">   </span><span class="c"># everything else in the document</span>
 
 <span class="c"># Build a document from scratch and write it out.</span>
 <span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">create_empty_tree</span><span class="p">()</span>

@@ -253,15 +253,16 @@
 <h1>Evaluating expressions<a class="headerlink" href="#evaluating-expressions" title="Link to this heading">¶</a></h1>
 <p>A PALS lattice may write numeric values as mathematical <em>expressions</em> —
 <code class="docutils literal notranslate"><span class="pre">0.3</span> <span class="pre">*</span> <span class="pre">r_electron</span></code>, <code class="docutils literal notranslate"><span class="pre">a_const^2</span></code>, <code class="docutils literal notranslate"><span class="pre">mass_of(&quot;proton&quot;)</span></code>. When
-<code class="docutils literal notranslate"><span class="pre">parse_and_expand_pals</span></code> builds the <strong><code class="docutils literal notranslate"><span class="pre">expanded</span></code></strong> view it evaluates every such
-expression to a plain number, so the expanded lattice is fully numeric and
-ready for a simulation program to consume. The <code class="docutils literal notranslate"><span class="pre">original</span></code> and <code class="docutils literal notranslate"><span class="pre">combined</span></code> views
-always keep the expression text exactly as written.</p>
+<code class="docutils literal notranslate"><span class="pre">parse_and_expand_pals</span></code> expands a lattice it evaluates every such expression to
+a plain number — across both the <strong><code class="docutils literal notranslate"><span class="pre">expanded</span></code></strong> and <strong><code class="docutils literal notranslate"><span class="pre">leftover</span></code></strong> views — so the
+expanded lattice is fully numeric and ready for a simulation program to consume.
+The <code class="docutils literal notranslate"><span class="pre">original</span></code> and <code class="docutils literal notranslate"><span class="pre">combined</span></code> views always keep the expression text exactly as
+written.</p>
 <div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="n">PALSJulia</span><span class="w"> </span><span class="n">as</span><span class="w"> </span><span class="n">pj</span>
 
 <span class="n">lat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">parse_and_expand_pals</span><span class="p">(</span><span class="s">&quot;ex.pals.yaml&quot;</span><span class="p">)</span>
 
-<span class="c"># `combined` keeps the source text; `expanded` holds the evaluated number.</span>
+<span class="c"># `combined` keeps the source text; the evaluated number is downstream of it.</span>
 <span class="n">pj</span><span class="o">.</span><span class="n">to_yaml_string</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">combined</span><span class="p">)</span><span class="w">   </span><span class="c"># length: 0.3 * r_electron</span>
 <span class="n">pj</span><span class="o">.</span><span class="n">to_yaml_string</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">expanded</span><span class="p">)</span><span class="w">   </span><span class="c"># length: 8.4538209614999992e-16</span>
 </pre></div>
