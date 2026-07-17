@@ -90,14 +90,22 @@ PALS:
     @testset "a definition used by the lattice reaches both trees" begin
       # main_line is named by lat1's branches, so expansion inlines a copy of its
       # definition into the lattice while the definition itself stays in
-      # leftover. The combined node ties the two sides together.
-      ml_kind = lat.combined["PALS"]["facility"][4]["main_line"]["kind"]
-      c = corr[ml_kind]
+      # leftover. The combined node ties the two sides together. `line` is the
+      # node to follow, not `kind`: inlining main_line made it a branch, and a
+      # branch has no kind, so no expanded node answers to main_line's.
+      ml = lat.combined["PALS"]["facility"][4]["main_line"]
+      @test isempty(corr[ml["kind"]].expanded)
+
+      c = corr[ml["line"]]
       @test length(c.combined) == 1
       @test length(c.leftover) == 1
       @test length(c.expanded) == 1
-      @test String(c.leftover[1]) == "BeamLine"
-      @test String(c.expanded[1]) == "BeamLine"
+      # The two copies are the same node of the same definition, but only the
+      # expanded one has been expanded: `cell: repeat: 3` is unrolled to 3
+      # entries there, while the definition in leftover still holds the 1 entry
+      # it was written with.
+      @test length(c.leftover[1]) == 1
+      @test length(c.expanded[1]) == 3
       # Both copies resolve back to the same class.
       @test corr[c.expanded[1]] == c
       @test corr[c.leftover[1]] == c

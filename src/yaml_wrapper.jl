@@ -83,7 +83,10 @@ A `Lattices` with four independent tree views:
   `inherit`ed ancestors merged in, and forks resolved. It is rooted at a map
   holding the single `name => Lattice` entry, without the `PALS`/`facility`
   scaffolding the lattice was defined under, so the lattice is reached as
-  `lat.expanded["lat1"]` rather than through `["PALS"]["facility"]`.
+  `lat.expanded["lat1"]` rather than through `["PALS"]["facility"]`. Its
+  `branches` entries are branches, not the `BeamLine`s they were built from, and
+  so carry no `kind`; a `BeamLine` nested in a `line` is a sub-line and keeps its
+  own.
 - `leftover`: everything the `expanded` tree does not carry, keeping its
   `PALS`/`facility` scaffolding: element and beamline definitions, `use`
   statements, constants and variables, `Controller`s, and any `Lattice` that
