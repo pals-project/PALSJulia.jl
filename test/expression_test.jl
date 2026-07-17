@@ -191,6 +191,12 @@ PALS:
     @test_throws ArgumentError evaluate_pals_expression("1 +")              # parse error
   end
 
+  # The element `name` as expansion inlined it into `lat.expanded`. The expanded
+  # tree is rooted at the lattice entry, so the path runs
+  # lattice > branches > beamline > line > element, with no PALS/facility above.
+  inlined(lat, lattice, beamline, name) =
+    lat.expanded[lattice]["branches"][1][beamline]["line"][1][name]
+
   @testset "parse_and_expand_pals evaluates the expanded tree" begin
     mktempdir() do dir
       path = joinpath(dir, "expr.pals.yaml")
@@ -198,8 +204,8 @@ PALS:
       lat = parse_and_expand_pals(path)
 
       a_var = 3.75e7 / (2.99792458e8)^2
-      fac = lat.expanded["PALS"]["facility"]
-      cleo = fac[2]["cleo"]
+      # cleo is named by main_line, so its definition is inlined into lat1.
+      cleo = inlined(lat, "lat1", "main_line", "cleo")
       mmp = cleo["MagneticMultipoleP"]
 
       # Immediate expression using a user variable.
@@ -208,8 +214,11 @@ PALS:
       @test Float64(mmp["Kn1"]) ≈ 3.74 * a_var
       # random_gauss() is deferred: the text is left untouched.
       @test String(mmp["Kn2"]) == "0.01 + 0.003*random_gauss()"
-      # Full-form constant defined via a particle function.
-      @test Float64(fac[3]["m_e"]["value"]) ≈ 510998.95069000003
+
+      # m_e is not part of the lattice and nothing in it refers to m_e, so it is
+      # left over — evaluated all the same.
+      @test Float64(lat.leftover["PALS"]["facility"][3]["m_e"]["value"]) ≈
+            510998.95069000003
 
       # The combined tree keeps the original expression text.
       @test String(lat.combined["PALS"]["facility"][2]["cleo"]["length"]) ==
@@ -223,9 +232,9 @@ PALS:
       write(path, ELEMENT_PARAM_REF_LATTICE)
       lat = parse_and_expand_pals(path)
 
-      fac = lat.expanded["PALS"]["facility"]
       # edge_int2 references thingB's Kn2L (0.1) via element>group.param syntax.
-      @test Float64(fac[2]["DH1A"]["BendP"]["edge_int2"]) ≈ 0.02 * 0.1
+      dh1a = inlined(lat, "lat1", "main_line", "DH1A")
+      @test Float64(dh1a["BendP"]["edge_int2"]) ≈ 0.02 * 0.1
     end
   end
 
@@ -236,16 +245,18 @@ PALS:
       lat = parse_and_expand_pals(path; problems=:none)
 
       m_3he = evaluate_pals_expression("mass_of(\"#3He\")")
-      fac = lat.expanded["PALS"]["facility"]
+      # The constants block is not part of the lattice, so it is left over.
+      consts = lat.leftover["PALS"]["facility"][1]["constants"]
+      dh1a = inlined(lat, "lat1", "main_line", "DH1A")
 
       # mass_of(species) resolves the `species: "#3He"` constant by name.
-      @test Float64(fac[1]["constants"]["b_const"]) ≈ 0.45 * m_3he
-      @test Float64(fac[2]["DH1A"]["BendP"]["e_tot"]) ≈ 1.1 * m_3he
+      @test Float64(consts["b_const"]) ≈ 0.45 * m_3he
+      @test Float64(dh1a["BendP"]["e_tot"]) ≈ 1.1 * m_3he
       # A bare identifier naming the species constant (species_ref: species) is
       # replaced by its species-name string in the expanded tree.
-      @test String(fac[2]["DH1A"]["ReferenceP"]["species_ref"]) == "#3He"
+      @test String(dh1a["ReferenceP"]["species_ref"]) == "#3He"
       # The species constant itself keeps its string species name.
-      @test String(fac[1]["constants"]["species"]) == "#3He"
+      @test String(consts["species"]) == "#3He"
     end
   end
 
@@ -257,7 +268,9 @@ PALS:
 
       cur1 = 0.023
       cur2 = cur1 / 2.99792458e8
-      fac = lat.expanded["PALS"]["facility"]
+      # Controllers are facility-level, so they are left over rather than part of
+      # the lattice; their expressions are evaluated all the same.
+      fac = lat.leftover["PALS"]["facility"]
       ps27 = fac[2]["ps27"]
 
       # A controller variable evaluated with the controller's own symbol table:

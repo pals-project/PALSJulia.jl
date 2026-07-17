@@ -2,16 +2,41 @@
 
 The `parse_and_expand_pals` entry point reads a PALS lattice
 file, resolves any files it includes, and expands the lattice line into an
-ordered list of elements. It returns a `Lattices` value with three independent
+ordered list of elements. It returns a `Lattices` value with four independent
 views of the document:
 
 - **`original`** — the lattice exactly as written in the top-level file.
 - **`combined`** — the lattice after its `include`d files have been merged in.
-- **`expanded`** — the fully expanded lattice, with lines resolved into a flat
-  ordered sequence of elements.
+- **`expanded`** — the fully expanded root lattice, with lines resolved into a
+  flat ordered sequence of elements, and nothing else.
+- **`leftover`** — everything else the document contained.
 
 Each view is an ordinary `YAMLNode`, so everything in
 [Parsing and writing YAML](parsing.md) applies to it.
+
+## `expanded` and `leftover`
+
+Expansion picks one lattice — the root lattice — and resolves it. `expanded`
+holds *only* that result, and it is rooted at the lattice entry itself, without
+the `PALS:`/`facility:` scaffolding the lattice was written under:
+
+```yaml
+lat1:
+  kind: Lattice
+  branches:
+    - main_line:
+        ...
+```
+
+so the lattice is reached as `lat.expanded["lat1"]`, not through
+`["PALS"]["facility"]`.
+
+Everything the root lattice did not absorb stays in `leftover`, which *does*
+keep the full `PALS:`/`facility:` document: element and beamline definitions,
+`use` statements, constants and variables, `Controller`s, and any `Lattice`
+other than the one expanded. Definitions that expansion substituted into the
+lattice are copied rather than moved, so they appear in both views — the
+definition in `leftover`, its inlined copy in `expanded`.
 
 ## Basic use
 
@@ -23,6 +48,7 @@ lat = pj.parse_and_expand_pals("ex.pals.yaml")
 println(pj.to_yaml_string(lat.original))
 println(pj.to_yaml_string(lat.combined))
 println(pj.to_yaml_string(lat.expanded))
+println(pj.to_yaml_string(lat.leftover))
 ```
 
 To expand a single named lattice from a file that defines several, pass its
@@ -81,13 +107,13 @@ lat = cd(lattice_dir) do
 end
 ```
 
-## Correspondence between the three views
+## Correspondence between the views
 
-The `original`, `combined`, and `expanded` trees describe the same lattice at
-three stages of processing, so most of their nodes correspond: the constant
-`a_const`, for instance, exists in all three. `node_correspondence` builds that
-mapping — given any node, it returns the nodes it corresponds to in the other
-two views.
+The four trees describe the same lattice at successive stages of processing, so
+most of their nodes correspond: the constant `a_const`, for instance, exists in
+`original`, in `combined`, and — since it is not part of the lattice — in
+`leftover`. `node_correspondence` builds that mapping: given any node, it returns
+the nodes it corresponds to in the other views.
 
 ```julia
 lat  = pj.parse_and_expand_pals("ex.pals.yaml")
@@ -95,23 +121,29 @@ corr = pj.node_correspondence(lat)
 ```
 
 The result is a `Dict` keyed by `YAMLNode`. Looking up a node returns a named
-tuple whose fields — `original`, `combined`, `expanded` — are each a
+tuple whose fields — `original`, `combined`, `expanded`, `leftover` — are each a
 `Vector{YAMLNode}` listing the corresponding nodes in that view:
 
 ```julia
 a_const = lat.combined["PALS"]["facility"][1]["constants"]["a_const"]
 
 corr[a_const].original   # [ the a_const node in the original tree ]
-corr[a_const].expanded   # [ the a_const node in the expanded tree ]
+corr[a_const].leftover   # [ the a_const node in the leftover tree ]
+corr[a_const].expanded   # [] — the lattice never referenced it
 ```
 
-The queried node is included in its own view's vector, so the three vectors
+The queried node is included in its own view's vector, so the four vectors
 together form the complete set of nodes that correspond to one another. You can
-look a class up starting from *any* of the three trees and get the same result:
+look a class up starting from *any* of the four trees and get the same result:
 
 ```julia
 corr[corr[a_const].original[1]] == corr[a_const]   # true
 ```
+
+Because expansion splits the document, a `combined` node can reach `expanded`,
+`leftover`, or both. A beamline named by the root lattice is a good example: its
+definition stays in `leftover` while a copy of it is inlined into `expanded`, and
+both belong to the same class.
 
 ### One-to-many correspondences
 
@@ -134,12 +166,13 @@ end
 
 A vector is empty when a view has no corresponding node. For example, the
 `fork_pointer` scalar that expansion synthesises exists only in `expanded`, so
-its `original` and `combined` vectors are empty.
+its `original` and `combined` vectors are empty; a constant the lattice never
+refers to exists only in `leftover`, so its `expanded` vector is empty.
 
 !!! note "The mapping is exact, not heuristic"
     The correspondence is not recovered by re-matching the finished trees. The
-    three views are built as a derivation chain
-    (`original` → `combined` → `expanded`), and the provenance of every node is
+    views are built as a derivation chain (`original` → `combined` →
+    `expanded` and `leftover`), and the provenance of every node is
     recorded as it is copied. `node_correspondence` reads back that recorded
     provenance, so the mapping is exact even where nodes are duplicated,
     merged, or renamed during expansion.
@@ -183,8 +216,8 @@ pj.match_names(lat.expanded, "Q1a")             # the element node
 pj.match_names(lat.expanded, "Q1a>BendP")       # a parameter-group node
 ```
 
-Pass any node of the tree you want to search — normally `lat.expanded`, since
-beamlines and elements are only fully realised after expansion. The returned
+Pass any node of the tree you want to search — `lat.expanded` for beamlines and
+elements, since those are only fully realised after expansion. The returned
 nodes belong to that same tree, so you can read or modify them in place:
 
 ```julia
@@ -201,9 +234,14 @@ constant and variable defined directly under the `PALS` or `facility` node, in
 both the full (`kind: constant` / `kind: variable`) and compact
 (`constants:` / `variables:` list) forms:
 
+Constants and variables are defined at facility level rather than inside the
+lattice, so they are found in `lat.leftover` — searching `lat.expanded` for one
+matches nothing, as the `PALS`/`facility` node it lives under is not part of
+that tree:
+
 ```julia
-pj.match_names(lat.expanded, "a_const")   # one named constant
-pj.match_names(lat.expanded, "a_.*")      # every constant/var named a_…
+pj.match_names(lat.leftover, "a_const")   # one named constant
+pj.match_names(lat.leftover, "a_.*")      # every constant/var named a_…
 ```
 
 For a compact-form entry the matched node is the `name: value` scalar; for a

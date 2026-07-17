@@ -7,7 +7,9 @@
 # {lattice}, {branch}, {name} are PCRE2 patterns (anchored whole-name matches);
 # {kind} and the dotted parameter path are matched exactly. It returns the nodes
 # the string resolves to — elements, parameter groups, parameters, constants, or
-# variables — which live in the tree you searched (normally the expanded view).
+# variables — which live in the tree you searched. Elements are searched for in
+# the `expanded` view; constants and variables are not part of the lattice, so
+# they are found in `leftover`.
 
 using PALSJulia
 import PALSJulia as pj
@@ -19,8 +21,8 @@ lat = pj.parse_and_expand_pals(ex_file)
 label(n) = (pj.is_map(n) || pj.is_sequence(n)) ? pj.node_key(n) :
            "$(pj.node_key(n)) = $(String(n))"
 
-show_matches(q) = begin
-  m = pj.match_names(lat.expanded, q)
+show_matches(q; tree = lat.expanded) = begin
+  m = pj.match_names(tree, q)
   println("  \"", q, "\"  →  ", length(m), " match(es)")
   for n in m
     println("      ", label(n))
@@ -39,10 +41,11 @@ println("\nElements:")
 show_matches("Q1a")
 
 # ── Constants and variables ───────────────────────────────────────────────────
-# A bare name also matches constants/variables by name.
+# A bare name also matches constants/variables by name. These are defined at
+# facility level rather than inside the lattice, so search the leftover view.
 println("\nConstants and variables:")
-show_matches("a_const")
-show_matches(".*_var")
+show_matches("a_const"; tree = lat.leftover)
+show_matches(".*_var"; tree = lat.leftover)
 
 # ── Editing matched parameters in place ───────────────────────────────────────
 # The returned nodes belong to lat.expanded, so they can be modified directly.
