@@ -19,4 +19,8 @@ println("\n", "-"^50)
 
 println("Printing expanded lattice information:")
 println(pj.to_yaml_string(lat.expanded))
+println("\n", "-"^50)
+
+println("Printing what expansion left over:")
+println(pj.to_yaml_string(lat.leftover))
 

@@ -47,7 +47,8 @@ import PALSJulia as pj
 # Read a lattice file and expand it.
 lat = pj.parse_and_expand_pals("ex.pals.yaml")
 
-println(pj.to_yaml_string(lat.expanded))   # the expanded lattice as YAML
+println(pj.to_yaml_string(lat.expanded))   # the expanded root lattice as YAML
+println(pj.to_yaml_string(lat.leftover))   # everything else in the document
 
 # Build a document from scratch and write it out.
 root = pj.create_empty_tree()

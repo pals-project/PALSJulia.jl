@@ -3,7 +3,7 @@ using PALSJulia
 using PALSJulia: parse_and_expand_pals, node_correspondence, parse_string
 
 # A self-contained lattice: `a_const` sits outside the expanded lattice (so it
-# is identical across all three trees), while `repeat: 3` exercises the
+# is left over rather than expanded), while `repeat: 3` exercises the
 # one-to-many correspondence produced by expansion.
 const CORR_LATTICE = """
 PALS:
@@ -40,32 +40,36 @@ PALS:
     @testset "returns a Dict keyed by node" begin
       @test corr isa Dict
       @test !isempty(corr)
-      # The combined and expanded roots are keys.
+      # The combined, expanded and leftover roots are keys.
       @test haskey(corr, lat.combined)
       @test haskey(corr, lat.expanded)
+      @test haskey(corr, lat.leftover)
     end
 
-    # a_const is untouched by expansion: one node in each of the three trees.
+    # a_const is not part of the lattice and nothing in it refers to a_const, so
+    # expansion leaves it behind: one node in original, combined and leftover,
+    # and none in expanded.
     a_const = lat.combined["PALS"]["facility"][1]["constants"]["a_const"]
     entry = corr[a_const]
 
-    @testset "one-to-one node maps across all three trees" begin
+    @testset "a node outside the lattice maps into leftover, not expanded" begin
       @test length(entry.original) == 1
       @test length(entry.combined) == 1
-      @test length(entry.expanded) == 1
+      @test length(entry.leftover) == 1
+      @test isempty(entry.expanded)
       @test String(entry.original[1]) == "0.3 * r_electron"
       @test String(entry.combined[1]) == "0.3 * r_electron"
-      # The expanded copy has its expression evaluated to a number, while the
+      # The leftover copy has its expression evaluated to a number, while the
       # original/combined copies keep the original expression text.
-      @test Float64(entry.expanded[1]) == evaluate_pals_expression("0.3 * r_electron")
+      @test Float64(entry.leftover[1]) == evaluate_pals_expression("0.3 * r_electron")
       # The queried node appears in its own tree's vector.
       @test entry.combined[1] == a_const
     end
 
     @testset "lookup is consistent from any tree" begin
-      # Reaching the class from the original or expanded node gives the same set.
+      # Reaching the class from the original or leftover node gives the same set.
       @test corr[entry.original[1]] == entry
-      @test corr[entry.expanded[1]] == entry
+      @test corr[entry.leftover[1]] == entry
     end
 
     @testset "repeat gives one-to-many correspondence" begin
@@ -77,6 +81,26 @@ PALS:
       @test length(c.expanded) >= 3
       # Every expanded copy resolves back to this same class.
       @test all(corr[n] == c for n in c.expanded)
+      # The definition it was expanded from is still standing in leftover, and
+      # belongs to the same class.
+      @test length(c.leftover) == 1
+      @test corr[c.leftover[1]] == c
+    end
+
+    @testset "a definition used by the lattice reaches both trees" begin
+      # main_line is named by lat1's branches, so expansion inlines a copy of its
+      # definition into the lattice while the definition itself stays in
+      # leftover. The combined node ties the two sides together.
+      ml_kind = lat.combined["PALS"]["facility"][4]["main_line"]["kind"]
+      c = corr[ml_kind]
+      @test length(c.combined) == 1
+      @test length(c.leftover) == 1
+      @test length(c.expanded) == 1
+      @test String(c.leftover[1]) == "BeamLine"
+      @test String(c.expanded[1]) == "BeamLine"
+      # Both copies resolve back to the same class.
+      @test corr[c.expanded[1]] == c
+      @test corr[c.leftover[1]] == c
     end
 
     @testset "unmapped nodes are absent from the Dict" begin

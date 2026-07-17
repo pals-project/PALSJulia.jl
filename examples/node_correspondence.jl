@@ -1,9 +1,9 @@
-# Example: mapping corresponding nodes across the three trees of a PALS lattice.
+# Example: mapping corresponding nodes across the four trees of a PALS lattice.
 #
-# parse_and_expand_pals returns three views of a lattice — `original`,
-# `combined`, and `expanded`. node_correspondence connects the nodes of these
-# views: given any node, it hands back the nodes it corresponds to in the other
-# two trees. The correspondence is computed from provenance recorded as the
+# parse_and_expand_pals returns four views of a lattice — `original`,
+# `combined`, `expanded` and `leftover`. node_correspondence connects the nodes
+# of these views: given any node, it hands back the nodes it corresponds to in
+# the others. The correspondence is computed from provenance recorded as the
 # trees are derived from one another, so it is exact even where expansion
 # duplicates a node (a `repeat`, an `inherit`, a scalar substitution, a fork).
 
@@ -17,19 +17,21 @@ corr = pj.node_correspondence(lat)
 
 println("Built a correspondence over ", length(corr), " nodes.\n")
 
-# ── A node that survives expansion unchanged maps one-to-one ──────────────────
-# 'a_const' is defined at the top level of the facility, outside the expanded
-# lattice, so it appears once in each of the three trees.
+# ── A node outside the lattice is left over, not expanded ─────────────────────
+# 'a_const' is defined at the top level of the facility and the lattice never
+# refers to it, so expansion leaves it behind: it appears once in `original`,
+# once in `combined` and once in `leftover`, and not at all in `expanded`.
 a_const = lat.combined["PALS"]["facility"][1]["constants"]["a_const"]
 entry   = corr[a_const]
 
 println("Correspondence of the 'a_const' node:")
 println("  in original: ", [pj.to_yaml_string(n) for n in entry.original])
 println("  in combined: ", [pj.to_yaml_string(n) for n in entry.combined])
-println("  in expanded: ", [pj.to_yaml_string(n) for n in entry.expanded])
+println("  in leftover: ", [pj.to_yaml_string(n) for n in entry.leftover])
+println("  in expanded: ", [pj.to_yaml_string(n) for n in entry.expanded], "  (empty)")
 println()
 
-# The map can be queried from *any* of the three trees and returns the same
+# The map can be queried from *any* of the four trees and returns the same
 # equivalence class — here we start from the node in the original tree.
 @assert corr[entry.original[1]] == entry
 println("Looking the class up from the original node gives the same result.\n")

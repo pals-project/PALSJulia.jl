@@ -1,9 +1,10 @@
 # Example: evaluating the mathematical expressions in a PALS lattice.
 #
-# When parse_and_expand_pals builds the `expanded` view it evaluates every
-# expression to a number, drawing on built-in physical constants, math and
-# particle-data functions, and any constants/variables the lattice defines. The
-# `original` and `combined` views keep the expression text as written.
+# parse_and_expand_pals evaluates every expression to a number, drawing on
+# built-in physical constants, math and particle-data functions, and any
+# constants/variables the lattice defines. This happens across both the
+# `expanded` and `leftover` views; the `original` and `combined` views keep the
+# expression text as written.
 # evaluate_pals_expression evaluates a single expression string on its own.
 
 using PALSJulia
@@ -13,10 +14,11 @@ ex_file = joinpath(@__DIR__, "..", "lattice_files", "ex.pals.yaml")
 
 lat = pj.parse_and_expand_pals(ex_file)
 
-# ── combined keeps the source text; expanded holds the evaluated number ───────
+# ── combined keeps the source text; the evaluated number is downstream of it ──
+# Constants and variables are not part of the lattice, so they are `leftover`.
 consts_c = lat.combined["PALS"]["facility"][1]["constants"]
-consts_e = lat.expanded["PALS"]["facility"][1]["constants"]
-vars_e   = lat.expanded["PALS"]["facility"][2]["variables"]
+consts_e = lat.leftover["PALS"]["facility"][1]["constants"]
+vars_e   = lat.leftover["PALS"]["facility"][2]["variables"]
 
 println("a_const  as written : ", String(consts_c["a_const"]))   # 0.3 * r_electron
 println("a_const  evaluated  : ", String(consts_e["a_const"]))   # a number

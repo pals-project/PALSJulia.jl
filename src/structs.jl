@@ -56,12 +56,13 @@ struct StringListC
   count::Csize_t
 end
 
-# Raw C struct returned by parse_and_expand_pals — three tree handles plus the
+# Raw C struct returned by parse_and_expand_pals — four tree handles plus the
 # problem list, all by value. Layout must match `struct lattices`.
 struct LatticesHandle
   original::Ptr{Cvoid}
   combined::Ptr{Cvoid}
   expanded::Ptr{Cvoid}
+  leftover::Ptr{Cvoid}
   problems::StringListC
 end
 
@@ -73,6 +74,7 @@ struct NodeLinkC
   original::Csize_t
   combined::Csize_t
   expanded::Csize_t
+  leftover::Csize_t
 end
 
 struct CorrespondenceMapC
@@ -91,9 +93,10 @@ end
 
 #---------------------------------------------------------------------------------------------------
 
-"""Three representations of a lattice, each as a root `YAMLNode`."""
+"""Four representations of a lattice, each as a root `YAMLNode`."""
 struct Lattices
   original::YAMLNode
   combined::YAMLNode
   expanded::YAMLNode
+  leftover::YAMLNode
 end
