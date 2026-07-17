@@ -73,7 +73,8 @@ are wired up correctly.
 ## Pointing at a pals-cpp elsewhere
 
 The side-by-side layout is only the default. Two environment variables override
-it, read when PALSJulia is loaded — set either one *before* `using PALSJulia`:
+it, read the first time PALSJulia calls into the library — so setting either one
+any time before that first call works, including after `using PALSJulia`:
 
 | Variable | Meaning |
 |---|---|
@@ -85,11 +86,13 @@ ENV["PALS_CPP_DIR"] = "/opt/src/pals-cpp"
 using PALSJulia
 ```
 
-`PALS_CPP_LIB` wins if both are set. The resolved path is available as
-`PALSJulia.LIBYAML[]`, which is worth checking first if calls behave unexpectedly
-— it is resolved per session rather than baked in when the package is
-precompiled, so a stale precompile cache is never the cause.
+`PALS_CPP_LIB` wins if both are set. `PALSJulia.libyaml()` returns the resolved
+path, which is worth checking first if calls behave unexpectedly — it is
+resolved per session rather than baked in when the package is precompiled, so a
+stale precompile cache is never the cause.
 
-If the library cannot be found, loading fails with an error listing every path
-that was tried, which is usually enough to spot a missing build or a typo in the
-variable.
+If the library cannot be found, the first call fails with an error listing every
+path that was tried, which is usually enough to spot a missing build or a typo
+in the variable. Note that `using PALSJulia` itself always succeeds: the library
+is looked up lazily so that tooling which only reads the package — building
+these docs, for one — does not need a C++ toolchain.

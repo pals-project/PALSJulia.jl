@@ -1,15 +1,14 @@
 using Libdl
 
-# Path to the pals-cpp shared library, filled in by __init__ (see _find_libyaml).
-#
-# A Ref rather than a plain const String: the value is read on every @ccall, so
-# it is resolved fresh in each session instead of being baked into the
-# precompile cache. That keeps the cache valid across machines and lets the
-# environment variables below take effect without a forced recompile.
-const LIBYAML = Ref{String}()
+# Cached path to the pals-cpp shared library; empty until first resolved by
+# libyaml(). A Ref rather than a const String so the path is read at call time
+# rather than frozen into the precompile cache, which keeps the cache valid
+# across machines and lets the environment variables below take effect without
+# a forced recompile.
+const LIBYAML = Ref{String}("")
 
 # Every place the library might be. The library is built by pals-cpp and is not
-# shipped with this package, so it has to be located at load time. In order:
+# shipped with this package, so it has to be searched for. In order:
 #   1. $PALS_CPP_LIB — full path to the shared library itself
 #   2. $PALS_CPP_DIR — a pals-cpp checkout; its build directory is searched
 #   3. a pals-cpp checkout beside this one (the layout the installation guide
@@ -47,13 +46,29 @@ function _find_libyaml()
         Build it from a pals-cpp checkout:
             cmake -S . -B build && cmake --build build
 
-        Then either clone pals-cpp next to PALSJulia, or point PALSJulia at it
-        before `using PALSJulia`:
+        Then either clone pals-cpp next to PALSJulia, or point PALSJulia at it:
             ENV["PALS_CPP_DIR"] = "/path/to/pals-cpp"
             ENV["PALS_CPP_LIB"] = "/path/to/libyaml_c_wrapper.$(Libdl.dlext)"
 
         Searched:
         """ * join("  " .* candidates, "\n"))
+end
+
+"""
+    PALSJulia.libyaml() -> String
+
+Absolute path to the pals-cpp shared library every `@ccall` here targets,
+resolved on first use and cached thereafter. Throws a descriptive error listing
+every path tried if the library cannot be found.
+
+Resolution is deliberately lazy rather than done in `__init__`: `using
+PALSJulia` must succeed without the C library present, so that documentation and
+other tooling can read the package without a C++ toolchain. The cost is that a
+missing library is reported at the first call rather than at load.
+"""
+function libyaml()
+  isempty(LIBYAML[]) && (LIBYAML[] = _find_libyaml())
+  return LIBYAML[]
 end
 
 # ─── constants matching the C header ────────────────────────────────────────
@@ -76,7 +91,7 @@ mutable struct YAMLTree
     t = new(handle)
     finalizer(t) do tree
       if tree.handle != C_NULL
-        @ccall (LIBYAML[]).delete_tree(tree.handle::Ptr{Cvoid})::Cvoid
+        @ccall (libyaml()).delete_tree(tree.handle::Ptr{Cvoid})::Cvoid
         tree.handle = C_NULL
       end
     end
