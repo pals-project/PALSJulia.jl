@@ -475,6 +475,50 @@ pattern yields an empty vector. A runnable version of these examples is in
 <code class="docutils literal notranslate"><span class="pre">examples/match_names.jl</span></code>.</p>
 </section>
 </section>
+<section id="reading-a-parameter-value">
+<h2>Reading a parameter value<a class="headerlink" href="#reading-a-parameter-value" title="Link to this heading">¶</a></h2>
+<p>Where <code class="docutils literal notranslate"><span class="pre">match_names</span></code> returns the <em>nodes</em> a string refers to, <code class="docutils literal notranslate"><span class="pre">parameter_value</span></code>
+returns the single <em>value</em> a parameter holds. It takes the whole expanded lattice
+<code class="docutils literal notranslate"><span class="pre">lat</span></code> and the same <em>Name Matching</em> syntax, and returns a <code class="docutils literal notranslate"><span class="pre">Float64</span></code>, a <code class="docutils literal notranslate"><span class="pre">String</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">missing</span></code>. Like <code class="docutils literal notranslate"><span class="pre">match_names</span></code>, the string names either an element parameter (with
+a parameter path) or, as a <em>bare</em> name, a constant or variable:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">lat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">parse_and_expand_pals</span><span class="p">(</span><span class="s">&quot;ex.pals.yaml&quot;</span><span class="p">)</span>
+
+<span class="n">pj</span><span class="o">.</span><span class="n">parameter_value</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;lat1&gt;&gt;&gt;B1a&gt;BendP.e1&quot;</span><span class="p">)</span><span class="w">        </span><span class="c"># 0.1     (element param, from expanded)</span>
+<span class="n">pj</span><span class="o">.</span><span class="n">parameter_value</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;F1&gt;ReferenceP.species_ref&quot;</span><span class="p">)</span><span class="w">  </span><span class="c"># &quot;#3He&quot;  (a string)</span>
+<span class="n">pj</span><span class="o">.</span><span class="n">parameter_value</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q1&gt;BendP.g&quot;</span><span class="p">)</span><span class="w">                 </span><span class="c"># 0.0     (unset → default)</span>
+<span class="n">pj</span><span class="o">.</span><span class="n">parameter_value</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q1&quot;</span><span class="p">)</span><span class="w">                         </span><span class="c"># missing (an element is not a value)</span>
+<span class="n">pj</span><span class="o">.</span><span class="n">parameter_value</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a_const&quot;</span><span class="p">)</span><span class="w">                    </span><span class="c"># a constant (from leftover)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">parameter_value</span></code> searches only two of <code class="docutils literal notranslate"><span class="pre">lat</span></code>’s four views: <code class="docutils literal notranslate"><span class="pre">lat.expanded</span></code>, which
+holds the element parameters, and then, if the name is not found there,
+<code class="docutils literal notranslate"><span class="pre">lat.leftover</span></code>, which holds the facility-level constants, variables, and any
+definitions not spliced into the lattice. The raw <code class="docutils literal notranslate"><span class="pre">lat.original</span></code> and
+<code class="docutils literal notranslate"><span class="pre">lat.combined</span></code> views are <strong>not</strong> searched.</p>
+<p>Because both searched views are post-expansion, values come back already
+evaluated — a numeric value as a <code class="docutils literal notranslate"><span class="pre">Float64</span></code>, and a non-numeric one (a species name,
+or an expression expansion left unevaluated such as one using <code class="docutils literal notranslate"><span class="pre">random()</span></code>) verbatim
+as a <code class="docutils literal notranslate"><span class="pre">String</span></code>:</p>
+<ul class="simple">
+<li><p><strong>Element parameter, set</strong> — its value: a <code class="docutils literal notranslate"><span class="pre">Float64</span></code>, or a <code class="docutils literal notranslate"><span class="pre">String</span></code> when
+non-numeric.</p></li>
+<li><p><strong>Element parameter, unset</strong> — an element that exists but does not set the
+parameter yields the parameter’s default. That default is <code class="docutils literal notranslate"><span class="pre">0.0</span></code> for every
+parameter for now; real per-parameter defaults come later.</p></li>
+<li><p><strong>Constant or variable</strong> — a bare name yields its value, the same way.</p></li>
+<li><p><strong>Unidentified</strong> — <code class="docutils literal notranslate"><span class="pre">missing</span></code>, when the name matches nothing in either view, is a
+bare element (an element has no single scalar value), stops on a whole parameter
+group rather than a single value, or several matches disagree on the value.
+(Matches that <em>agree</em> — the same element reused, or several that all take the
+default — collapse to the one shared value.)</p></li>
+</ul>
+<p>!!! note “Defaults are provisional”
+Because there is no parameter schema yet, an unset parameter and a name that
+is not a real parameter are indistinguishable, so both return the <code class="docutils literal notranslate"><span class="pre">0.0</span></code>
+default rather than <code class="docutils literal notranslate"><span class="pre">missing</span></code>. When defaults arrive, an unknown parameter
+name will return <code class="docutils literal notranslate"><span class="pre">missing</span></code> instead.</p>
+</section>
 <section id="command-line-driver">
 <h2>Command-line driver<a class="headerlink" href="#command-line-driver" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">examples/read_pals.jl</span></code> is a small runnable program that wraps the above: it reads
@@ -555,6 +599,7 @@ accepts a file path and an optional <code class="docutils literal notranslate"><
 <li><a class="reference internal" href="#constants-and-variables">Constants and variables</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#reading-a-parameter-value">Reading a parameter value</a></li>
 <li><a class="reference internal" href="#command-line-driver">Command-line driver</a></li>
 </ul>
 </li>

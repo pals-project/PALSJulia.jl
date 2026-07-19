@@ -256,6 +256,53 @@ Results are de-duplicated and returned in document order, and a malformed
 pattern yields an empty vector. A runnable version of these examples is in
 `examples/match_names.jl`.
 
+## Reading a parameter value
+
+Where `match_names` returns the *nodes* a string refers to, `parameter_value`
+returns the single *value* a parameter holds. It takes the whole expanded lattice
+`lat` and the same *Name Matching* syntax, and returns a `Float64`, a `String`, or
+`missing`. Like `match_names`, the string names either an element parameter (with
+a parameter path) or, as a *bare* name, a constant or variable:
+
+```julia
+lat = pj.parse_and_expand_pals("ex.pals.yaml")
+
+pj.parameter_value(lat, "lat1>>>B1a>BendP.e1")        # 0.1     (element param, from expanded)
+pj.parameter_value(lat, "F1>ReferenceP.species_ref")  # "#3He"  (a string)
+pj.parameter_value(lat, "Q1>BendP.g")                 # 0.0     (unset → default)
+pj.parameter_value(lat, "Q1")                         # missing (an element is not a value)
+pj.parameter_value(lat, "a_const")                    # a constant (from leftover)
+```
+
+`parameter_value` searches only two of `lat`'s four views: `lat.expanded`, which
+holds the element parameters, and then, if the name is not found there,
+`lat.leftover`, which holds the facility-level constants, variables, and any
+definitions not spliced into the lattice. The raw `lat.original` and
+`lat.combined` views are **not** searched.
+
+Because both searched views are post-expansion, values come back already
+evaluated — a numeric value as a `Float64`, and a non-numeric one (a species name,
+or an expression expansion left unevaluated such as one using `random()`) verbatim
+as a `String`:
+
+- **Element parameter, set** — its value: a `Float64`, or a `String` when
+  non-numeric.
+- **Element parameter, unset** — an element that exists but does not set the
+  parameter yields the parameter's default. That default is `0.0` for every
+  parameter for now; real per-parameter defaults come later.
+- **Constant or variable** — a bare name yields its value, the same way.
+- **Unidentified** — `missing`, when the name matches nothing in either view, is a
+  bare element (an element has no single scalar value), stops on a whole parameter
+  group rather than a single value, or several matches disagree on the value.
+  (Matches that *agree* — the same element reused, or several that all take the
+  default — collapse to the one shared value.)
+
+!!! note "Defaults are provisional"
+    Because there is no parameter schema yet, an unset parameter and a name that
+    is not a real parameter are indistinguishable, so both return the `0.0`
+    default rather than `missing`. When defaults arrive, an unknown parameter
+    name will return `missing` instead.
+
 ## Command-line driver
 
 `examples/read_pals.jl` is a small runnable program that wraps the above: it reads
