@@ -28,6 +28,7 @@ function export_manipulators()
   @eval export is_scalar
   @eval export get_parent
   @eval export node_key
+  @eval export parameter_value
   @eval export add_scalar!
   @eval export add_map!
   @eval export add_sequence!

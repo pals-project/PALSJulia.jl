@@ -3,5 +3,6 @@ using Test
 include("yaml_test.jl")
 include("correspondence_test.jl")
 include("matching_test.jl")
+include("parameter_value_test.jl")
 include("expression_test.jl")
 include("translate_test.jl")
