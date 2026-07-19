@@ -359,6 +359,69 @@ function match_names(node::YAMLNode, match_string::AbstractString)
   return YAMLNode[YAMLNode(tree, id) for id in ids]
 end
 
+# ─── parameter values ─────────────────────────────────────────────────────────
+
+"""
+    parameter_value(lat::Lattices, match_string) -> Float64 | String | Missing
+
+Return the value of the lattice parameter named by `match_string`, looked up in
+the expanded lattice `lat`.
+
+`match_string` uses the same PALS *Name Matching* syntax as [`match_names`](@ref).
+It names either an element parameter (with a `>{group}.{sub}. … .{parameter}`
+path) or, as a *bare* name (no lattice/branch/kind qualifier and no path), a
+constant or variable — the same constructs `match_names` resolves.
+
+Only two of `lat`'s four views are searched: `lat.expanded`, which holds the
+element parameters, and then, if the name is not found there, `lat.leftover`,
+which holds the facility-level constants, variables, and any definitions not
+spliced into the lattice. The raw `lat.original` and `lat.combined` views are
+**not** searched — they carry unevaluated, pre-expansion text.
+
+Because both searched views are post-expansion, values come back already
+evaluated: a numeric value as a `Float64`, and a non-numeric one (e.g. a species
+name like `"#3He"`, or an expression expansion left unevaluated such as one using
+`random()`) verbatim as a `String`.
+
+The value is resolved as follows:
+
+  - **Element parameter, set:** its value — a `Float64`, or a `String` when
+    non-numeric.
+  - **Element parameter, not set:** the parameter's default is returned (`0.0`
+    for every parameter, for now — real per-parameter defaults come later).
+  - **Constant or variable (bare name):** its value, the same way.
+  - **Nothing identified:** `missing`, when the name matches nothing in either
+    view, names a bare element (an element has no single scalar value), stops on
+    a whole parameter group, or several matches carry conflicting values.
+
+# Example
+```julia
+lat = parse_and_expand_pals("lattice.pals.yaml")
+
+parameter_value(lat, "quad1>MagneticMultipoleP.Bn1")  # 1.0        (from expanded)
+parameter_value(lat, "quad1>BendP.g")                 # 0.0        (unset → default)
+parameter_value(lat, "a_const")                       # a constant (from leftover)
+parameter_value(lat, "quad1>nope.nope")               # missing
+```
+"""
+function parameter_value(lat::Lattices, match_string::AbstractString)
+  pv = @ccall (libyaml()).get_lattice_parameter_value(
+    lat.expanded.tree.handle::Ptr{Cvoid}, lat.leftover.tree.handle::Ptr{Cvoid},
+    String(match_string)::Cstring)::ParamValueC
+  return _param_value_result(pv)
+end
+
+# Turn the raw ParamValueC returned by the C API into a Julia value: a `Float64`
+# for a number, a `String` for a string (copied out, then the owning C string is
+# freed), or `missing`.
+function _param_value_result(pv::ParamValueC)
+  pv.kind == PARAM_VALUE_NUMBER && return pv.number
+  pv.kind == PARAM_VALUE_STRING || return missing
+  s = unsafe_string(pv.string)
+  @ccall (libyaml()).yaml_free_string(pv.string::Cstring)::Cvoid
+  return s
+end
+
 # ─── parsing & memory ────────────────────────────────────────────────────────
 
 """

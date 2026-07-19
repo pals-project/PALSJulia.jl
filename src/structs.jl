@@ -164,6 +164,25 @@ end
 
 #---------------------------------------------------------------------------------------------------
 
+# Raw C struct returned by parameter_value. Mirrors `struct param_value`
+# from yaml_c_wrapper.h. `kind` is one of the PARAM_VALUE_* constants below;
+# `number` is meaningful when kind is PARAM_VALUE_NUMBER; `string` is an owning C
+# string (freed with yaml_free_string) when kind is PARAM_VALUE_STRING, else
+# NULL. The Cint/Cdouble/Cstring layout, with padding after `kind`, matches the
+# C `int`/`double`/`char*` struct.
+struct ParamValueC
+  kind::Cint
+  number::Cdouble
+  string::Cstring
+end
+
+# `enum param_value_kind` from yaml_c_wrapper.h.
+const PARAM_VALUE_MISSING = Cint(0)
+const PARAM_VALUE_NUMBER = Cint(1)
+const PARAM_VALUE_STRING = Cint(2)
+
+#---------------------------------------------------------------------------------------------------
+
 """Four representations of a lattice, each as a root `YAMLNode`."""
 struct Lattices
   original::YAMLNode
