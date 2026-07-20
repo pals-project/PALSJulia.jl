@@ -105,6 +105,27 @@ using PALSJulia: YAMLTree, YAMLNode, create_empty_tree,
     @testset "parse_file - missing file throws" begin
       @test_throws ErrorException parse_file("/nonexistent/path.yaml")
     end
+
+    @testset "malformed YAML throws a pinpointed error, not a crash" begin
+      # A sequence item missing its ':' is a syntax error. The C library used to
+      # abort the whole process; it must now raise a catchable error whose
+      # message names the offending line.
+      err = try
+        parse_string("- cav\n    kind: RFCavity\n"); nothing
+      catch e
+        sprint(showerror, e)
+      end
+      @test err !== nothing
+      @test occursin("line", err)
+
+      filename = tempname() * ".yaml"
+      try
+        write(filename, "a: 1\n  b: 2\n")
+        @test_throws ErrorException parse_file(filename)
+      finally
+        isfile(filename) && rm(filename)
+      end
+    end
   end
 
   @testset "Type Checks" begin

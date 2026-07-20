@@ -342,6 +342,27 @@ PALS:
       # An invalid `problems` value is rejected.
       @test_throws ArgumentError parse_and_expand_pals(path; problems=:bogus)
     end
+
+    @testset "parse_and_expand_pals: malformed file throws, pinpointing it" begin
+      # A YAML syntax error (a sequence item missing its ':') is fatal: there is
+      # no tree to expand. It must raise a catchable error naming the line — the
+      # C library no longer aborts the whole process.
+      mktemp() do path, io
+        write(io, "PALS:\n  facility:\n    - cav\n        kind: RFCavity\n")
+        close(io)
+        err = try
+          parse_and_expand_pals(path); nothing
+        catch e
+          sprint(showerror, e)
+        end
+        @test err !== nothing
+        @test occursin("line 4", err)
+        # The message quotes the source: the preceding line (where the missing
+        # ':' really is) and a caret, so the fault is easy to spot.
+        @test occursin("3 |     - cav", err)
+        @test occursin("^", err)
+      end
+    end
   end
 
 end

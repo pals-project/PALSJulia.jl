@@ -7,6 +7,15 @@ function _root_node(handle::Ptr{Cvoid})
   return YAMLNode(tree, root_id)
 end
 
+# The most recent parse error recorded by the C library on this thread (empty
+# when the last parse succeeded). Used to append a location — "line L, column C"
+# — to the error PALSJulia raises when a parse fails, so the offending line is
+# pinpointed instead of reporting a bare failure.
+function _last_parse_error()
+  ptr = @ccall (libyaml()).yaml_last_parse_error()::Cstring
+  ptr == C_NULL ? "" : unsafe_string(ptr)
+end
+
 # ─── parse_and_expand_pals ────────────────────────────────────────────────────
 
 # Copy the C-owned problem strings into a Julia Vector{String} and free the
@@ -126,9 +135,15 @@ function parse_and_expand_pals(filename::String, root_lattice::String="";
   # Take ownership of the problem list before anything can error out.
   problem_list = _take_problem_list(handles.problems)
 
-  (handles.original == C_NULL || handles.combined == C_NULL ||
-   handles.expanded == C_NULL || handles.leftover == C_NULL) &&
-    error("Failed to parse lattice file: $filename")
+  # NULL handles mean a fatal parse failure (a malformed top-level file): there
+  # is no tree to expand. The C library reports why — with the offending
+  # line/column — as the single problem, so surface that rather than a bare
+  # failure. This raises a normal Julia error; it does not abort the process.
+  if handles.original == C_NULL || handles.combined == C_NULL ||
+     handles.expanded == C_NULL || handles.leftover == C_NULL
+    detail = isempty(problem_list) ? "" : "\n  " * join(problem_list, "\n  ")
+    error("Failed to parse lattice file: $filename$detail")
+  end
 
   _report_problems(problem_list, problems)
 
@@ -442,7 +457,10 @@ Parse a YAML file from disk. Returns a node pointing to the tree root.
 function parse_file(filename::String)
   isfile(filename) || error("File not found: $filename")
   handle = @ccall (libyaml()).parse_file(filename::Cstring)::Ptr{Cvoid}
-  handle == C_NULL && error("Failed to parse YAML file: $filename")
+  if handle == C_NULL
+    msg = _last_parse_error()
+    error("Failed to parse YAML file: $filename" * (isempty(msg) ? "" : "\n  $msg"))
+  end
   return _root_node(handle)
 end
 
@@ -455,7 +473,10 @@ Parse a YAML string. Returns a node pointing to the tree root.
 """
 function parse_string(yaml_str::String)
   handle = @ccall (libyaml()).parse_string(yaml_str::Cstring)::Ptr{Cvoid}
-  handle == C_NULL && error("Failed to parse YAML string")
+  if handle == C_NULL
+    msg = _last_parse_error()
+    error("Failed to parse YAML string" * (isempty(msg) ? "" : "\n  $msg"))
+  end
   return _root_node(handle)
 end
 
