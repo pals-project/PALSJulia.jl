@@ -329,8 +329,15 @@ PALS:
       @test occursin("could not evaluate expression for constants.a_const", contents)
       @test occursin("could not evaluate expression for BendP.edge_int2", contents)
 
-      # `:none` prints nothing.
-      @test isempty(capture_stderr(() -> parse_and_expand_pals(path; problems=:none)))
+      # `:none` prints nothing, but still returns the problems in the struct.
+      local lat
+      @test isempty(capture_stderr(() -> (lat = parse_and_expand_pals(path; problems=:none))))
+      @test !isempty(lat.problems)
+      @test any(p -> occursin("NoSuchElement", p), lat.problems)
+      @test any(p -> occursin("inherit: 'ghost_ancestor' is not defined", p), lat.problems)
+
+      # A clean lattice carries an empty problems list.
+      @test isempty(parse_and_expand_pals(clean; problems=:none).problems)
 
       # An invalid `problems` value is rejected.
       @test_throws ArgumentError parse_and_expand_pals(path; problems=:bogus)

@@ -55,7 +55,8 @@ end
     parse_and_expand_pals(filename, root_lattice=""; problems=:print) -> Lattices
 
 Parse a PALS lattice file and return its `original`, `combined`, `expanded` and
-`leftover` views as a [`Lattices`](@ref).
+`leftover` views, together with the list of expansion `problems`, as a
+[`Lattices`](@ref).
 
 # Arguments
 - `filename`: Path to the top-level YAML lattice file.
@@ -73,7 +74,12 @@ Parse a PALS lattice file and return its `original`, `combined`, `expanded` and
     - `:none` — do nothing (no printing, no file).
 
 # Returns
-A `Lattices` with four independent tree views:
+A `Lattices` with four independent tree views and a `problems` list. The same
+problems handed to `problems` are also returned in the `problems` field
+(a `Vector{String}`, empty when expansion was clean) regardless of the reporting
+mode, so `:none` still lets the caller inspect them programmatically.
+
+The four tree views are:
 - `original`: the tree as read in, mapping each file (including any `include`d
   files) to its unparsed contents.
 - `combined`: the tree with all `include` directives resolved and spliced
@@ -85,8 +91,11 @@ A `Lattices` with four independent tree views:
   scaffolding the lattice was defined under, so the lattice is reached as
   `lat.expanded["lat1"]` rather than through `["PALS"]["facility"]`. Its
   `branches` entries are branches, not the `BeamLine`s they were built from, and
-  so carry no `kind`; a `BeamLine` nested in a `line` is a sub-line and keeps its
-  own.
+  so carry no `kind`; a `BeamLine` referenced inside a `line` is a sub-line whose
+  contents are spliced directly into the enclosing line, so no nested `BeamLine`
+  survives in the expanded tree. Elements of a `multipass` line carry a
+  `multipass_index` giving their 1-based position within that line's expansion
+  (the nearest enclosing `multipass` line wins when they nest).
 - `leftover`: everything the `expanded` tree does not carry, keeping its
   `PALS`/`facility` scaffolding: element and beamline definitions, `use`
   statements, constants and variables, `Controller`s, and any `Lattice` that
@@ -128,6 +137,7 @@ function parse_and_expand_pals(filename::String, root_lattice::String="";
     _root_node(handles.combined),
     _root_node(handles.expanded),
     _root_node(handles.leftover),
+    problem_list,
   )
 end
 
