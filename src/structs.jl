@@ -183,10 +183,19 @@ const PARAM_VALUE_STRING = Cint(2)
 
 #---------------------------------------------------------------------------------------------------
 
-"""Four representations of a lattice, each as a root `YAMLNode`."""
+"""
+Four representations of a lattice, each as a root `YAMLNode`, plus the list of
+problems found while expanding it.
+
+`problems` is a `Vector{String}` — one human-readable message per problem
+encountered during expansion (undefined lattice, dangling element/line
+references, undefined `inherit`/`repeat`/`Fork` targets, and expressions that
+could not be evaluated). It is empty when expansion was clean.
+"""
 struct Lattices
   original::YAMLNode
   combined::YAMLNode
   expanded::YAMLNode
   leftover::YAMLNode
+  problems::Vector{String}
 end
