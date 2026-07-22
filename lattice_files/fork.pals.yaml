@@ -23,7 +23,7 @@ PALS:
         ForkP:
           to_line: b_line
           propagate_reference: false
-          xxx: abc
+
 
     - c_fork:
         kind: Fork
@@ -34,6 +34,15 @@ PALS:
         kind: Fork
         ForkP:
           to_line: a_line
+          destination_element: b_fork
+          new_branch: null
+
+    - cav:
+        kind: RFCavity
+        length: 0.4
+        RFP:
+          gradient: 1e8
+          dE_ref: 1e8
 
     - m:
         kind: Marker
@@ -46,7 +55,7 @@ PALS:
         kind: BeamLine
         line:
           - begin1
-          - dft
+          - cav
           - a_fork
 
     - one_line:
@@ -60,7 +69,7 @@ PALS:
         kind: BeamLine
         line:
           - m
-          - dft
+          - cav
           - b_fork
 
     - b_line:

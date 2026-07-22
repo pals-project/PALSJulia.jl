@@ -86,6 +86,9 @@ PALS:
     - DH1A:
         kind: Bend
         length: 0.2
+        ReferenceP:
+          species_ref: proton
+          E_tot_ref: 1.0e9
         BendP:
           edge2_int: 0.02 * thingB>MagneticMultipoleP.Kn2L
     - main_line:
