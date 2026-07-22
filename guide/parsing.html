@@ -510,10 +510,10 @@ so you can graft one subtree onto another.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">to_yaml_string(node)</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">to_yaml_string(node;</span> <span class="pre">exclude)</span></code></p></td>
 <td><p>The node and its descendants as a YAML <code class="docutils literal notranslate"><span class="pre">String</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">write_yaml(node,</span> <span class="pre">filename)</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">write_yaml(node,</span> <span class="pre">filename;</span> <span class="pre">exclude)</span></code></p></td>
 <td><p>Write the whole tree containing <code class="docutils literal notranslate"><span class="pre">node</span></code> to a file.</p></td>
 </tr>
 </tbody>
@@ -521,6 +521,15 @@ so you can graft one subtree onto another.</p>
 </div>
 <div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">to_yaml_string</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="w">     </span><span class="c"># YAML as a String</span>
 <span class="n">write_yaml</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;out.pals.yaml&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Both take an <code class="docutils literal notranslate"><span class="pre">exclude</span></code> keyword naming keys to leave out, which is handy for
+printing or saving a large lattice without the bulky subtrees.  Every MAP entry
+with a matching key is dropped, at any depth, together with its subtree; the
+tree in memory is not modified.</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">println</span><span class="p">(</span><span class="n">to_yaml_string</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">exclude</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s">&quot;FloorP&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;ReferenceP&quot;</span><span class="p">]))</span>
+<span class="n">println</span><span class="p">(</span><span class="n">to_yaml_string</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">exclude</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;FloorP&quot;</span><span class="p">))</span><span class="w">   </span><span class="c"># a single key needs no vector</span>
+<span class="n">write_yaml</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;out.pals.yaml&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">exclude</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s">&quot;FloorP&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;ReferenceP&quot;</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>See the <strong>API Reference</strong> (linked in the sidebar) for the full list of functions
