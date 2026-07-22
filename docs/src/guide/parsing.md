@@ -165,12 +165,23 @@ Serialize a node to a string or straight to disk:
 
 | Function | Description |
 | --- | --- |
-| `to_yaml_string(node)` | The node and its descendants as a YAML `String`. |
-| `write_yaml(node, filename)` | Write the whole tree containing `node` to a file. |
+| `to_yaml_string(node; exclude)` | The node and its descendants as a YAML `String`. |
+| `write_yaml(node, filename; exclude)` | Write the whole tree containing `node` to a file. |
 
 ```julia
 text = to_yaml_string(root)     # YAML as a String
 write_yaml(root, "out.pals.yaml")
+```
+
+Both take an `exclude` keyword naming keys to leave out, which is handy for
+printing or saving a large lattice without the bulky subtrees.  Every MAP entry
+with a matching key is dropped, at any depth, together with its subtree; the
+tree in memory is not modified.
+
+```julia
+println(to_yaml_string(root, exclude = ["FloorP", "ReferenceP"]))
+println(to_yaml_string(root, exclude = "FloorP"))   # a single key needs no vector
+write_yaml(root, "out.pals.yaml", exclude = ["FloorP", "ReferenceP"])
 ```
 
 See the **API Reference** (linked in the sidebar) for the full list of functions
