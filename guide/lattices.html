@@ -395,9 +395,10 @@ copy, which is why each field is a <em>vector</em>: one <code class="docutils li
 </pre></div>
 </div>
 <p>A vector is empty when a view has no corresponding node. For example, the
-<code class="docutils literal notranslate"><span class="pre">fork_pointer</span></code> scalar that expansion synthesises exists only in <code class="docutils literal notranslate"><span class="pre">expanded</span></code>, so
-its <code class="docutils literal notranslate"><span class="pre">original</span></code> and <code class="docutils literal notranslate"><span class="pre">combined</span></code> vectors are empty; a constant the lattice never
-refers to exists only in <code class="docutils literal notranslate"><span class="pre">leftover</span></code>, so its <code class="docutils literal notranslate"><span class="pre">expanded</span></code> vector is empty.</p>
+<code class="docutils literal notranslate"><span class="pre">destination_pointer</span></code> scalar that expansion synthesises exists only in
+<code class="docutils literal notranslate"><span class="pre">expanded</span></code>, so its <code class="docutils literal notranslate"><span class="pre">original</span></code> and <code class="docutils literal notranslate"><span class="pre">combined</span></code> vectors are empty; a constant the
+lattice never refers to exists only in <code class="docutils literal notranslate"><span class="pre">leftover</span></code>, so its <code class="docutils literal notranslate"><span class="pre">expanded</span></code> vector is
+empty.</p>
 <p>!!! note “The mapping is exact, not heuristic”
 The correspondence is not recovered by re-matching the finished trees. The
 views are built as a derivation chain (<code class="docutils literal notranslate"><span class="pre">original</span></code> → <code class="docutils literal notranslate"><span class="pre">combined</span></code> →
