@@ -319,6 +319,63 @@ using PALSJulia: YAMLTree, YAMLNode, create_empty_tree,
       @test occursin("30", yaml_str)
     end
 
+    @testset "to_yaml_string with exclude" begin
+      node = parse_string("""
+        lat:
+          elements:
+            - name: q1
+              FloorP: {r: [1, 2, 3]}
+              L: 0.5
+              ReferenceP: {species: electron}
+          ReferenceP: {pc: 1e9}
+        """)
+
+      yaml_str = to_yaml_string(node, exclude = ["FloorP", "ReferenceP"])
+      @test !occursin("FloorP", yaml_str)
+      @test !occursin("ReferenceP", yaml_str)
+      @test !occursin("electron", yaml_str)   # the excluded subtrees go too
+      @test occursin("q1", yaml_str)
+      @test occursin("L", yaml_str)
+
+      # A single key may be given as a bare string.
+      yaml_str = to_yaml_string(node, exclude = "FloorP")
+      @test !occursin("FloorP", yaml_str)
+      @test occursin("ReferenceP", yaml_str)
+
+      # The default and an empty exclude list are the unfiltered output, and the
+      # node itself is never modified.
+      @test to_yaml_string(node, exclude = String[]) == to_yaml_string(node)
+      @test occursin("FloorP", to_yaml_string(node))
+    end
+
+    @testset "write_yaml with exclude" begin
+      root = parse_string("""
+        lat:
+          elements:
+            - name: q1
+              FloorP: {r: [1, 2, 3]}
+              L: 0.5
+          ReferenceP: {pc: 1e9}
+        other: stuff
+        """)
+      filename = tempname() * ".yaml"
+
+      try
+        # Writing from a non-root node still writes the whole tree.
+        @test write_yaml(root["lat"], filename, exclude = ["FloorP", "ReferenceP"])
+        text = read(filename, String)
+        @test !occursin("FloorP", text)
+        @test !occursin("ReferenceP", text)
+        @test occursin("q1", text)
+        @test occursin("other", text)
+
+        # The tree in memory keeps everything.
+        @test occursin("FloorP", to_yaml_string(root))
+      finally
+        isfile(filename) && rm(filename)
+      end
+    end
+
     @testset "write_yaml to file and read back" begin
       root = create_empty_tree()
       root["test"]  = "data"

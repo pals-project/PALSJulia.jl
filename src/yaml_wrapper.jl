@@ -7,6 +7,14 @@ function _root_node(handle::Ptr{Cvoid})
   return YAMLNode(tree, root_id)
 end
 
+# The root of the tree `node` belongs to (`node` itself if it is the root).
+# Unlike _root_node, this shares the existing YAMLTree instead of taking
+# ownership of the handle.
+function _tree_root(node::YAMLNode)
+  root_id = @ccall (libyaml()).get_root(node.tree.handle::Ptr{Cvoid})::Csize_t
+  return YAMLNode(node.tree, root_id)
+end
+
 # The most recent parse error recorded by the C library on this thread (empty
 # when the last parse succeeded). Used to append a location — "line L, column C"
 # — to the error PALSJulia raises when a parse fails, so the offending line is
@@ -935,12 +943,44 @@ end
 
 # ─── emitting ────────────────────────────────────────────────────────────────
 
+# What the `exclude` keyword of to_yaml_string / write_yaml accepts: one key
+# name, or a collection of them.
+const ExcludeKeys = Union{AbstractString,AbstractVector{<:AbstractString}}
+
+_exclude_set(exclude::ExcludeKeys) =
+  exclude isa AbstractString ? Set([String(exclude)]) : Set(String.(exclude))
+
+#---------------------------------------------------------------------------------------------------
+
 """
-    to_yaml_string(node) -> String
+    to_yaml_string(node; exclude=String[]) -> String
 
 Emit `node` and its descendants as a YAML string.
+
+`exclude` is a key name, or a collection of key names, to be left out of the
+output: every MAP entry whose key matches, at any depth, is omitted along with
+its whole subtree.  This is a display filter only -- `node` itself is never
+modified.  For example, to print a lattice without the floor and reference
+subtrees:
+
+    println(to_yaml_string(lat, exclude = ["FloorP", "ReferenceP"]))
 """
-function to_yaml_string(node::YAMLNode)
+function to_yaml_string(node::YAMLNode; exclude::ExcludeKeys=String[])
+  drop = _exclude_set(exclude)
+  isempty(drop) && return _emit_yaml(node)
+  # `GC.@preserve` keeps the throw-away copy's tree alive across the emit, since
+  # nothing else holds a reference to it.
+  pruned = _pruned_copy(node, drop)
+  GC.@preserve pruned begin
+    return _emit_yaml(pruned)
+  end
+end
+
+#---------------------------------------------------------------------------------------------------
+
+# Emit `node` and its descendants as YAML, without any filtering.
+
+function _emit_yaml(node::YAMLNode)
   ptr = @ccall (libyaml()).node_to_string(
     node.tree.handle::Ptr{Cvoid}, node.id::Csize_t)::Cstring
   ptr == C_NULL && error("Cannot convert node to YAML string")
@@ -951,14 +991,58 @@ end
 
 #---------------------------------------------------------------------------------------------------
 
+# An independent copy of `node`, in a tree of its own, with every entry keyed by
+# a name in `drop` removed. The caller's tree is left untouched.
+
+function _pruned_copy(node::YAMLNode, drop::Set{String})
+  pruned = copy(node)
+  _prune_keys!(pruned, drop)
+  return pruned
+end
+
+#---------------------------------------------------------------------------------------------------
+
+# Recursively remove, in place, every MAP entry of `node` whose key is in `drop`.
+
+function _prune_keys!(node::YAMLNode, drop::Set{String})
+  if is_map(node)
+    for k in keys(node)
+      child = node[k]
+      k in drop ? remove!(child) : _prune_keys!(child, drop)
+    end
+  elseif is_sequence(node)
+    for i in 1:length(node)
+      _prune_keys!(node[i], drop)
+    end
+  end
+  return node
+end
+
+#---------------------------------------------------------------------------------------------------
+
 """
-    write_yaml(node, filename) -> Bool
+    write_yaml(node, filename; exclude=String[]) -> Bool
 
 Write the entire tree that contains `node` to a YAML file.
 Returns `true` on success.
+
+`exclude` is a key name, or a collection of key names, to be left out of the
+file: every MAP entry whose key matches, at any depth, is omitted along with its
+whole subtree.  The tree in memory is not modified.  For example, to write a
+lattice without the floor and reference subtrees:
+
+    write_yaml(lat, "out.pals.yaml", exclude = ["FloorP", "ReferenceP"])
 """
-function write_yaml(node::YAMLNode, filename::String)
-  Bool(@ccall (libyaml()).write_file(node.tree.handle::Ptr{Cvoid}, filename::Cstring)::Bool)
+function write_yaml(node::YAMLNode, filename::String; exclude::ExcludeKeys=String[])
+  drop = _exclude_set(exclude)
+  # Prune a throw-away copy of the whole tree, then write that copy instead.
+  # `GC.@preserve` keeps that copy's tree alive across the call, since nothing
+  # else holds a reference to it.
+  target = isempty(drop) ? node : _pruned_copy(_tree_root(node), drop)
+  GC.@preserve target begin
+    return Bool(@ccall (libyaml()).write_file(
+      target.tree.handle::Ptr{Cvoid}, filename::Cstring)::Bool)
+  end
 end
 
 # ─── display ─────────────────────────────────────────────────────────────────

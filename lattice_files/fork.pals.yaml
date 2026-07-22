@@ -1,0 +1,84 @@
+PALS:
+  facility:
+
+    - begin1:
+        kind: BeginningEle
+        ReferenceP:
+          species_ref: "electron"
+          E_tot_ref: 1e7
+
+    - b_begin:
+        kind: BeginningEle
+        ReferenceP:
+          species_ref: "electron"
+          E_tot_ref: 2e7
+
+    - a_fork:
+        kind: Fork
+        ForkP:
+          to_line: a_line
+
+    - b_fork:
+        kind: Fork
+        ForkP:
+          to_line: b_line
+          propagate_reference: false
+          xxx: abc
+
+    - c_fork:
+        kind: Fork
+        ForkP:
+          to_line: c_line
+
+    - a_back_fork:
+        kind: Fork
+        ForkP:
+          to_line: a_line
+
+    - m:
+        kind: Marker
+
+    - dft:
+        kind: Drift
+        length: 2
+
+    - zero_line:
+        kind: BeamLine
+        line:
+          - begin1
+          - dft
+          - a_fork
+
+    - one_line:
+        kind: BeamLine
+        line:
+          - begin1
+          - dft
+          - c_fork
+
+    - a_line:
+        kind: BeamLine
+        line:
+          - m
+          - dft
+          - b_fork
+
+    - b_line:
+        kind: BeamLine
+        line:
+          - m
+          - b_begin
+          - dft
+
+    - c_line:
+        kind: BeamLine
+        line:
+          - m
+          - dft
+          - a_back_fork
+
+    - root_lat:
+        kind: Lattice
+        branches:
+          - zero_line
+          - one_line
