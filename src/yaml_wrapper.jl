@@ -236,8 +236,8 @@ correspondence, `map[node]` is a named tuple
 corresponding node grouped by tree. The queried node appears in its own tree's
 vector, so the four vectors together are the full equivalence class of `node`. A
 vector is empty when a tree has no corresponding node (e.g. the synthesised
-`fork_pointer` scalar exists only in `expanded`, and a constant that the lattice
-never references exists only in `leftover`).
+`destination_pointer` scalar exists only in `expanded`, and a constant that the
+lattice never references exists only in `leftover`).
 
 # Example
 ```julia
