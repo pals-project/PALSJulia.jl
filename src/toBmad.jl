@@ -303,8 +303,11 @@ Return `(bmad_kind, args)` where `bmad_kind` is the Bmad element-type name for t
 function _bmad_kind(ele_kind::String)
   # Magnets and RF Cavities
   if      ele_kind == "ACKicker";         return ("AC_Kicker", nothing)
-  elseif  ele_kind == "RBend";            return (ele_kind, nothing)
-  elseif  ele_kind == "SBend";            return (ele_kind, nothing)
+  # PALS has the one `Bend`, whose reference geometry is a sector; the pole face
+  # rotations that make a bend rectangular are parameters of it (`e1_rect`,
+  # `e2_rect`), not a second kind. Bmad splits the two, so `Bend` maps to Bmad's
+  # sector bend and Bmad's `RBend` has no PALS kind to map from.
+  elseif  ele_kind == "Bend";             return ("SBend", nothing)
   elseif  ele_kind == "CrabCavity";       return ("Crab_Cavity", nothing)
   elseif  ele_kind == "Drift";            return (ele_kind, nothing)
   elseif  ele_kind == "Kicker";           return (ele_kind, nothing)
@@ -435,7 +438,7 @@ Elements that carry field multipoles map to `ABRepresentation`; kinds that have 
 attributes, or are unrecognized, raise an error.
 """
 function _KindMap(ele_kind)
-  if ele_kind in ("SBend", "RBend", "Quadrupole", "Sextupole", "Octupole",
+  if ele_kind in ("Bend", "Quadrupole", "Sextupole", "Octupole",
           "Multipole", "Solenoid", "Kicker", "Wiggler",
           "RFCavity", "CrabCavity")
     return ABRepresentation

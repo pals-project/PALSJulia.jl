@@ -2,11 +2,11 @@ PALS:
   notes:
     - "Translated from Bmad lattice file: bta_oct30.bmad"
 
-  extension_names:
+  extension_labels:
     names:
-      Bmad
+      BmadP: Bmad element data with no PALS equivalent
     prefixes:
-      Bmad_
+      Bmad_: Bmad data with no PALS equivalent
 
   Bmad_overlays:
     BF_K1: pmom,scale,
@@ -36,7 +36,7 @@ PALS:
           eta_x:  2.72079607809613755E+000
           etap_x: -4.22260065862766376E-001
         BmadP:
-          Bmand_key: Beginning_Ele
+          Bmad_key: Beginning_Ele
 
     - btastart: 
         kind: Marker
@@ -45,7 +45,7 @@ PALS:
           location: EXIT_END        
 
     - dhf6a: 
-        kind: SBend
+        kind: Bend
         length:  1.25000000000000000E+000
         BendP:
           g_ref: -5.71919999999999998E-002
@@ -64,7 +64,7 @@ PALS:
           location: EXIT_END        
 
     - dhf6b: 
-        kind: SBend
+        kind: Bend
         length:  1.32689999999999997E+000
         BendP:
           g_ref: -4.47283141156078062E-002
@@ -89,7 +89,7 @@ PALS:
           shape: RECTANGULAR     
           location: EXIT_END        
         BmadP:
-          Bmand_key: Monitor
+          Bmad_key: Monitor
 
     - dr001: 
         kind: Drift
@@ -118,7 +118,7 @@ PALS:
           shape: RECTANGULAR     
           location: EXIT_END        
         BmadP:
-          Bmand_key: VKicker
+          Bmad_key: VKicker
 
     - dr007: 
         kind: Drift
@@ -144,7 +144,7 @@ PALS:
           location: EXIT_END        
 
     - dh1a: 
-        kind: SBend
+        kind: Bend
         length:  2.66653672973886480E-001
         BendP:
           g_ref:  6.81858224461081158E-002
@@ -159,7 +159,7 @@ PALS:
           location: EXIT_END        
 
     - dh1b: 
-        kind: SBend
+        kind: Bend
         length:  2.66653672973886480E-001
         BendP:
           g_ref:  6.81858224461081158E-002
@@ -261,7 +261,7 @@ PALS:
           shape: RECTANGULAR     
           location: EXIT_END        
         BmadP:
-          Bmand_key: VKicker
+          Bmad_key: VKicker
 
     - dr024b: 
         kind: Drift
@@ -287,7 +287,7 @@ PALS:
           location: EXIT_END        
 
     - dh2: 
-        kind: SBend
+        kind: Bend
         length:  2.42384999999999984E+000
         BendP:
           g_ref:  1.13744662417228803E-001
@@ -331,7 +331,7 @@ PALS:
           shape: RECTANGULAR     
           location: EXIT_END        
         BmadP:
-          Bmand_key: Monitor
+          Bmad_key: Monitor
 
     - dr046: 
         kind: Drift
@@ -341,7 +341,7 @@ PALS:
           location: EXIT_END        
 
     - dh3: 
-        kind: SBend
+        kind: Bend
         length:  2.42384999999999984E+000
         BendP:
           g_ref:  1.13744662417228803E-001
@@ -451,7 +451,7 @@ PALS:
           location: EXIT_END        
 
     - dh4a: 
-        kind: SBend
+        kind: Bend
         length:  2.66650810302187846E-001
         BendP:
           g_ref:  3.20269043635076911E-002
@@ -466,7 +466,7 @@ PALS:
           location: EXIT_END        
 
     - dh4b: 
-        kind: SBend
+        kind: Bend
         length:  2.66650810302187846E-001
         BendP:
           g_ref:  3.20269043635076911E-002
@@ -510,7 +510,7 @@ PALS:
           shape: RECTANGULAR     
           location: EXIT_END        
         BmadP:
-          Bmand_key: VKicker
+          Bmad_key: VKicker
 
     - drq9b: 
         kind: Drift
@@ -555,7 +555,7 @@ PALS:
           shape: RECTANGULAR     
           location: EXIT_END        
         BmadP:
-          Bmand_key: HKicker
+          Bmad_key: HKicker
 
     - dr127: 
         kind: Drift
@@ -570,7 +570,7 @@ PALS:
           shape: RECTANGULAR     
           location: EXIT_END        
         BmadP:
-          Bmand_key: Monitor
+          Bmad_key: Monitor
 
     - dr129: 
         kind: Drift
@@ -621,7 +621,7 @@ PALS:
           shape: RECTANGULAR     
           location: EXIT_END        
         BmadP:
-          Bmand_key: Monitor
+          Bmad_key: Monitor
 
     - dr143: 
         kind: Drift
@@ -666,7 +666,7 @@ PALS:
           shape: RECTANGULAR     
           location: EXIT_END        
         BmadP:
-          Bmand_key: HKicker
+          Bmad_key: HKicker
 
     - dr158: 
         kind: Drift
@@ -681,7 +681,7 @@ PALS:
           shape: RECTANGULAR     
           location: EXIT_END        
         BmadP:
-          Bmand_key: Monitor
+          Bmad_key: Monitor
 
     - dr160: 
         kind: Drift
@@ -732,7 +732,7 @@ PALS:
           shape: RECTANGULAR     
           location: EXIT_END        
         BmadP:
-          Bmand_key: Monitor
+          Bmad_key: Monitor
 
     - dr170: 
         kind: Drift
@@ -758,7 +758,7 @@ PALS:
           location: EXIT_END        
 
     - dh5a: 
-        kind: SBend
+        kind: Bend
         length:  6.22928612672511539E-001
         BendP:
           g_ref: -1.13006528465579306E-001
@@ -773,7 +773,7 @@ PALS:
           location: EXIT_END        
 
     - dh5b: 
-        kind: SBend
+        kind: Bend
         length:  6.22928612672511539E-001
         BendP:
           g_ref: -1.13006528465579306E-001
@@ -801,7 +801,7 @@ PALS:
           shape: RECTANGULAR     
           location: EXIT_END        
         BmadP:
-          Bmand_key: VKicker
+          Bmad_key: VKicker
 
     - dr181: 
         kind: Drift
@@ -840,7 +840,7 @@ PALS:
           location: EXIT_END        
 
     - l20sptm1: 
-        kind: SBend
+        kind: Bend
         length:  1.23095438501483279E+000
         BendP:
           g_ref:  4.45711073195769816E-002
@@ -853,7 +853,7 @@ PALS:
           location: EXIT_END        
 
     - l20sptm2: 
-        kind: SBend
+        kind: Bend
         length:  1.23095438501483279E+000
         BendP:
           g_ref:  4.45711073195769816E-002
@@ -866,7 +866,7 @@ PALS:
           location: EXIT_END        
 
     - mm_a01bf: 
-        kind: SBend
+        kind: Bend
         length:  2.00664618248814230E+000
         BendP:
           g_ref: -1.17122296422273627E-002
@@ -888,7 +888,7 @@ PALS:
           location: EXIT_END        
 
     - mm_a02bf: 
-        kind: SBend
+        kind: Bend
         length:  2.00664618248814230E+000
         BendP:
           g_ref: -1.17122296422273627E-002
@@ -916,7 +916,7 @@ PALS:
           shape: RECTANGULAR     
           location: EXIT_END        
         BmadP:
-          Bmand_key: Monitor
+          Bmad_key: Monitor
 
     - dhca02: 
         kind: Kicker
@@ -924,7 +924,7 @@ PALS:
           shape: RECTANGULAR     
           location: EXIT_END        
         BmadP:
-          Bmand_key: HKicker
+          Bmad_key: HKicker
 
     - dvca02: 
         kind: Kicker
@@ -932,7 +932,7 @@ PALS:
           shape: RECTANGULAR     
           location: EXIT_END        
         BmadP:
-          Bmand_key: VKicker
+          Bmad_key: VKicker
 
     - d2tx: 
         kind: Drift
@@ -942,7 +942,7 @@ PALS:
           location: EXIT_END        
 
     - mm_a03cd: 
-        kind: SBend
+        kind: Bend
         length:  2.38767780201331314E+000
         BendP:
           g_ref: -1.17122296301534548E-002
@@ -978,7 +978,7 @@ PALS:
           location: EXIT_END        
 
     - mm_a04cd: 
-        kind: SBend
+        kind: Bend
         length:  2.38767780201331314E+000
         BendP:
           g_ref: -1.17122296301534548E-002
@@ -999,7 +999,7 @@ PALS:
           shape: RECTANGULAR     
           location: EXIT_END        
         BmadP:
-          Bmand_key: Monitor
+          Bmad_key: Monitor
 
     - d2lx: 
         kind: Drift
@@ -1009,7 +1009,7 @@ PALS:
           location: EXIT_END        
 
     - mm_a05af: 
-        kind: SBend
+        kind: Bend
         length:  2.38767780201331314E+000
         BendP:
           g_ref: -1.17122296301534548E-002
@@ -1031,7 +1031,7 @@ PALS:
           location: EXIT_END        
 
     - kckra05: 
-        kind: SBend
+        kind: Bend
         length:  1.00000037500009853E+000
         BendP:
           g_ref:  2.99999887500012642E-003
@@ -1044,7 +1044,7 @@ PALS:
           location: EXIT_END        
 
     - mm_a06af: 
-        kind: SBend
+        kind: Bend
         length:  2.38767780201331314E+000
         BendP:
           g_ref: -1.17122296301534548E-002
@@ -1066,7 +1066,7 @@ PALS:
           location: EXIT_END        
 
     - mm_a07cd: 
-        kind: SBend
+        kind: Bend
         length:  2.38767780201331314E+000
         BendP:
           g_ref: -1.17122296301534548E-002
@@ -1095,7 +1095,7 @@ PALS:
           location: EXIT_END        
 
     - mm_a08cd: 
-        kind: SBend
+        kind: Bend
         length:  2.38767780201331314E+000
         BendP:
           g_ref: -1.17122296301534548E-002
@@ -1116,7 +1116,7 @@ PALS:
           shape: RECTANGULAR     
           location: EXIT_END        
         BmadP:
-          Bmand_key: Monitor
+          Bmad_key: Monitor
 
     - dhca08: 
         kind: Kicker
@@ -1124,7 +1124,7 @@ PALS:
           shape: RECTANGULAR     
           location: EXIT_END        
         BmadP:
-          Bmand_key: HKicker
+          Bmad_key: HKicker
 
     - dvca08: 
         kind: Kicker
@@ -1132,10 +1132,10 @@ PALS:
           shape: RECTANGULAR     
           location: EXIT_END        
         BmadP:
-          Bmand_key: VKicker
+          Bmad_key: VKicker
 
     - mm_a09bf: 
-        kind: SBend
+        kind: Bend
         length:  2.00664618248814230E+000
         BendP:
           g_ref: -1.17122296422273627E-002
@@ -1150,7 +1150,7 @@ PALS:
           location: EXIT_END        
 
     - mm_a10bf: 
-        kind: SBend
+        kind: Bend
         length:  2.00664618248814230E+000
         BendP:
           g_ref: -1.17122296422273627E-002
@@ -1172,7 +1172,7 @@ PALS:
           location: EXIT_END        
 
     - mm_a11bd: 
-        kind: SBend
+        kind: Bend
         length:  2.00664618248814230E+000
         BendP:
           g_ref: -1.17122296422273627E-002
@@ -1187,7 +1187,7 @@ PALS:
           location: EXIT_END        
 
     - mm_a12bd: 
-        kind: SBend
+        kind: Bend
         length:  2.00664618248814230E+000
         BendP:
           g_ref: -1.17122296422273627E-002
@@ -1208,7 +1208,7 @@ PALS:
           shape: RECTANGULAR     
           location: EXIT_END        
         BmadP:
-          Bmand_key: Monitor
+          Bmad_key: Monitor
 
     - dhca12: 
         kind: Kicker
@@ -1216,7 +1216,7 @@ PALS:
           shape: RECTANGULAR     
           location: EXIT_END        
         BmadP:
-          Bmand_key: HKicker
+          Bmad_key: HKicker
 
     - dvca12: 
         kind: Kicker
@@ -1224,10 +1224,10 @@ PALS:
           shape: RECTANGULAR     
           location: EXIT_END        
         BmadP:
-          Bmand_key: VKicker
+          Bmad_key: VKicker
 
     - mm_a13cf: 
-        kind: SBend
+        kind: Bend
         length:  2.38767780201331314E+000
         BendP:
           g_ref: -1.17122296301534548E-002
@@ -1249,7 +1249,7 @@ PALS:
           location: EXIT_END        
 
     - mm_a14cf: 
-        kind: SBend
+        kind: Bend
         length:  2.38767780201331314E+000
         BendP:
           g_ref: -1.17122296301534548E-002
@@ -1270,10 +1270,10 @@ PALS:
           shape: RECTANGULAR     
           location: EXIT_END        
         BmadP:
-          Bmand_key: Monitor
+          Bmad_key: Monitor
 
     - mm_a15ad: 
-        kind: SBend
+        kind: Bend
         length:  2.38767780201331314E+000
         BendP:
           g_ref: -1.17122296301534548E-002
