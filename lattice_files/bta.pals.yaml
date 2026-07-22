@@ -148,8 +148,8 @@ PALS:
         length:  2.66653672973886480E-001
         BendP:
           g_ref:  6.81858224461081158E-002
-          edge_int1:  2.06500000000000017E-002
-          edge_int2:  2.06500000000000017E-002
+          edge1_int:  2.06500000000000017E-002
+          edge2_int:  2.06500000000000017E-002
           e1:  9.09100000000000012E-003
           e2:  9.09100000000000012E-003
         MagneticMultipoleP:
@@ -163,8 +163,8 @@ PALS:
         length:  2.66653672973886480E-001
         BendP:
           g_ref:  6.81858224461081158E-002
-          edge_int1:  2.06500000000000017E-002
-          edge_int2:  2.06500000000000017E-002
+          edge1_int:  2.06500000000000017E-002
+          edge2_int:  2.06500000000000017E-002
           e1:  9.09100000000000012E-003
           e2:  9.09100000000000012E-003
         MagneticMultipoleP:
@@ -291,8 +291,8 @@ PALS:
         length:  2.42384999999999984E+000
         BendP:
           g_ref:  1.13744662417228803E-001
-          edge_int1:  2.89100000000000017E-002
-          edge_int2:  2.89100000000000017E-002
+          edge1_int:  2.89100000000000017E-002
+          edge2_int:  2.89100000000000017E-002
           e1:  5.05800000000000000E-002
           e2:  5.05800000000000000E-002
         MagneticMultipoleP:
@@ -345,8 +345,8 @@ PALS:
         length:  2.42384999999999984E+000
         BendP:
           g_ref:  1.13744662417228803E-001
-          edge_int1:  2.89100000000000017E-002
-          edge_int2:  2.89100000000000017E-002
+          edge1_int:  2.89100000000000017E-002
+          edge2_int:  2.89100000000000017E-002
           e1:  5.05800000000000000E-002
           e2:  5.05800000000000000E-002
         MagneticMultipoleP:
@@ -455,8 +455,8 @@ PALS:
         length:  2.66650810302187846E-001
         BendP:
           g_ref:  3.20269043635076911E-002
-          edge_int1:  2.06500000000000017E-002
-          edge_int2:  2.06500000000000017E-002
+          edge1_int:  2.06500000000000017E-002
+          edge2_int:  2.06500000000000017E-002
           e1:  4.27000000000000036E-003
           e2:  4.27000000000000036E-003
         MagneticMultipoleP:
@@ -470,8 +470,8 @@ PALS:
         length:  2.66650810302187846E-001
         BendP:
           g_ref:  3.20269043635076911E-002
-          edge_int1:  2.06500000000000017E-002
-          edge_int2:  2.06500000000000017E-002
+          edge1_int:  2.06500000000000017E-002
+          edge2_int:  2.06500000000000017E-002
           e1:  4.27000000000000036E-003
           e2:  4.27000000000000036E-003
         MagneticMultipoleP:
@@ -762,8 +762,8 @@ PALS:
         length:  6.22928612672511539E-001
         BendP:
           g_ref: -1.13006528465579306E-001
-          edge_int1:  2.06500000000000017E-002
-          edge_int2:  2.06500000000000017E-002
+          edge1_int:  2.06500000000000017E-002
+          edge2_int:  2.06500000000000017E-002
           e1: -3.51974999999999996E-002
           e2: -3.51974999999999996E-002
         MagneticMultipoleP:
@@ -777,8 +777,8 @@ PALS:
         length:  6.22928612672511539E-001
         BendP:
           g_ref: -1.13006528465579306E-001
-          edge_int1:  2.06500000000000017E-002
-          edge_int2:  2.06500000000000017E-002
+          edge1_int:  2.06500000000000017E-002
+          edge2_int:  2.06500000000000017E-002
           e1: -3.51974999999999996E-002
           e2: -3.51974999999999996E-002
         MagneticMultipoleP:
@@ -911,7 +911,8 @@ PALS:
 
     - pue_a02: 
         kind: Instrument
-        label: "“AGSBPM”"
+        MetaP:
+          label: "“AGSBPM”"
         ApertureP:
           shape: RECTANGULAR     
           location: EXIT_END        
@@ -994,7 +995,8 @@ PALS:
 
     - pue_a04: 
         kind: Instrument
-        label: "“AGSBPM”"
+        MetaP:
+          label: "“AGSBPM”"
         ApertureP:
           shape: RECTANGULAR     
           location: EXIT_END        
@@ -1111,7 +1113,8 @@ PALS:
 
     - pue_a08: 
         kind: Instrument
-        label: "“AGSBPM”"
+        MetaP:
+          label: "“AGSBPM”"
         ApertureP:
           shape: RECTANGULAR     
           location: EXIT_END        
@@ -1203,7 +1206,8 @@ PALS:
 
     - pue_a12: 
         kind: Instrument
-        label: "“AGSBPM”"
+        MetaP:
+          label: "“AGSBPM”"
         ApertureP:
           shape: RECTANGULAR     
           location: EXIT_END        
@@ -1265,7 +1269,8 @@ PALS:
 
     - pue_a14: 
         kind: Instrument
-        label: "“AGSBPM”"
+        MetaP:
+          label: "“AGSBPM”"
         ApertureP:
           shape: RECTANGULAR     
           location: EXIT_END        

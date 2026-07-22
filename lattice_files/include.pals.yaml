@@ -7,7 +7,7 @@
     BendP:
       g_ref: 0.06818582244610812
       e1: 0.009091 * a_const
-      edge_int2: 0.02065
+      edge2_int: 0.02065
 
 - a_subline:
     kind: BeamLine
