@@ -2,7 +2,7 @@
     kind: Sextupole
 
 - DH1A:
-    kind: SBend
+    kind: Bend
     length: 0.2666536729738865
     BendP:
       g_ref: 0.06818582244610812
@@ -10,7 +10,7 @@
       edge_int2: 0.02065
 
 - a_subline:
-    kind: Beamline
+    kind: BeamLine
     line:
       - DH1A
       - pueh001: 
@@ -18,6 +18,10 @@
           ApertureP:
             shape: RECTANGULAR     
             location: EXIT_END        
-          BmadP:
-            Bmand_key: Monitor
+          # An include file has no `PALS` root of its own to register an
+          # `extension_labels` name under, so the extension is marked in place
+          # with an `extension` key (extensions.md, s:extension-syntax).
+          bmad_data:
+            extension: Bmad
+            Bmad_key: Monitor
       - include: "include2.pals.yaml"

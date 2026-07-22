@@ -14,7 +14,7 @@ PALS:
           py: 5
           pz: 6
     - ap1:
-        kind: Aperture
+        kind: Mask
         length: 1
         ApertureP:
           x_min: 1
@@ -34,13 +34,13 @@ PALS:
         kind: Drift
         length: 100
     - ap2:
-        kind: Aperture
+        kind: Mask
         length: 0
         ApertureP:
           x_width: 2
           y_width: 4
     - s1:
-        kind: SBend
+        kind: Bend
         length: 10
         BendP:
           rho_ref: 4.2         # [radian] Reference bend angle
