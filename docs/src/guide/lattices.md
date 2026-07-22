@@ -165,9 +165,10 @@ end
 ```
 
 A vector is empty when a view has no corresponding node. For example, the
-`fork_pointer` scalar that expansion synthesises exists only in `expanded`, so
-its `original` and `combined` vectors are empty; a constant the lattice never
-refers to exists only in `leftover`, so its `expanded` vector is empty.
+`destination_pointer` scalar that expansion synthesises exists only in
+`expanded`, so its `original` and `combined` vectors are empty; a constant the
+lattice never refers to exists only in `leftover`, so its `expanded` vector is
+empty.
 
 !!! note "The mapping is exact, not heuristic"
     The correspondence is not recovered by re-matching the finished trees. The
