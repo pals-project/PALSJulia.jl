@@ -87,7 +87,7 @@ PALS:
         kind: Bend
         length: 0.2
         BendP:
-          edge_int2: 0.02 * thingB>MagneticMultipoleP.Kn2L
+          edge2_int: 0.02 * thingB>MagneticMultipoleP.Kn2L
     - main_line:
         kind: BeamLine
         line:
@@ -114,7 +114,7 @@ PALS:
     - DH1A:
         kind: Bend
         BendP:
-          edge_int2: 0.02 * thingB>MagneticMultipoleP.NotThere
+          edge2_int: 0.02 * thingB>MagneticMultipoleP.NotThere
     - ghost_child:
         kind: Bend
         inherit: ghost_ancestor
@@ -144,7 +144,7 @@ PALS:
         ReferenceP:
           species_ref: species
         BendP:
-          e_tot: 1.1 * mass_of(species)
+          h1: 1.1 * mass_of(species)
     - main_line:
         kind: BeamLine
         line:
@@ -232,9 +232,9 @@ PALS:
       write(path, ELEMENT_PARAM_REF_LATTICE)
       lat = parse_and_expand_pals(path)
 
-      # edge_int2 references thingB's Kn2L (0.1) via element>group.param syntax.
+      # edge2_int references thingB's Kn2L (0.1) via element>group.param syntax.
       dh1a = inlined(lat, "lat1", "main_line", "DH1A")
-      @test Float64(dh1a["BendP"]["edge_int2"]) ≈ 0.02 * 0.1
+      @test Float64(dh1a["BendP"]["edge2_int"]) ≈ 0.02 * 0.1
     end
   end
 
@@ -251,7 +251,7 @@ PALS:
 
       # mass_of(species) resolves the `species: "#3He"` constant by name.
       @test Float64(consts["b_const"]) ≈ 0.45 * m_3he
-      @test Float64(dh1a["BendP"]["e_tot"]) ≈ 1.1 * m_3he
+      @test Float64(dh1a["BendP"]["h1"]) ≈ 1.1 * m_3he
       # A bare identifier naming the species constant (species_ref: species) is
       # replaced by its species-name string in the expanded tree.
       @test String(dh1a["ReferenceP"]["species_ref"]) == "#3He"
@@ -327,7 +327,7 @@ PALS:
       @test occursin("reference to undefined element or line 'NoSuchElement'", contents)
       @test occursin("inherit: 'ghost_ancestor' is not defined", contents)
       @test occursin("could not evaluate expression for constants.a_const", contents)
-      @test occursin("could not evaluate expression for BendP.edge_int2", contents)
+      @test occursin("could not evaluate expression for BendP.edge2_int", contents)
 
       # `:none` prints nothing, but still returns the problems in the struct.
       local lat

@@ -129,7 +129,7 @@ PALS:
           phase: 3.1                      # [unitless] RF phase in 0 to 2*pi
           multipass_phase: 2            # [unitless] RF Phase added to multipass elements
           cavity_type: STANDING_WAVE    # [string] Cavity type
-          n_cell: 1                     # [unitles] Number of cavity cells
+          num_cells: 1                     # [unitles] Number of cavity cells
           zero_phase: ACCELERATING      # [enum] Sets what phase = 0 means.
 
     - rfcav2:
@@ -143,7 +143,7 @@ PALS:
           phase: 3.1                      # [unitless] RF phase in 0 to 2*pi
           multipass_phase: 2            # [unitless] RF Phase added to multipass elements
           cavity_type: STANDING_WAVE    # [string] Cavity type
-          n_cell: 1                     # [unitles] Number of cavity cells
+          num_cells: 1                     # [unitles] Number of cavity cells
           zero_phase: BELOW_TRANSITION      # [enum] Sets what phase = 0 means.
 
     - rfcav3:
@@ -157,7 +157,7 @@ PALS:
           phase: 3.1                      # [unitless] RF phase in 0 to 2*pi
           multipass_phase: 2            # [unitless] RF Phase added to multipass elements
           cavity_type: TRAVELING_WAVE    # [string] Cavity type
-          n_cell: 1                     # [unitles] Number of cavity cells
+          num_cells: 1                     # [unitles] Number of cavity cells
           zero_phase: ABOVE_TRANSITION      # [enum] Sets what phase = 0 means.
     - beambeam1:
         kind: BeamBeam
