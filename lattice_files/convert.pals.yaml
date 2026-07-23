@@ -116,7 +116,7 @@ PALS:
           flexible: true          # Default is False.
                             #    true -> User sets offsets and rot. 
                             #    False -> Offsets and rot from branch layout. 
-          ref_coords: entrance_end        # Coordinate system defining the length
+          ref_coords: ENTRANCE_END        # Coordinate system defining the length
           user_sets_length: true  # Default is False. Is the element length User set? 
     - rfcav1:
         kind: RFCavity

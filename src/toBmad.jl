@@ -751,10 +751,10 @@ function _make_bmad_ele(ele::YAMLNode)
           flex = lowercase(String(patchP["flexible"]))
           tmp = "flexible = $(flex == "true" ? "T" : "F"),"
         elseif pkey == "ref_coords"
-          ref = lowercase(String(apertureP["ref_coords"]))
-          if ref == "entrance_end"
+          ref = String(patchP["ref_coords"])
+          if ref == "ENTRANCE_END"
             tmp = "ref_coords = entrance_end,"
-          elseif ref == "exit_end"
+          elseif ref == "EXIT_END"
             tmp = "ref_coords = exit_end,"
           end
         elseif pkey == "user_sets_length"
