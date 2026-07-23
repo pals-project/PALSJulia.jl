@@ -642,10 +642,10 @@ function _make_bmad_ele(ele::YAMLNode)
 
       for bkey in keys(bendP)
         tmp = ""
-        if bkey == "rho_ref"
-          tmp *= "angle = $(String(bendP["rho_ref"])),"
-        elseif bkey == "bend_field_ref"
-          tmp *= "B_field = $(String(bendP["bend_field_ref"])),"
+        if bkey == "radius_ref"
+          tmp *= "rho = $(String(bendP["radius_ref"])),"
+        elseif bkey == "Bn0_ref"
+          tmp *= "B_field = $(String(bendP["Bn0_ref"])),"
 
         elseif bkey == "e1" || bkey == "e1_rect"
           tmp *= "e1 = $(String(bendP["e1"])),"
