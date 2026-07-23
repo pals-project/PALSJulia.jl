@@ -75,7 +75,6 @@ PALS:
     - b_line:
         kind: BeamLine
         line:
-          - m
           - b_begin
           - dft
 
