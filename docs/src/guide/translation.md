@@ -102,8 +102,8 @@ and their SciBmad/Bmad equivalents.
 ### BeamBeamP --> Not in SciBmad yet
 
 ### BendP --> BendParams
-- rho_ref -> caluclated
-- bend_field_ref -> calculated
+- radius_ref -> caluclated
+- Bn0_ref -> calculated
 - e1 --> e1
 - e2 --> e2
 - e1_rect --> calculated

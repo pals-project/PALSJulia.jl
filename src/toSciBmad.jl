@@ -342,10 +342,10 @@ function _make_scibmad_ele(ele::YAMLNode)
     elseif key == "BendP"
       bendP = props["BendP"]
       for bkey in keys(bendP)
-        if bkey == "rho_ref"
-          println("rho_ref not yet supported")
-        elseif bkey == "bend_field_ref"
-          println("bend_field_ref not yet supported")
+        if bkey == "radius_ref"
+          println("radius_ref not yet supported")
+        elseif bkey == "Bn0_ref"
+          println("Bn0_ref not yet supported")
         elseif bkey == "e1"
           push!(attrs, "e1 = $(String(bendP["e1"]))")
         elseif bkey == "e2"

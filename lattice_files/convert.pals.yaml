@@ -43,8 +43,8 @@ PALS:
         kind: Bend
         length: 10
         BendP:
-          rho_ref: 4.2         # [radian] Reference bend angle
-          bend_field_ref: 1.2  # [T] Reference bend field
+          radius_ref: 4.2      # [m] Reference bend radius
+          Bn0_ref: 1.2         # [T] Reference bend field
           e1: 9.1              # [radian] Entrance end pole face rotation with respect to a sector geometry
           e2: -10.2              # [radian] Exit end pole face rotation with respect to a sector geometry
           e1_rect: 1.1         # [radian] Entrance end pole face rotation with respect to a rectangular geometry
