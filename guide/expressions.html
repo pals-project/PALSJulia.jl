@@ -254,7 +254,8 @@
 <p>A PALS lattice may write numeric values as mathematical <em>expressions</em> —
 <code class="docutils literal notranslate"><span class="pre">0.3</span> <span class="pre">*</span> <span class="pre">r_electron</span></code>, <code class="docutils literal notranslate"><span class="pre">a_const^2</span></code>, <code class="docutils literal notranslate"><span class="pre">mass_of(&quot;proton&quot;)</span></code>. When
 <code class="docutils literal notranslate"><span class="pre">parse_and_expand_pals</span></code> expands a lattice it evaluates every such expression to
-a plain number — across both the <strong><code class="docutils literal notranslate"><span class="pre">expanded</span></code></strong> and <strong><code class="docutils literal notranslate"><span class="pre">leftover</span></code></strong> views — so the
+a plain number — across the expanded views (<strong><code class="docutils literal notranslate"><span class="pre">expanded</span></code></strong> and
+<strong><code class="docutils literal notranslate"><span class="pre">full_expanded</span></code></strong>, which hold the same values) and <strong><code class="docutils literal notranslate"><span class="pre">leftover</span></code></strong> — so the
 expanded lattice is fully numeric and ready for a simulation program to consume.
 The <code class="docutils literal notranslate"><span class="pre">original</span></code> and <code class="docutils literal notranslate"><span class="pre">combined</span></code> views always keep the expression text exactly as
 written.</p>
@@ -466,7 +467,7 @@ grammar outside a lattice:</p>
 </div>
 <p>This evaluates a <em>standalone</em> string, so user-defined constants and variables
 are <strong>not</strong> in scope — use <code class="docutils literal notranslate"><span class="pre">parse_and_expand_pals</span></code> for whole-lattice
-evaluation, whose <code class="docutils literal notranslate"><span class="pre">expanded</span></code> tree already has every expression resolved. It
+evaluation, whose expanded trees already have every expression resolved. It
 throws <code class="docutils literal notranslate"><span class="pre">ArgumentError</span></code> when the string is not evaluable: a parse error, an
 unknown identifier or species, an unquoted species name, a
 <code class="docutils literal notranslate"><span class="pre">random()</span></code>/<code class="docutils literal notranslate"><span class="pre">random_gauss()</span></code> expression (intentionally deferred), or a
