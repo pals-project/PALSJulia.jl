@@ -50,7 +50,7 @@ const _TRANSLATE_FIXTURE = """
 # A lattice built around the two `Controller` kinds.  It also names its beginning
 # element in the `line` rather than spelling it out, gives its branch as a map, and
 # gives q1 an aperture with a shape but no limits — all forms the translators have
-# to accept.
+# to accept.  m1 carries nothing but multipoles, which Bmad handles its own way.
 const _CONTROLLER_FIXTURE = """
   PALS:
     facility:
@@ -72,12 +72,17 @@ const _CONTROLLER_FIXTURE = """
           length: 0.2
           MagneticMultipoleP:
             Ks2L: 1.5
+      - m1:
+          kind: Multipole
+          MagneticMultipoleP:
+            Kn3L: 0.7
       - ring:
           kind: BeamLine
           line:
             - beg
             - q1
             - s1
+            - m1
       - lat:
           kind: Lattice
           branches:
@@ -143,6 +148,9 @@ _parsed(dir, text) = (path = joinpath(dir, "fixture.pals.yaml");
       @test occursin("L = 100", out)
       @test occursin("q1: Quadrupole", out)
 
+      # No element here has multipoles, so none of them needs the scaling turned off.
+      @test !occursin("scale_multipoles", out)
+
       # BeamLine definition (line[1] is dropped by design, leaving d1, q1).
       @test occursin("ring: line = (d1, q1)", out)
 
@@ -196,8 +204,16 @@ _parsed(dir, text) = (path = joinpath(dir, "fixture.pals.yaml");
       # no length -- but is skew and second order, hence A2 and the 1/2! of the convention.
       @test occursin("bump: group = {s1[A2]: 0.5*(dk)}, var = {dk}, dk = 0.0", out)
 
+      # Bmad would otherwise read An/Bn as fractions of the element's own strength and scale
+      # them by it, which for these elements -- whose strength is in the An/Bn -- means by zero.
+      @test occursin("B1 = 0.125,\n\tscale_multipoles = F", out)
+      @test occursin("A2 = 0.75,\n\tscale_multipoles = F", out)
+
+      # An element that is only multipoles does no such scaling, and has no attribute to set.
+      @test occursin("m1: AB_Multipole,\n\tB3 = 0.11666666666666665\n", out)
+
       # The rest of the lattice still comes through.
-      @test occursin("ring: line = (q1, s1)", out)
+      @test occursin("ring: line = (q1, s1, m1)", out)
       @test occursin("use, ring", out)
     end
   end
