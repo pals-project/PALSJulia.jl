@@ -27,6 +27,29 @@ end
 
 #---------------------------------------------------------------------------------------------------
 """
+    BmadController
+
+A Bmad `overlay` or `group` element: what a PALS `Controller` becomes.
+
+Fields:
+  - `name`   : the controller name.
+  - `type`   : `"overlay"` for `control_type: ABSOLUTE`, `"group"` for `RELATIVE`. Bmad's
+               overlay sets the slave parameter and its group adds to it, which is the same
+               split PALS makes.
+  - `slaves` : the controlled parameters, each an `"ele[attribute]: expression"` string.
+  - `vars`   : the variable names, in definition order.
+  - `inits`  : the variables' initial values, each a `"name = value"` string.
+"""
+struct BmadController
+  name::String
+  type::String
+  slaves::Vector{String}
+  vars::Vector{String}
+  inits::Vector{String}
+end
+
+#---------------------------------------------------------------------------------------------------
+"""
     BmadLattice
 
 An in-memory model of a Bmad lattice.
@@ -34,19 +57,24 @@ An in-memory model of a Bmad lattice.
 Produced by [`pals_to_bmad`](@ref) and serialized to a file by [`write_bmad_file`](@ref).
 The fields mirror the sections of a Bmad lattice file:
   - `parameters`     : global `parameter[...] = ...` settings (species, energy, geometry).
+  - `beginning`      : `beginning[...] = ...` initial Twiss, coupling and dispersion settings.
   - `particle_start` : `particle_start[...] = ...` initial-coordinate settings.
   - `elements`       : element definitions ([`BmadEleDef`](@ref)).
+  - `controllers`    : `overlay`/`group` definitions ([`BmadController`](@ref)).
   - `beamlines`      : `line` definitions ([`BmadBeamline`](@ref)).
   - `use`            : branch names for the final `use, ...` statement.
 """
 struct BmadLattice
   parameters::Vector{String}
+  beginning::Vector{String}
   particle_start::Vector{String}
   elements::Vector{BmadEleDef}
+  controllers::Vector{BmadController}
   beamlines::Vector{BmadBeamline}
   use::Vector{String}
 end
-BmadLattice() = BmadLattice(String[], String[], BmadEleDef[], BmadBeamline[], String[])
+BmadLattice() = BmadLattice(String[], String[], String[], BmadEleDef[], BmadController[],
+                            BmadBeamline[], String[])
 
 #---------------------------------------------------------------------------------------------------
 """
@@ -74,8 +102,9 @@ function pals_to_bmad(yaml::YAMLNode)
     haskey(props, "kind") || continue
     pals_kind = String(props["kind"])
     if pals_kind == "BeginningEle"
-      params, particle = _ele_to_bmad_str(ele)
+      params, beginning, particle = _ele_to_bmad_str(ele)
       append!(lat.parameters, params)
+      append!(lat.beginning, beginning)
       append!(lat.particle_start, particle)
     elseif pals_kind == "BeamLine"
       push!(lat.beamlines, _make_bmad_line(ele))
@@ -86,6 +115,10 @@ function pals_to_bmad(yaml::YAMLNode)
                 Bmad only supports one branching lattice per file.\n
                 Consider using different Tao universes.\n")
       _add_bmad_branches!(lat, props["branches"])
+    elseif pals_kind == "Controller"
+      push!(lat.controllers, _make_bmad_controller(ele, facility))
+    elseif pals_kind == "constant" || pals_kind == "variable"
+      error("$(node_key(props)): `$pals_kind` definitions are not yet translated to Bmad")
     else
       push!(lat.elements, _make_bmad_ele(ele))
     end
@@ -134,13 +167,20 @@ end
 
 Serialize the [`BmadLattice`](@ref) `lat` to `filename` as a Bmad lattice file.
 
-Write the global/particle-start parameters, the element definitions, the beamline (`line`)
-definitions, and the branch (`use`) statement, each in its own labelled section.
+Write the global, beginning-Twiss and particle-start parameters, the element definitions, the
+`overlay`/`group` definitions, the beamline (`line`) definitions, and the branch (`use`)
+statement, each in its own labelled section.
 """
 function write_bmad_file(lat::BmadLattice, filename::String)
   open(filename, "w") do io
     for p in lat.parameters
       write(io, p * "\n")
+    end
+    if !isempty(lat.beginning)
+      write(io, "\n")
+      for p in lat.beginning
+        write(io, p * "\n")
+      end
     end
     if !isempty(lat.particle_start)
       write(io, "\n")
@@ -152,6 +192,13 @@ function write_bmad_file(lat::BmadLattice, filename::String)
     write(io, "! Element definitions " * "\n\n")
     for ele in lat.elements
       write(io, _format_bmad_ele(ele) * "\n")
+    end
+    if !isempty(lat.controllers)
+      write(io, "!======================================================================" * "\n")
+      write(io, "! Controller definitions " * "\n\n")
+      for ctrl in lat.controllers
+        write(io, _format_bmad_controller(ctrl) * "\n")
+      end
     end
     write(io, "!======================================================================" * "\n")
     write(io, "! Beamline definitions " * "\n\n")
@@ -176,6 +223,22 @@ function _format_bmad_ele(ele::BmadEleDef)
   s = "$(ele.name): $(ele.type)"
   for a in ele.attrs
     s *= ",\n\t$a"
+  end
+  return s
+end
+
+#---------------------------------------------------------------------------------------------------
+"""
+    _format_bmad_controller(ctrl::BmadController)
+
+Render a [`BmadController`](@ref) as a Bmad `name: overlay = {...}, var = {...}, v = init`
+definition.
+"""
+function _format_bmad_controller(ctrl::BmadController)
+  s = "$(ctrl.name): $(ctrl.type) = {" * join(ctrl.slaves, ", ") * "}"
+  isempty(ctrl.vars) || (s *= ", var = {" * join(ctrl.vars, ", ") * "}")
+  for init in ctrl.inits
+    s *= ", " * init
   end
   return s
 end
@@ -219,16 +282,25 @@ end
 
 Translate a `BeginningEle` element into Bmad global-parameter settings.
 
-Return `(params, particle_start)` where `params` holds `parameter[...]` strings from the
-element's `ReferenceP` (species and energy) and `particle_start` holds `particle_start[...]`
-strings from its `ParticleP` (initial phase-space coordinates).
+Return `(params, beginning, particle_start)` where `params` holds `parameter[...]` strings from
+the element's `ReferenceP` (species and energy), `beginning` holds `beginning[...]` strings from
+its `TwissP` (initial Twiss, coupling and dispersion), and `particle_start` holds
+`particle_start[...]` strings from its `ParticleP` (initial phase-space coordinates and spin).
 """
 function _ele_to_bmad_str(ele::YAMLNode)
   props = ele[1]
   params = String[]
+  beginning = String[]
   particle = String[]
   for key in keys(props)
-    if key == "ReferenceP"
+    if key == "TwissP"
+      twissP = props["TwissP"]
+      for k in keys(twissP)
+        # PALS and Bmad give these the same names, bar the coupling matrix's underscore.
+        attribute = startswith(k, "cmat") ? "cmat_" * k[5:end] : k
+        push!(beginning, "beginning[$attribute] = $(String(twissP[k]))")
+      end
+    elseif key == "ReferenceP"
       referenceP = props["ReferenceP"]
       for k in keys(referenceP)
         if k == "species_ref"
@@ -257,11 +329,13 @@ function _ele_to_bmad_str(ele::YAMLNode)
           push!(particle, "particle_start[py] = $val")
         elseif k == "pz"
           push!(particle, "particle_start[pz] = $val")
+        elseif k == "spin_x" || k == "spin_y" || k == "spin_z"
+          push!(particle, "particle_start[$k] = $val")
         end
       end
     end
   end
-  return params, particle
+  return params, beginning, particle
 end
 
 #---------------------------------------------------------------------------------------------------
@@ -289,6 +363,159 @@ function _make_bmad_line(ele::YAMLNode)
     end
   end
   return BmadBeamline(name, members)
+end
+
+#---------------------------------------------------------------------------------------------------
+"""
+    _ctrl_variables(props::YAMLNode)
+
+Return a controller's `variables` as `name => value-text` pairs, in definition order.
+
+Accepts both forms the standard allows: a map (`vv: 0.3`) and a sequence of single-key maps
+(`- vv: 0.3`). A variable written with no value takes PALS' default of zero.
+"""
+function _ctrl_variables(props::YAMLNode)
+  vars = Pair{String,String}[]
+  haskey(props, "variables") || return vars
+  variables = props["variables"]
+  function add!(node)
+    (is_map(node) || is_sequence(node)) && return
+    value = strip(String(node))
+    push!(vars, node_key(node) => (value in ("", "~", "null") ? "0" : value))
+  end
+  if is_map(variables)
+    for key in keys(variables)
+      add!(variables[key])
+    end
+  elseif is_sequence(variables)
+    for entry in variables, i in eachindex(entry)
+      add!(entry[i])
+    end
+  end
+  return vars
+end
+
+#---------------------------------------------------------------------------------------------------
+"""
+    _facility_entry(facility::YAMLNode, name::String)
+
+Return the `facility` entry named `name`, or `nothing` if there is none. The entry is the
+single-key map the translators take as an element; [`_facility_props`](@ref) gives its
+properties.
+"""
+function _facility_entry(facility::YAMLNode, name::String)
+  for ele in facility
+    node_key(ele[1]) == name && return ele
+  end
+  return nothing
+end
+
+#---------------------------------------------------------------------------------------------------
+"""
+    _facility_props(facility::YAMLNode, name::String)
+
+Return the property map of the `facility` entry named `name`, or `nothing` if there is none.
+"""
+function _facility_props(facility::YAMLNode, name::String)
+  ele = _facility_entry(facility, name)
+  return ele === nothing ? nothing : ele[1]
+end
+
+#---------------------------------------------------------------------------------------------------
+"""
+    _bmad_control_target(cname::String, param::String, facility::YAMLNode)
+
+Translate a controller's `parameter` target into a Bmad slave reference.
+
+Return `(target, factor)` where `target` is the `"ele[attribute]"` Bmad reference and `factor`
+is what the control expression must be multiplied by to hold the same physics. The factor is
+not always one because the element translation does not carry PALS parameters across
+unchanged: a `MagneticMultipoleP` multipole becomes Bmad's normalized *integrated* strength
+`An`/`Bn`, so a controller driving a non-integrated `Kn1` has to pick up the slave's length
+(and the `1/n!` of the multipole convention) here. Targets Bmad cannot express -- a pattern
+matching several elements, or a parameter with no Bmad attribute -- raise an error.
+"""
+function _bmad_control_target(cname::String, param::String, facility::YAMLNode)
+  parts = split(param, ">")
+  length(parts) == 2 ||
+      error("controller $cname: control parameter `$param` is not of the form `element>parameter`")
+  slave, path = String(parts[1]), String(parts[2])
+
+  occursin(r"^[A-Za-z_][A-Za-z0-9_]*$", slave) ||
+      error("controller $cname: `$param` selects slaves by pattern, which a Bmad overlay cannot express")
+
+  props = _facility_props(facility, slave)
+  props === nothing && error("controller $cname: `$param` names no element of the facility")
+
+  # A controller may drive another controller's variable, and so may a Bmad overlay.
+  if haskey(props, "kind") && String(props["kind"]) == "Controller"
+    occursin(r"^[A-Za-z_][A-Za-z0-9_]*$", path) ||
+        error("controller $cname: `$param` is not a variable of controller $slave")
+    return "$slave[$path]", 1.0
+  end
+
+  path == "length" && return "$slave[L]", 1.0
+
+  m = match(r"^MagneticMultipoleP\.([KB])([ns])([0-9]+)(L?)$", path)
+  if m !== nothing
+    order      = parse(Int, m[3])
+    skew       = m[2] == "s"
+    integrated = m[4] == "L"
+    L = (integrated || !haskey(props, "length")) ? 1.0 : Float64(props["length"])
+    # A tilted multipole rotates normal and skew into each other, so the one PALS parameter
+    # no longer maps onto the one Bmad attribute.
+    if haskey(props, "MagneticMultipoleP") && haskey(props["MagneticMultipoleP"], "tilt$order")
+      Float64(props["MagneticMultipoleP"]["tilt$order"]) ≈ 0 ||
+          error("controller $cname: `$param` drives a tilted multipole, which has no single Bmad attribute")
+    end
+    fact = order <= 20 ? factorial(order) : factorial(big(order))
+    return "$slave[$(skew ? "A" : "B")$order]", L / fact
+  end
+
+  error("controller $cname: control parameter `$param` is not yet translated to Bmad")
+end
+
+#---------------------------------------------------------------------------------------------------
+"""
+    _make_bmad_controller(ele::YAMLNode, facility::YAMLNode)
+
+Translate a `Controller` element into a [`BmadController`](@ref).
+
+`facility` is needed to reach the slave elements: what a control expression must be scaled by
+depends on the element it drives (see [`_bmad_control_target`](@ref)).
+"""
+function _make_bmad_controller(ele::YAMLNode, facility::YAMLNode)
+  props = ele[1]
+  name = node_key(props)
+
+  control_type = haskey(props, "control_type") ? String(props["control_type"]) : "ABSOLUTE"
+  if control_type == "ABSOLUTE"
+    bmad_type = "overlay"
+  elseif control_type == "RELATIVE"
+    bmad_type = "group"
+  else
+    error("$name: control_type must be ABSOLUTE or RELATIVE, not $control_type")
+  end
+
+  vars  = String[]
+  inits = String[]
+  for (var, value) in _ctrl_variables(props)
+    push!(vars, var)
+    push!(inits, "$var = $value")
+  end
+
+  slaves = String[]
+  if haskey(props, "controls")
+    for control in props["controls"]
+      haskey(control, "parameter") && haskey(control, "expression") ||
+          error("$name: a controls entry needs both a `parameter` and an `expression`")
+      target, factor = _bmad_control_target(name, String(control["parameter"]), facility)
+      expression = String(control["expression"])
+      push!(slaves, factor ≈ 1 ? "$target: $expression" : "$target: $factor*($expression)")
+    end
+  end
+
+  return BmadController(name, bmad_type, slaves, vars, inits)
 end
 
 #---------------------------------------------------------------------------------------------------
@@ -352,6 +579,8 @@ function _bmad_kind(ele_kind::String)
   # External Circuits
   elseif  ele_kind == "Feedback";         return error("No Feedback elements in Bmad")
 
+  else
+    error("Element kind $ele_kind is not translated to Bmad")
   end
 end
 
