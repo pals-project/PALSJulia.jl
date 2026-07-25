@@ -50,7 +50,8 @@ const _TRANSLATE_FIXTURE = """
 # A lattice built around the two `Controller` kinds.  It also names its beginning
 # element in the `line` rather than spelling it out, gives its branch as a map, and
 # gives q1 an aperture with a shape but no limits — all forms the translators have
-# to accept.  m1 carries nothing but multipoles, which Bmad handles its own way.
+# to accept.  s1's aperture does set limits, so the two can be told apart.  m1 carries
+# nothing but multipoles, which Bmad handles its own way.
 const _CONTROLLER_FIXTURE = """
   PALS:
     facility:
@@ -72,6 +73,13 @@ const _CONTROLLER_FIXTURE = """
           length: 0.2
           MagneticMultipoleP:
             Ks2L: 1.5
+          ApertureP:
+            shape: ELLIPTICAL
+            location: BOTH_ENDS
+            x_width: 0.25
+            x_center: 0.0625
+            y_width: 0.5
+            y_center: 0.125
       - m1:
           kind: Multipole
           MagneticMultipoleP:
@@ -281,8 +289,15 @@ _parsed(dir, text) = (path = joinpath(dir, "fixture.pals.yaml");
       # which Bmad has no sextupole attribute for, so it stays the multipole `A2` -- and Bmad
       # would otherwise read that as a fraction of s1's strength and scale it by that, i.e. by
       # zero, since the strength is the multipole.
-      @test occursin("q1: Quadrupole,\n\tL = 0.5,\n\tK1 = 0.25,\n\taperture_type", out)
+      @test occursin("q1: Quadrupole,\n\tL = 0.5,\n\tK1 = 0.25\n", out)
       @test occursin("A2 = 0.75,\n\tscale_multipoles = F", out)
+
+      # q1's aperture group sets no limit, so it bounds nothing and none of it is written out.
+      # s1's does, and Bmad states each limit as a distance from the axis.
+      @test occursin("x1_limit = 0.0625, x2_limit = 0.1875", out)
+      @test occursin("y1_limit = 0.125, y2_limit = 0.375", out)
+      @test occursin("aperture_type = elliptical,\n\taperture_at = both_ends", out)
+      @test count("aperture_type", out) == 1
 
       # An element that is only multipoles does no such scaling, and has no attribute to set.
       @test occursin("m1: AB_Multipole,\n\tB3 = 0.11666666666666665\n", out)
@@ -310,9 +325,14 @@ _parsed(dir, text) = (path = joinpath(dir, "fixture.pals.yaml");
       @test occursin("bump = Controller(", out)
       @test occursin("(s1, :Ks2L) => (ele; dk) -> ele.Ks2L + (dk)", out)
 
-      # An aperture with a shape but no limits gives a shape and no limits.
-      @test occursin("aperture_shape = ApertureShape.Rectangular", out)
-      @test !occursin("x1_limit", out)
+      # An aperture group that sets no limit bounds nothing, so q1 gets no aperture at all.
+      @test occursin("q1 = LineElement(kind = Quadrupole, L = 0.5, Kn1 = 0.25)", out)
+
+      # s1's does bound something.  Beamlines states each limit as an edge position, so the
+      # low-side ones are negative -- where Bmad wants a distance from the axis.
+      @test occursin("x1_limit = -0.0625, x2_limit = 0.1875", out)
+      @test occursin("y1_limit = -0.125, y2_limit = 0.375", out)
+      @test occursin("aperture_shape = ApertureShape.Elliptical, aperture_at = ApertureAt.BothEnds", out)
 
       # The line names its beginning element; its reference parameters still reach the
       # beamline, and the branch given as a map still reaches the lattice list.
