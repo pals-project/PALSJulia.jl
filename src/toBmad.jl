@@ -878,13 +878,15 @@ function _make_bmad_ele(ele::YAMLNode)
                 Ignoring ApertureP of element $(node_key(ele[1])).
                 Either x_min and max should be defined or width and center, not both.
                 ")
+      # Bmad states a limit as a distance from the axis, not as a coordinate: it loses a
+      # particle at `x < -x1_limit`, so the low-side limit is the negated PALS `x_min`.
       elseif (has_xwidth)
         width  = Float64(apertureP["x_width"])
         center = has_xcen ? Float64(apertureP["x_center"]) : 0.0
         tmp *= "x1_limit = $(width / 2 - center), "
         tmp *= "x2_limit = $(width / 2 + center),"
       elseif (has_xmin && has_xmax)
-        tmp *= "x1_limit = $(String(apertureP["x_min"])), "
+        tmp *= "x1_limit = $(-Float64(apertureP["x_min"])), "
         tmp *= "x2_limit = $(String(apertureP["x_max"])),"
       end
       push_attr!(tmp)
@@ -901,7 +903,7 @@ function _make_bmad_ele(ele::YAMLNode)
         tmp *= "y1_limit = $(width / 2 - center), "
         tmp *= "y2_limit = $(width / 2 + center),"
       elseif (has_ymin && has_ymax)
-        tmp *= "y1_limit = $(String(apertureP["y_min"])), "
+        tmp *= "y1_limit = $(-Float64(apertureP["y_min"])), "
         tmp *= "y2_limit = $(String(apertureP["y_max"])),"
       end
       push_attr!(tmp)

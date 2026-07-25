@@ -28,6 +28,12 @@ const _TRANSLATE_FIXTURE = """
       - d1:
           kind: Drift
           length: 100
+          ApertureP:
+            shape: RECTANGULAR
+            x_min: -0.03
+            x_max: 0.05
+            y_min: -0.01
+            y_max: 0.02
       - q1:
           kind: Quadrupole
           length: 0.5
@@ -232,6 +238,11 @@ _parsed(dir, text) = (path = joinpath(dir, "fixture.pals.yaml");
       # No element here has multipoles, so none of them needs the scaling turned off.
       @test !occursin("scale_multipoles", out)
 
+      # A Bmad limit is a distance from the axis, so the low-side ones come out positive:
+      # Bmad loses a particle at `x < -x1_limit`, where PALS loses it at `x < x_min`.
+      @test occursin("x1_limit = 0.03, x2_limit = 0.05", out)
+      @test occursin("y1_limit = 0.01, y2_limit = 0.02", out)
+
       # BeamLine definition (line[1] is dropped by design, leaving d1, q1).
       @test occursin("ring: line = (d1, q1)", out)
 
@@ -257,6 +268,11 @@ _parsed(dir, text) = (path = joinpath(dir, "fixture.pals.yaml");
       @test occursin("@elements begin", out)
       @test occursin("d1 = LineElement(", out)
       @test occursin("kind = Drift", out)
+
+      # Beamlines states a limit as an edge position, so the low-side ones stay as PALS
+      # wrote them -- where Bmad wants the distance from the axis.
+      @test occursin("x1_limit = -0.03, x2_limit = 0.05", out)
+      @test occursin("y1_limit = -0.01, y2_limit = 0.02", out)
       @test occursin("L = 100", out)
       @test occursin("q1 = LineElement(", out)
 
