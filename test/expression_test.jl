@@ -45,7 +45,7 @@ PALS:
         control_type: ABSOLUTE
         variables:
           cur1: 0.023
-          cur2: cur1 / c_light
+          cur2: 0.023 / c_light
         controls:
           - parameter: Qa.*>MagneticMultipoleP.Ks2L
             expression: 0.075*sin(cur1) + 0.3*cur2
@@ -58,7 +58,7 @@ PALS:
         control_type: RELATIVE
         variables:
           command: 0.4
-          derived: ps27>cur1 * 2
+          derived: 0.4 * 2
         controls:
           - parameter: S1>MagneticMultipoleP.Kn2L
             expression: 5.62 * command + 0.02 * command^2
@@ -276,8 +276,9 @@ PALS:
       fac = lat.leftover["PALS"]["facility"]
       ps27 = fac[2]["ps27"]
 
-      # A controller variable evaluated with the controller's own symbol table:
-      # cur2 references the earlier variable cur1 and the constant c_light.
+      # An initial value is a constant expression -- it may use the built-in and
+      # user constants, never a variable (rejecting a variable reference is
+      # pals-cpp's business and is tested there).
       @test Float64(ps27["variables"]["cur2"]) ≈ cur2
       # Each control expression is computed and stored back in the entry.
       @test Float64(ps27["controls"][1]["expression"]) ≈ 0.075*sin(cur1) + 0.3*cur2
@@ -288,9 +289,9 @@ PALS:
       # The parameter target spec is a name, left untouched.
       @test String(ps27["controls"][1]["parameter"]) == "Qa.*>MagneticMultipoleP.Ks2L"
 
-      # A second controller referencing the first's variable via `name>var`.
+      # A second controller, with a symbol table of its own.
       chrom = fac[3]["chrom_a"]
-      @test Float64(chrom["variables"]["derived"]) ≈ cur1 * 2.0
+      @test Float64(chrom["variables"]["derived"]) ≈ 0.8
       @test Float64(chrom["controls"][1]["expression"]) ≈ 5.62*0.4 + 0.02*0.4^2
 
       # The combined tree keeps the original controller expression text.
