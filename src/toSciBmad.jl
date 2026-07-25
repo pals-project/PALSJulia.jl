@@ -35,23 +35,44 @@ end
 
 #---------------------------------------------------------------------------------------------------
 """
+    SciBmadController
+
+A SciBmad `Controller`: what a PALS `Controller` becomes.
+
+Fields:
+  - `name`   : the controller name.
+  - `slaves` : the controlled properties, each a `"(ele, :prop) => (ele; vars...) -> expr"`
+               pair-and-function string.
+  - `vars`   : the variables' initial values, each a `"name = value"` string.
+"""
+struct SciBmadController
+  name::String
+  slaves::Vector{String}
+  vars::Vector{String}
+end
+
+#---------------------------------------------------------------------------------------------------
+"""
     SciBmadLattice
 
 An in-memory model of a SciBmad lattice.
 
 Produced by [`pals_to_scibmad`](@ref) and serialized to a file by [`write_scibmad_file`](@ref):
-  - `particle`  : `BeginningEle` particle-coordinate lines (including the `v = [...]` vector).
-  - `elements`  : `LineElement` definitions ([`SciBmadEle`](@ref)).
-  - `beamlines` : `Beamline` definitions ([`SciBmadBeamline`](@ref)).
-  - `lattices`  : lattice lists ([`SciBmadLatticeList`](@ref)).
+  - `particle`    : `BeginningEle` particle-coordinate lines (including the `v = [...]` vector).
+  - `elements`    : `LineElement` definitions ([`SciBmadEle`](@ref)).
+  - `controllers` : `Controller` definitions ([`SciBmadController`](@ref)).
+  - `beamlines`   : `Beamline` definitions ([`SciBmadBeamline`](@ref)).
+  - `lattices`    : lattice lists ([`SciBmadLatticeList`](@ref)).
 """
 struct SciBmadLattice
   particle::Vector{String}
   elements::Vector{SciBmadEle}
+  controllers::Vector{SciBmadController}
   beamlines::Vector{SciBmadBeamline}
   lattices::Vector{SciBmadLatticeList}
 end
-SciBmadLattice() = SciBmadLattice(String[], SciBmadEle[], SciBmadBeamline[], SciBmadLatticeList[])
+SciBmadLattice() = SciBmadLattice(String[], SciBmadEle[], SciBmadController[],
+                                  SciBmadBeamline[], SciBmadLatticeList[])
 
 #---------------------------------------------------------------------------------------------------
 """
@@ -84,11 +105,17 @@ function pals_to_scibmad(yaml::YAMLNode)
       name = String(keys(ele)[1])
       branches = String[]
       for bl in props["branches"]
-        push!(branches, String(bl))
+        # A branch is either the bare name of a beamline or that name carrying the branch's
+        # own settings, which SciBmad takes from the beamline rather than the lattice list.
+        push!(branches, is_map(bl) ? String(keys(bl)[1]) : String(bl))
       end
       push!(lat.lattices, SciBmadLatticeList(name, branches))
     elseif kind == "BeamLine"
-      push!(lat.beamlines, _make_scibmad_beamline(ele))
+      push!(lat.beamlines, _make_scibmad_beamline(ele, facility))
+    elseif kind == "Controller"
+      push!(lat.controllers, _make_scibmad_controller(ele))
+    elseif kind == "constant" || kind == "variable"
+      error("$(String(keys(ele)[1])): `$kind` definitions are not yet translated to SciBmad")
     else
       push!(lat.elements, _make_scibmad_ele(ele))
     end
@@ -102,8 +129,8 @@ end
 
 Serialize the [`SciBmadLattice`](@ref) `lat` to `filename` as a SciBmad lattice file.
 
-Write the particle-start block, the `@elements` block of `LineElement`s, the `Beamline`
-definitions, and the lattice lists.
+Write the particle-start block, the `@elements` block of `LineElement`s, the `Controller`
+definitions, the `Beamline` definitions, and the lattice lists.
 """
 function write_scibmad_file(lat::SciBmadLattice, filename::String)
   open(filename, "w") do io
@@ -115,6 +142,10 @@ function write_scibmad_file(lat::SciBmadLattice, filename::String)
       write(io, _format_scibmad_ele(ele) * "\n")
     end
     write(io, "end\n\n")
+    for ctrl in lat.controllers
+      write(io, _format_scibmad_controller(ctrl) * "\n")
+    end
+    isempty(lat.controllers) || write(io, "\n")
     for bl in lat.beamlines
       write(io, _format_scibmad_beamline(bl) * "\n")
     end
@@ -133,6 +164,19 @@ Render a [`SciBmadEle`](@ref) as a `name = LineElement(...)` definition.
 """
 function _format_scibmad_ele(ele::SciBmadEle)
   return "$(ele.name) = LineElement($(join(ele.attrs, ", ")))"
+end
+
+#---------------------------------------------------------------------------------------------------
+"""
+    _format_scibmad_controller(ctrl::SciBmadController)
+
+Render a [`SciBmadController`](@ref) as a `name = Controller(slaves...; vars = (; ...))`
+definition.
+"""
+function _format_scibmad_controller(ctrl::SciBmadController)
+  slaves = join(ctrl.slaves, ",\n  ")
+  vars   = join(ctrl.vars, ", ")
+  return "$(ctrl.name) = Controller(\n  $slaves;\n  vars = (; $vars)\n)"
 end
 
 #---------------------------------------------------------------------------------------------------
@@ -173,7 +217,9 @@ function _ele_to_scibmad_str(ele::YAMLNode)
   ref = String[]
   particle = String[]
   for key in keys(props)
-    if key == "ReferenceP"
+    if key == "TwissP"
+      println("TwissP not yet supported")
+    elseif key == "ReferenceP"
       referenceP = props["ReferenceP"]
       for k in keys(referenceP)
         if k == "species_ref"
@@ -202,6 +248,9 @@ function _ele_to_scibmad_str(ele::YAMLNode)
           push!(particle, "py = $val")
         elseif k == "pz"
           push!(particle, "pz = $val")
+        elseif k == "spin_x" || k == "spin_y" || k == "spin_z"
+          # SciBmad carries spin as a quaternion, not as its components.
+          println("$k not yet supported")
         end
       end
       push!(particle, "v = [ x px y py z pz ]")
@@ -212,18 +261,26 @@ end
 
 #---------------------------------------------------------------------------------------------------
 """
-    _make_scibmad_beamline(ele::YAMLNode)
+    _make_scibmad_beamline(ele::YAMLNode, facility::YAMLNode)
 
 Translate a `BeamLine` element into a [`SciBmadBeamline`](@ref).
 
 Collect the member element names (dropping the leading reference entry, `line[1]`) and the
-reference parameters read from that first entry.
+reference parameters read from that first entry. A line may also name its beginning element
+instead of spelling it out, in which case the reference parameters are on that element's
+`facility` definition.
 """
-function _make_scibmad_beamline(ele::YAMLNode)
+function _make_scibmad_beamline(ele::YAMLNode, facility::YAMLNode)
   name = String(keys(ele)[1])
   props = ele[keys(ele)[1]]
   line = props["line"]
-  ref, _ = _ele_to_scibmad_str(line[1])
+  beginning = line[1]
+  if !is_map(beginning)
+    beginning = _facility_entry(facility, String(beginning))
+    beginning === nothing &&
+        error("BeamLine $name: its first element is not defined in the facility")
+  end
+  ref, _ = _ele_to_scibmad_str(beginning)
   members = String[]
   for i in 2:length(line)
     line_ele = line[i]
@@ -234,6 +291,77 @@ function _make_scibmad_beamline(ele::YAMLNode)
     end
   end
   return SciBmadBeamline(name, members, ref)
+end
+
+#---------------------------------------------------------------------------------------------------
+"""
+    _scibmad_control_target(cname::String, param::String)
+
+Translate a controller's `parameter` target into a SciBmad `(element, :property)` pair.
+
+Return `(element, property)`. SciBmad keeps the PALS parameter names, so a group-qualified
+target such as `q>MagneticMultipoleP.Kn1` needs only its group prefix dropped. Targets SciBmad
+cannot express -- a pattern matching several elements -- raise an error.
+"""
+function _scibmad_control_target(cname::String, param::String)
+  parts = split(param, ">")
+  length(parts) == 2 ||
+      error("controller $cname: control parameter `$param` is not of the form `element>parameter`")
+  slave, path = String(parts[1]), String(parts[2])
+
+  occursin(r"^[A-Za-z_][A-Za-z0-9_]*$", slave) ||
+      error("controller $cname: `$param` selects slaves by pattern, which a SciBmad Controller cannot express")
+
+  # `length` is the one PALS element parameter that is not in a group, and the one whose
+  # SciBmad name differs.
+  path == "length" && return slave, "L"
+
+  property = String(last(split(path, ".")))
+  occursin(r"^[A-Za-z_][A-Za-z0-9_]*$", property) ||
+      error("controller $cname: `$param` does not name a single parameter")
+  return slave, property
+end
+
+#---------------------------------------------------------------------------------------------------
+"""
+    _make_scibmad_controller(ele::YAMLNode)
+
+Translate a `Controller` element into a [`SciBmadController`](@ref).
+
+Each control becomes a function of the controller's variables, which SciBmad passes as keyword
+arguments. `control_type: RELATIVE` adds its expression to the value the element already
+carries -- that is what makes it relative -- while `ABSOLUTE` replaces it.
+"""
+function _make_scibmad_controller(ele::YAMLNode)
+  props = ele[keys(ele)[1]]
+  name = String(keys(ele)[1])
+
+  control_type = haskey(props, "control_type") ? String(props["control_type"]) : "ABSOLUTE"
+  control_type in ("ABSOLUTE", "RELATIVE") ||
+      error("$name: control_type must be ABSOLUTE or RELATIVE, not $control_type")
+
+  var_names = String[]
+  vars      = String[]
+  for (var, value) in _ctrl_variables(props)
+    push!(var_names, var)
+    push!(vars, "$var = $value")
+  end
+  # SciBmad calls every control function with all of the controller's variables.
+  signature = "(ele; " * join(var_names, ", ") * ")"
+
+  slaves = String[]
+  if haskey(props, "controls")
+    for control in props["controls"]
+      haskey(control, "parameter") && haskey(control, "expression") ||
+          error("$name: a controls entry needs both a `parameter` and an `expression`")
+      slave, property = _scibmad_control_target(name, String(control["parameter"]))
+      expression = String(control["expression"])
+      control_type == "RELATIVE" && (expression = "ele.$property + ($expression)")
+      push!(slaves, "($slave, :$property) => $signature -> $expression")
+    end
+  end
+
+  return SciBmadController(name, slaves, vars)
 end
 
 #---------------------------------------------------------------------------------------------------
@@ -270,7 +398,7 @@ function _make_scibmad_ele(ele::YAMLNode)
         push!(attrs, "x2_limit = $(String(apertureP["x_max"]))")
       elseif (has_xwidth && !has_xcen) || (has_xcen && !has_xwidth)
         println("Both width and center need to be defined.")
-      else
+      elseif has_xwidth && has_xcen
         width  = Float64(apertureP["x_width"])
         center = Float64(apertureP["x_center"])
         push!(attrs, "x1_limit = $(center - width / 2)")
@@ -287,7 +415,7 @@ function _make_scibmad_ele(ele::YAMLNode)
         push!(attrs, "y2_limit = $(String(apertureP["y_max"]))")
       elseif (has_ywidth && !has_ycen) || (has_ycen && !has_ywidth)
         println("Both width and center need to be defined.")
-      else
+      elseif has_ywidth && has_ycen
         width  = Float64(apertureP["y_width"])
         center = Float64(apertureP["y_center"])
         push!(attrs, "y1_limit = $(center - width / 2)")
