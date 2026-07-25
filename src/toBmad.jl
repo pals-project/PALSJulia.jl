@@ -430,10 +430,13 @@ Translate a controller's `parameter` target into a Bmad slave reference.
 Return `(target, factor)` where `target` is the `"ele[attribute]"` Bmad reference and `factor`
 is what the control expression must be multiplied by to hold the same physics. The factor is
 not always one because the element translation does not carry PALS parameters across
-unchanged: a `MagneticMultipoleP` multipole becomes Bmad's normalized *integrated* strength
-`An`/`Bn`, so a controller driving a non-integrated `Kn1` has to pick up the slave's length
-(and the `1/n!` of the multipole convention) here. Targets Bmad cannot express -- a pattern
-matching several elements, or a parameter with no Bmad attribute -- raise an error.
+unchanged: a multipole that is not the element's own becomes Bmad's normalized *integrated*
+strength `An`/`Bn`, so a controller driving a non-integrated one has to pick up the slave's
+length (and the `1/n!` of the multipole convention) here. A multipole that *is* the element's
+own strength becomes `K1`, `K2` or `K3` (see [`_native_strength!`](@ref)), which is not length
+integrated, so there an integrated PALS parameter is the one that needs the length. Targets
+Bmad cannot express -- a pattern matching several elements, or a parameter with no Bmad
+attribute -- raise an error.
 """
 function _bmad_control_target(cname::String, param::String, facility::YAMLNode)
   parts = split(param, ">")
@@ -461,15 +464,24 @@ function _bmad_control_target(cname::String, param::String, facility::YAMLNode)
     order      = parse(Int, m[3])
     skew       = m[2] == "s"
     integrated = m[4] == "L"
-    L = (integrated || !haskey(props, "length")) ? 1.0 : Float64(props["length"])
+    ele_length = haskey(props, "length") ? Float64(props["length"]) : 1.0
     # A tilted multipole rotates normal and skew into each other, so the one PALS parameter
     # no longer maps onto the one Bmad attribute.
     if haskey(props, "MagneticMultipoleP") && haskey(props["MagneticMultipoleP"], "tilt$order")
       Float64(props["MagneticMultipoleP"]["tilt$order"]) ≈ 0 ||
           error("controller $cname: `$param` drives a tilted multipole, which has no single Bmad attribute")
     end
+
+    # The normal component of the element's own multipole is its strength attribute, which the
+    # element translation writes without the length or the factorial.
+    native = get(_NATIVE_STRENGTH, haskey(props, "kind") ? String(props["kind"]) : "", nothing)
+    if native !== nothing && native[1] == order && !skew && !(integrated && ele_length == 0)
+      return "$slave[$(m[1] == "K" ? native[2] : native[3])]",
+             integrated ? 1 / ele_length : 1.0
+    end
+
     fact = order <= 20 ? factorial(order) : factorial(big(order))
-    return "$slave[$(skew ? "A" : "B")$order]", L / fact
+    return "$slave[$(skew ? "A" : "B")$order]", (integrated ? 1.0 : ele_length) / fact
   end
 
   error("controller $cname: control parameter `$param` is not yet translated to Bmad")
@@ -650,12 +662,24 @@ function ABRepresentation(full::FullRepresentation)
     L    = full.integrated[mp] ? 1.0 : full.L
     t_n  = haskey(full.tilt, mp) ? full.tilt[mp] : 0.0
     fact = mp <= 20 ? 1 / factorial(mp) : 1 / factorial(big(mp))
-    b_ia = fact * L * first([1 1im] * full.magnitude[mp]) * exp(-1im * mp * t_n)
+    b_ia = fact * L * first([1 1im] * full.magnitude[mp]) * _tilt_rotation(mp, t_n)
     A[mp] = imag(b_ia)
     B[mp] = real(b_ia)
   end
   return ABRepresentation(A, B)
 end
+
+#---------------------------------------------------------------------------------------------------
+"""
+    _tilt_rotation(order::Int, tilt::Real)
+
+Return the factor that rotates an `order` multipole of the given `tilt` into normal and skew
+parts.
+
+A tilt of `T` rotates an order-`N` field by `(N+1) * T` in the normal/skew plane: both PALS and
+Bmad write the field as `(1/N!) (normal + i * skew) exp(-i (N+1) T)`.
+"""
+_tilt_rotation(order::Int, tilt::Real) = exp(-1im * (order + 1) * tilt)
 
 #---------------------------------------------------------------------------------------------------
 """
@@ -676,6 +700,61 @@ function _KindMap(ele_kind)
   else
     error("Element type $ele_kind is unrecognized")
   end
+end
+
+#---------------------------------------------------------------------------------------------------
+"""
+    _NATIVE_STRENGTH
+
+The multipole order that is an element's own strength, and the Bmad attributes that hold it.
+
+Each entry maps a PALS element kind to `(order, normalized_attribute, field_attribute)`: a
+quadrupole's order-1 field is Bmad's `K1` (or `B1_GRADIENT`), not a `B1` multipole. Kinds whose
+strength does not line up one-to-one with a PALS multipole -- a bend's `G`, a kicker's `HKICK`,
+a solenoid's `KS` -- are deliberately absent, and keep the multipole form.
+"""
+const _NATIVE_STRENGTH = Dict("Quadrupole" => (1, "K1", "B1_GRADIENT"),
+                              "Sextupole"  => (2, "K2", "B2_GRADIENT"),
+                              "Octupole"   => (3, "K3", "B3_GRADIENT"))
+
+#---------------------------------------------------------------------------------------------------
+"""
+    _native_strength!(full::FullRepresentation, ele_kind::String)
+
+Take the element's own multipole out of `full` and return its Bmad attribute fragments.
+
+The strength of a Bmad quadrupole is its `K1`, so that is where a PALS `Kn1` belongs: leaving it
+in a `B1` multipole would give an element whose nominal strength is zero and whose field comes
+entirely from a multipole slot. The native attribute is not length integrated, so an integrated
+PALS value is divided by the element length; a tilted one is rotated first, and whatever lands
+in the skew part is left behind in `full` as an ordinary multipole. That rotation is why the
+tilt does not simply become the Bmad element `tilt`, which is already spoken for by
+`BodyShiftP.z_rot`.
+
+Return an empty vector -- leaving `full` untouched, so the multipole form is used -- for kinds
+that have no such attribute, and for an integrated multipole on a zero-length element, which no
+non-integrated attribute can express. As elsewhere in this conversion, an element with no
+`length` is taken to be one metre long.
+"""
+function _native_strength!(full::FullRepresentation, ele_kind::String)
+  haskey(_NATIVE_STRENGTH, ele_kind) || return String[]
+  order, normalized_attr, field_attr = _NATIVE_STRENGTH[ele_kind]
+  haskey(full.magnitude, order) || return String[]
+
+  L = full.integrated[order] ? full.L : 1.0
+  L == 0 && return String[]
+  strength = first([1 1im] * full.magnitude[order]) *
+             _tilt_rotation(order, get(full.tilt, order, 0.0)) / L
+
+  # What is left is a skew multipole of the same order, in the same units the native attribute
+  # was just read in: no longer integrated, and with the tilt already applied.
+  full.magnitude[order] = [0.0, imag(strength)]
+  full.integrated[order] = false
+  delete!(full.tilt, order)
+
+  real(strength) ≈ 0 && return String[]
+  attribute = full.normalized[order] ? normalized_attr : field_attr
+  return ["$attribute = $(real(strength))"]
 end
 
 #---------------------------------------------------------------------------------------------------
@@ -953,15 +1032,17 @@ function _make_bmad_ele(ele::YAMLNode)
         error("$(node_key(props)): Multipoles of one element must be all normalized or all unnormalized.")
       end
 
+      # The element's own multipole is its Bmad strength attribute; the rest stay multipoles.
+      append!(attrs, _native_strength!(full, ele_kind))
+
       rep = _KindMap(ele_kind)(full)   # pick the element-specific representation, then down-convert
       mp_attrs = _mp_key(rep)
       append!(attrs, mp_attrs)
 
       # Bmad reads An/Bn on an ordinary element as fractions of that element's own strength,
       # scaling them by K1*L for a quadrupole, K2*L for a sextupole, and so on. PALS multipoles
-      # are the field integrals themselves, and the main strength lands in An/Bn here rather
-      # than in K1 or K2, so the scaling has to be turned off. The kinds that hold nothing but
-      # multipoles do not scale, and have no such attribute to set.
+      # are the field integrals themselves, so the scaling has to be turned off. The kinds that
+      # hold nothing but multipoles do not scale, and have no such attribute to set.
       if any(a -> startswith(a, r"[AB][0-9]"), mp_attrs) &&
              ele_kind_bmad ∉ ("AB_Multipole", "Multipole", "SAD_Mult")
         push_attr!("scale_multipoles = F")
