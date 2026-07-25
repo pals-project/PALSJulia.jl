@@ -121,18 +121,20 @@ Base.hash(n::YAMLNode, h::UInt) = hash(n.id, hash(objectid(n.tree), h))
 
 # Raw C struct mirroring `struct string_list` from yaml_c_wrapper.h: an owning
 # array of C strings and its length. Carries the problems found while building
-# the expanded tree; freed with free_lattice_problems.
+# the full_expanded tree; freed with free_lattice_problems.
 struct StringListC
   items::Ptr{Cstring}
   count::Csize_t
 end
 
-# Raw C struct returned by parse_and_expand_pals — four tree handles plus the
-# problem list, all by value. Layout must match `struct lattices`.
+# Raw C struct returned by parse_and_expand_pals — five tree handles plus the
+# problem list, all by value. Layout must match `struct lattices`, field for
+# field and in order.
 struct LatticesHandle
   original::Ptr{Cvoid}
   combined::Ptr{Cvoid}
   expanded::Ptr{Cvoid}
+  full_expanded::Ptr{Cvoid}
   leftover::Ptr{Cvoid}
   problems::StringListC
 end
@@ -144,7 +146,7 @@ end
 struct NodeLinkC
   original::Csize_t
   combined::Csize_t
-  expanded::Csize_t
+  full_expanded::Csize_t
   leftover::Csize_t
 end
 
@@ -184,8 +186,13 @@ const PARAM_VALUE_STRING = Cint(2)
 #---------------------------------------------------------------------------------------------------
 
 """
-Four representations of a lattice, each as a root `YAMLNode`, plus the list of
+Five representations of a lattice, each as a root `YAMLNode`, plus the list of
 problems found while expanding it.
+
+`expanded` and `full_expanded` are the same expanded lattice holding the same
+values; `full_expanded` additionally carries every parameter the bookkeeper
+computed, while `expanded` keeps only what the author wrote. See
+[`parse_and_expand_pals`](@ref) for what each view holds.
 
 `problems` is a `Vector{String}` — one human-readable message per problem
 encountered during expansion (undefined lattice, dangling element/line
@@ -196,6 +203,7 @@ struct Lattices
   original::YAMLNode
   combined::YAMLNode
   expanded::YAMLNode
+  full_expanded::YAMLNode
   leftover::YAMLNode
   problems::Vector{String}
 end

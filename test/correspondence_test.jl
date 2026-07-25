@@ -42,7 +42,7 @@ PALS:
       @test !isempty(corr)
       # The combined, expanded and leftover roots are keys.
       @test haskey(corr, lat.combined)
-      @test haskey(corr, lat.expanded)
+      @test haskey(corr, lat.full_expanded)
       @test haskey(corr, lat.leftover)
     end
 
@@ -56,7 +56,7 @@ PALS:
       @test length(entry.original) == 1
       @test length(entry.combined) == 1
       @test length(entry.leftover) == 1
-      @test isempty(entry.expanded)
+      @test isempty(entry.full_expanded)
       @test String(entry.original[1]) == "0.3 * r_electron"
       @test String(entry.combined[1]) == "0.3 * r_electron"
       # The leftover copy has its expression evaluated to a number, while the
@@ -78,9 +78,9 @@ PALS:
       cell_d1 = lat.combined["PALS"]["facility"][3]["cell"]["line"][1]
       c = corr[cell_d1]
       @test length(c.combined) == 1
-      @test length(c.expanded) >= 3
+      @test length(c.full_expanded) >= 3
       # Every expanded copy resolves back to this same class.
-      @test all(corr[n] == c for n in c.expanded)
+      @test all(corr[n] == c for n in c.full_expanded)
       # The definition it was expanded from is still standing in leftover, and
       # belongs to the same class.
       @test length(c.leftover) == 1
@@ -94,20 +94,20 @@ PALS:
       # node to follow, not `kind`: inlining main_line made it a branch, and a
       # branch has no kind, so no expanded node answers to main_line's.
       ml = lat.combined["PALS"]["facility"][4]["main_line"]
-      @test isempty(corr[ml["kind"]].expanded)
+      @test isempty(corr[ml["kind"]].full_expanded)
 
       c = corr[ml["line"]]
       @test length(c.combined) == 1
       @test length(c.leftover) == 1
-      @test length(c.expanded) == 1
+      @test length(c.full_expanded) == 1
       # The two copies are the same node of the same definition, but only the
       # expanded one has been expanded: `cell: repeat: 3` is unrolled to 3
       # entries there, while the definition in leftover still holds the 1 entry
       # it was written with.
       @test length(c.leftover[1]) == 1
-      @test length(c.expanded[1]) == 3
+      @test length(c.full_expanded[1]) == 3
       # Both copies resolve back to the same class.
-      @test corr[c.expanded[1]] == c
+      @test corr[c.full_expanded[1]] == c
       @test corr[c.leftover[1]] == c
     end
 

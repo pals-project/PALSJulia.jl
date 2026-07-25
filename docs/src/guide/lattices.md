@@ -2,23 +2,27 @@
 
 The `parse_and_expand_pals` entry point reads a PALS lattice
 file, resolves any files it includes, and expands the lattice line into an
-ordered list of elements. It returns a `Lattices` value with four independent
+ordered list of elements. It returns a `Lattices` value with five independent
 views of the document:
 
-- **`original`** — the lattice exactly as written in the top-level file.
-- **`combined`** — the lattice after its `include`d files have been merged in.
-- **`expanded`** — the fully expanded root lattice, with lines resolved into a
-  flat ordered sequence of elements, and nothing else.
+- **`original`** — the lattice exactly as written, one entry per file read.
+- **`combined`** — the lattice after its `include`d and `load`ed files have been
+  merged in.
+- **`full_expanded`** — the fully expanded root lattice, with lines resolved into
+  a flat ordered sequence of elements and every dependent parameter computed.
+- **`expanded`** — the same lattice with the computed parameters pruned, leaving
+  what the author wrote.
 - **`leftover`** — everything else the document contained.
 
 Each view is an ordinary `YAMLNode`, so everything in
 [Parsing and writing YAML](parsing.md) applies to it.
 
-## `expanded` and `leftover`
+## The expanded views and `leftover`
 
-Expansion picks one lattice — the root lattice — and resolves it. `expanded`
-holds *only* that result, and it is rooted at the lattice entry itself, without
-the `PALS:`/`facility:` scaffolding the lattice was written under:
+Expansion picks one lattice — the root lattice — and resolves it. The two
+expanded views hold *only* that result, and are rooted at the lattice entry
+itself, without the `PALS:`/`facility:` scaffolding the lattice was written
+under:
 
 ```yaml
 lat1:
@@ -28,15 +32,38 @@ lat1:
         ...
 ```
 
-so the lattice is reached as `lat.expanded["lat1"]`, not through
+so the lattice is reached as `lat.full_expanded["lat1"]`, not through
 `["PALS"]["facility"]`.
 
 Everything the root lattice did not absorb stays in `leftover`, which *does*
 keep the full `PALS:`/`facility:` document: element and beamline definitions,
-`use` statements, constants and variables, `Controller`s, and any `Lattice`
-other than the one expanded. Definitions that expansion substituted into the
-lattice are copied rather than moved, so they appear in both views — the
-definition in `leftover`, its inlined copy in `expanded`.
+`use` statements, constants and variables, `Controller`s, `set` commands, and any
+`Lattice` other than the one expanded. Definitions that expansion substituted
+into the lattice are copied rather than moved, so they appear in both views — the
+definition in `leftover`, its inlined copy in the expanded lattice.
+
+## `full_expanded` and `expanded`
+
+`full_expanded` is the lattice with everything it implies worked out: each
+element carries its `ReferenceP`, `FloorP` and `s_position`, the derived members
+of every parameter family it uses (`Kn1L` alongside `Kn1`, `voltage` alongside
+`gradient`, …) and the non-zero defaults of the groups it carries, and each
+branch is capped with a `branch_end` `Placeholder` holding its final reference
+and floor.
+
+`expanded` is that same tree with all of it pruned: a parameter is kept only
+when the author wrote it (or a post-`expand_lattice` `set` wrote it). It is
+`full_expanded` with nodes removed rather than an earlier snapshot, so a
+parameter present in both holds the *same* value in both, with every `set` and
+ABSOLUTE controller applied.
+
+Which to reach for:
+
+- **`full_expanded`** to ask what the lattice *is* — placement, reference
+  energy, or any parameter derived from another. `match_names` and
+  `parameter_value` search it for that reason.
+- **`expanded`** to see the inputs rather than their consequences, or to write a
+  lattice back out without the computed values.
 
 ## Basic use
 
@@ -47,6 +74,7 @@ lat = pj.parse_and_expand_pals("ex.pals.yaml")
 
 println(pj.to_yaml_string(lat.original))
 println(pj.to_yaml_string(lat.combined))
+println(pj.to_yaml_string(lat.full_expanded))
 println(pj.to_yaml_string(lat.expanded))
 println(pj.to_yaml_string(lat.leftover))
 ```
@@ -109,7 +137,8 @@ end
 
 ## Correspondence between the views
 
-The four trees describe the same lattice at successive stages of processing, so
+The derivation-chain trees describe the same lattice at successive stages of
+processing, so
 most of their nodes correspond: the constant `a_const`, for instance, exists in
 `original`, in `combined`, and — since it is not part of the lattice — in
 `leftover`. `node_correspondence` builds that mapping: given any node, it returns
@@ -121,29 +150,33 @@ corr = pj.node_correspondence(lat)
 ```
 
 The result is a `Dict` keyed by `YAMLNode`. Looking up a node returns a named
-tuple whose fields — `original`, `combined`, `expanded`, `leftover` — are each a
+tuple whose fields — `original`, `combined`, `full_expanded`, `leftover` — are each a
 `Vector{YAMLNode}` listing the corresponding nodes in that view:
 
 ```julia
 a_const = lat.combined["PALS"]["facility"][1]["constants"]["a_const"]
 
-corr[a_const].original   # [ the a_const node in the original tree ]
-corr[a_const].leftover   # [ the a_const node in the leftover tree ]
-corr[a_const].expanded   # [] — the lattice never referenced it
+corr[a_const].original       # [ the a_const node in the original tree ]
+corr[a_const].leftover       # [ the a_const node in the leftover tree ]
+corr[a_const].full_expanded  # [] — the lattice never referenced it
 ```
 
 The queried node is included in its own view's vector, so the four vectors
 together form the complete set of nodes that correspond to one another. You can
-look a class up starting from *any* of the four trees and get the same result:
+look a class up starting from *any* of those four trees and get the same result:
 
 ```julia
 corr[corr[a_const].original[1]] == corr[a_const]   # true
 ```
 
-Because expansion splits the document, a `combined` node can reach `expanded`,
-`leftover`, or both. A beamline named by the root lattice is a good example: its
-definition stays in `leftover` while a copy of it is inlined into `expanded`, and
-both belong to the same class.
+Because expansion splits the document, a `combined` node can reach
+`full_expanded`, `leftover`, or both. A beamline named by the root lattice is a
+good example: its definition stays in `leftover` while a copy of it is inlined
+into the expanded lattice, and both belong to the same class.
+
+The `expanded` view takes no part in the correspondence: it is a pruned copy of
+`full_expanded` rather than a step in the derivation chain, so a node in it is
+found by the path it sits at, not by a recorded link.
 
 ### One-to-many correspondences
 
@@ -151,29 +184,29 @@ Expansion can turn a single node into several — a `repeat` unrolls a line, an
 `inherit` copies fields in, a bare element name is substituted with its full
 definition, and a fork spawns a new branch. The correspondence follows every
 copy, which is why each field is a *vector*: one `combined` node can map to many
-`expanded` nodes.
+`full_expanded` nodes.
 
 ```julia
 # The sub-line repeated inside inj_line appears once in `combined`
-# but several times in `expanded`.
+# but several times in `full_expanded`.
 for (node, class) in corr
     if length(class.combined) == 1 && node == class.combined[1] &&
-       length(class.expanded) > 1
-        println("combined node → ", length(class.expanded), " expanded copies")
+       length(class.full_expanded) > 1
+        println("combined node → ", length(class.full_expanded), " expanded copies")
     end
 end
 ```
 
 A vector is empty when a view has no corresponding node. For example, the
 `destination_pointer` scalar that expansion synthesises exists only in
-`expanded`, so its `original` and `combined` vectors are empty; a constant the
-lattice never refers to exists only in `leftover`, so its `expanded` vector is
-empty.
+`full_expanded`, so its `original` and `combined` vectors are empty; a constant
+the lattice never refers to exists only in `leftover`, so its `full_expanded`
+vector is empty.
 
 !!! note "The mapping is exact, not heuristic"
     The correspondence is not recovered by re-matching the finished trees. The
     views are built as a derivation chain (`original` → `combined` →
-    `expanded` and `leftover`), and the provenance of every node is
+    `full_expanded` and `leftover`), and the provenance of every node is
     recorded as it is copied. `node_correspondence` reads back that recorded
     provenance, so the mapping is exact even where nodes are duplicated,
     merged, or renamed during expansion.
@@ -203,26 +236,26 @@ sub-lines are included.
 lat = pj.parse_and_expand_pals("ex.pals.yaml")
 
 # The `e1` bend parameter of every element whose name begins with `B1`:
-pj.match_names(lat.expanded, "B1.*>BendP.e1")
+pj.match_names(lat.full_expanded, "B1.*>BendP.e1")
 
 # Restrict to an element kind with `::`:
-pj.match_names(lat.expanded, "Quadrupole::.*>length")
+pj.match_names(lat.full_expanded, "Quadrupole::.*>length")
 
 # Restrict to a named beamline/branch (`>>`) or lattice (`>>>`):
-pj.match_names(lat.expanded, "inj_line>>Q.*>length")
-pj.match_names(lat.expanded, "ring>>>inj_line>>Q.*>length")
+pj.match_names(lat.full_expanded, "inj_line>>Q.*>length")
+pj.match_names(lat.full_expanded, "ring>>>inj_line>>Q.*>length")
 
 # Omit the parameter path to match the element itself, or the group:
-pj.match_names(lat.expanded, "Q1a")             # the element node
-pj.match_names(lat.expanded, "Q1a>BendP")       # a parameter-group node
+pj.match_names(lat.full_expanded, "Q1a")             # the element node
+pj.match_names(lat.full_expanded, "Q1a>BendP")       # a parameter-group node
 ```
 
-Pass any node of the tree you want to search — `lat.expanded` for beamlines and
+Pass any node of the tree you want to search — `lat.full_expanded` for beamlines and
 elements, since those are only fully realised after expansion. The returned
 nodes belong to that same tree, so you can read or modify them in place:
 
 ```julia
-for n in pj.match_names(lat.expanded, "B1.*>BendP.e1")
+for n in pj.match_names(lat.full_expanded, "B1.*>BendP.e1")
     pj.set_scalar!(n, "0.0")   # zero the entrance-face angle of each B1… bend
 end
 ```
@@ -236,7 +269,7 @@ both the full (`kind: constant` / `kind: variable`) and compact
 (`constants:` / `variables:` list) forms:
 
 Constants and variables are defined at facility level rather than inside the
-lattice, so they are found in `lat.leftover` — searching `lat.expanded` for one
+lattice, so they are found in `lat.leftover` — searching `lat.full_expanded` for one
 matches nothing, as the `PALS`/`facility` node it lives under is not part of
 that tree:
 
@@ -268,18 +301,20 @@ a parameter path) or, as a *bare* name, a constant or variable:
 ```julia
 lat = pj.parse_and_expand_pals("ex.pals.yaml")
 
-pj.parameter_value(lat, "lat1>>>B1a>BendP.e1")        # 0.1     (element param, from expanded)
+pj.parameter_value(lat, "lat1>>>B1a>BendP.e1")        # 0.1     (element param, from full_expanded)
 pj.parameter_value(lat, "F1>ReferenceP.species_ref")  # "#3He"  (a string)
 pj.parameter_value(lat, "Q1>BendP.g")                 # 0.0     (unset → default)
 pj.parameter_value(lat, "Q1")                         # missing (an element is not a value)
 pj.parameter_value(lat, "a_const")                    # a constant (from leftover)
 ```
 
-`parameter_value` searches only two of `lat`'s four views: `lat.expanded`, which
-holds the element parameters, and then, if the name is not found there,
+`parameter_value` searches only two of `lat`'s five views: `lat.full_expanded`,
+which holds the element parameters, and then, if the name is not found there,
 `lat.leftover`, which holds the facility-level constants, variables, and any
 definitions not spliced into the lattice. The raw `lat.original` and
-`lat.combined` views are **not** searched.
+`lat.combined` views are **not** searched, and neither is `lat.expanded`: a
+dependent parameter is a legitimate thing to ask for, and only `full_expanded`
+carries one.
 
 Because both searched views are post-expansion, values come back already
 evaluated — a numeric value as a `Float64`, and a non-numeric one (a species name,
