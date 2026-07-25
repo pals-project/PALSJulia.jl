@@ -3,7 +3,8 @@
 A PALS lattice may write numeric values as mathematical *expressions* —
 `0.3 * r_electron`, `a_const^2`, `mass_of("proton")`. When
 `parse_and_expand_pals` expands a lattice it evaluates every such expression to
-a plain number — across both the **`expanded`** and **`leftover`** views — so the
+a plain number — across the expanded views (**`expanded`** and
+**`full_expanded`**, which hold the same values) and **`leftover`** — so the
 expanded lattice is fully numeric and ready for a simulation program to consume.
 The `original` and `combined` views always keep the expression text exactly as
 written.
@@ -201,7 +202,7 @@ pj.evaluate_pals_expression("expr(2 * pi)")          # 6.283…
 
 This evaluates a *standalone* string, so user-defined constants and variables
 are **not** in scope — use `parse_and_expand_pals` for whole-lattice
-evaluation, whose `expanded` tree already has every expression resolved. It
+evaluation, whose expanded trees already have every expression resolved. It
 throws `ArgumentError` when the string is not evaluable: a parse error, an
 unknown identifier or species, an unquoted species name, a
 `random()`/`random_gauss()` expression (intentionally deferred), or a

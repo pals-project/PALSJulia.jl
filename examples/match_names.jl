@@ -8,8 +8,8 @@
 # {kind} and the dotted parameter path are matched exactly. It returns the nodes
 # the string resolves to — elements, parameter groups, parameters, constants, or
 # variables — which live in the tree you searched. Elements are searched for in
-# the `expanded` view; constants and variables are not part of the lattice, so
-# they are found in `leftover`.
+# the `full_expanded` view; constants and variables are not part of the lattice,
+# so they are found in `leftover`.
 
 using PALSJulia
 import PALSJulia as pj
@@ -21,7 +21,7 @@ lat = pj.parse_and_expand_pals(ex_file)
 label(n) = (pj.is_map(n) || pj.is_sequence(n)) ? pj.node_key(n) :
            "$(pj.node_key(n)) = $(String(n))"
 
-show_matches(q; tree = lat.expanded) = begin
+show_matches(q; tree = lat.full_expanded) = begin
   m = pj.match_names(tree, q)
   println("  \"", q, "\"  →  ", length(m), " match(es)")
   for n in m
@@ -48,9 +48,9 @@ show_matches("a_const"; tree = lat.leftover)
 show_matches(".*_var"; tree = lat.leftover)
 
 # ── Editing matched parameters in place ───────────────────────────────────────
-# The returned nodes belong to lat.expanded, so they can be modified directly.
+# The returned nodes belong to lat.full_expanded, so they can be modified directly.
 println("\nEditing in place:")
-for n in pj.match_names(lat.expanded, "Q1a>direction")
+for n in pj.match_names(lat.full_expanded, "Q1a>direction")
   pj.set_scalar!(n, "1")
 end
 show_matches("Q1a>direction")

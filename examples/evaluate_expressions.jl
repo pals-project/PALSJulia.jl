@@ -2,9 +2,10 @@
 #
 # parse_and_expand_pals evaluates every expression to a number, drawing on
 # built-in physical constants, math and particle-data functions, and any
-# constants/variables the lattice defines. This happens across both the
-# `expanded` and `leftover` views; the `original` and `combined` views keep the
-# expression text as written.
+# constants/variables the lattice defines. This happens across the expanded
+# views (`expanded` and `full_expanded`, which hold the same values) and
+# `leftover`; the `original` and `combined` views keep the expression text as
+# written.
 # evaluate_pals_expression evaluates a single expression string on its own.
 
 using PALSJulia
@@ -26,7 +27,7 @@ println("a_const  evaluated  : ", String(consts_e["a_const"]))   # a number
 println("a_var    evaluated  : ", String(vars_e["a_var"]), "  (= a_const^2)\n")
 
 # ── an element parameter written as an expression is evaluated too ────────────
-q1a_length = pj.match_names(lat.expanded, "Q1a>length")   # length: 1.03 * pi / c_light
+q1a_length = pj.match_names(lat.full_expanded, "Q1a>length")   # length: 1.03 * pi / c_light
 if !isempty(q1a_length)
   println("Q1a length evaluated: ", String(q1a_length[1]), "  (= 1.03 * pi / c_light)\n")
 end

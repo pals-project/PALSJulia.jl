@@ -194,11 +194,11 @@ PALS:
     @test_throws ArgumentError evaluate_pals_expression("1 +")              # parse error
   end
 
-  # The element `name` as expansion inlined it into `lat.expanded`. The expanded
+  # The element `name` as expansion inlined it into `lat.full_expanded`. The expanded
   # tree is rooted at the lattice entry, so the path runs
   # lattice > branches > beamline > line > element, with no PALS/facility above.
   inlined(lat, lattice, beamline, name) =
-    lat.expanded[lattice]["branches"][1][beamline]["line"][1][name]
+    lat.full_expanded[lattice]["branches"][1][beamline]["line"][1][name]
 
   @testset "parse_and_expand_pals evaluates the expanded tree" begin
     mktempdir() do dir
