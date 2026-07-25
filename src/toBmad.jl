@@ -954,7 +954,18 @@ function _make_bmad_ele(ele::YAMLNode)
       end
 
       rep = _KindMap(ele_kind)(full)   # pick the element-specific representation, then down-convert
-      append!(attrs, _mp_key(rep))
+      mp_attrs = _mp_key(rep)
+      append!(attrs, mp_attrs)
+
+      # Bmad reads An/Bn on an ordinary element as fractions of that element's own strength,
+      # scaling them by K1*L for a quadrupole, K2*L for a sextupole, and so on. PALS multipoles
+      # are the field integrals themselves, and the main strength lands in An/Bn here rather
+      # than in K1 or K2, so the scaling has to be turned off. The kinds that hold nothing but
+      # multipoles do not scale, and have no such attribute to set.
+      if any(a -> startswith(a, r"[AB][0-9]"), mp_attrs) &&
+             ele_kind_bmad ∉ ("AB_Multipole", "Multipole", "SAD_Mult")
+        push_attr!("scale_multipoles = F")
+      end
 
     elseif key == "MetaP"
       println("MetaP not supported in Bmad")
