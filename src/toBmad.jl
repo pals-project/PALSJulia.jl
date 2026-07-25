@@ -860,9 +860,19 @@ function _make_bmad_ele(ele::YAMLNode)
     elseif key == "ApertureP"
       apertureP = props["ApertureP"]
 
-      tmp = ""
       has_xmin   = haskey(apertureP, "x_min");    has_xmax  = haskey(apertureP, "x_max")
       has_xwidth = haskey(apertureP, "x_width");  has_xcen  = haskey(apertureP, "x_center")
+      has_ymin   = haskey(apertureP, "y_min");    has_ymax  = haskey(apertureP, "y_max")
+      has_ywidth = haskey(apertureP, "y_width");  has_ycen  = haskey(apertureP, "y_center")
+
+      # Shape, location and the rest describe an aperture; they do not put one there. Writing
+      # them out for a group that sets no limit would hand Bmad an aperture the PALS lattice
+      # does not have. A `vertices` aperture is bounded too, by its vertex list.
+      has_xaperture = has_xmin || has_xmax || has_xwidth || has_xcen
+      has_yaperture = has_ymin || has_ymax || has_ywidth || has_ycen
+      has_xaperture || has_yaperture || haskey(apertureP, "vertices") || continue
+
+      tmp = ""
       if (has_xmin || has_xmax) && (has_xwidth || has_xcen)
         println("
                 Ignoring ApertureP of element $(node_key(ele[1])).
@@ -880,8 +890,6 @@ function _make_bmad_ele(ele::YAMLNode)
       push_attr!(tmp)
 
       tmp = ""
-      has_ymin   = haskey(apertureP, "y_min");    has_ymax  = haskey(apertureP, "y_max")
-      has_ywidth = haskey(apertureP, "y_width");  has_ycen  = haskey(apertureP, "y_center")
       if (has_ymin || has_ymax) && (has_ywidth || has_ycen)
         println("
                 Ignoring ApertureP of element $(node_key(ele[1])).

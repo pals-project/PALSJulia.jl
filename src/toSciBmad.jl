@@ -389,6 +389,16 @@ function _make_scibmad_ele(ele::YAMLNode)
       apertureP = props["ApertureP"]
       has_xmin   = haskey(apertureP, "x_min");   has_xmax  = haskey(apertureP, "x_max")
       has_xwidth = haskey(apertureP, "x_width");  has_xcen  = haskey(apertureP, "x_center")
+      has_ymin   = haskey(apertureP, "y_min");   has_ymax  = haskey(apertureP, "y_max")
+      has_ywidth = haskey(apertureP, "y_width");  has_ycen  = haskey(apertureP, "y_center")
+
+      # Shape and location describe an aperture; they do not put one there. A group that sets
+      # no limit bounds nothing, so writing them out would give the element an aperture the
+      # PALS lattice does not have. A `vertices` aperture is bounded by its vertex list.
+      has_xmin || has_xmax || has_xwidth || has_xcen ||
+          has_ymin || has_ymax || has_ywidth || has_ycen ||
+          haskey(apertureP, "vertices") || continue
+
       if (has_xmin || has_xmax) && (has_xwidth || has_xcen)
         println("Either min and max should be defined or width and center, not both.")
       elseif (has_xmin && !has_xmax) || (has_xmax && !has_xmin)
@@ -404,8 +414,6 @@ function _make_scibmad_ele(ele::YAMLNode)
         push!(attrs, "x1_limit = $(center - width / 2)")
         push!(attrs, "x2_limit = $(center + width / 2)")
       end
-      has_ymin   = haskey(apertureP, "y_min");   has_ymax  = haskey(apertureP, "y_max")
-      has_ywidth = haskey(apertureP, "y_width");  has_ycen  = haskey(apertureP, "y_center")
       if (has_ymin || has_ymax) && (has_ywidth || has_ycen)
         println("Either min and max should be defined or width and center, not both.")
       elseif (has_ymin && !has_ymax) || (has_ymax && !has_ymin)
