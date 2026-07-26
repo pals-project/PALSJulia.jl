@@ -512,15 +512,17 @@ end
 
 Translate a controller's `parameter` target into a Bmad slave reference.
 
-Return `(target, factor)` where `target` is the `"ele[attribute]"` Bmad reference and `factor`
-is what the control expression must be multiplied by to hold the same physics. The factor is
-not always one because the element translation does not carry PALS parameters across
-unchanged: a multipole that is not the element's own becomes Bmad's normalized *integrated*
-strength `An`/`Bn`, so a controller driving a non-integrated one has to pick up the slave's
-length (and the `1/n!` of the multipole convention) here. A multipole that *is* the element's
-own strength becomes `K1`, `K2` or `K3` (see [`_native_strength!`](@ref)), which is not length
-integrated, so there an integrated PALS parameter is the one that needs the length. Targets
-Bmad cannot express -- a pattern matching several elements, or a parameter with no Bmad
+Return `(target, factor, offset)` where `target` is the `"ele[attribute]"` Bmad reference and
+the control expression must be multiplied by `factor` and have `offset` subtracted from it to
+hold the same physics. Neither is trivial in general because the element translation does not
+carry PALS parameters across unchanged: a multipole that is not the element's own becomes
+Bmad's normalized *integrated* strength `An`/`Bn`, so a controller driving a non-integrated one
+has to pick up the slave's length (and the `1/n!` of the multipole convention) here. A
+multipole that *is* the element's own strength becomes `K1`, `K2`, `K3` or a bend's `DG` (see
+[`_native_strength!`](@ref)), which is not length integrated, so there an integrated PALS
+parameter is the one that needs the length; and `DG`, alone among them, is measured from the
+reference bend rather than from zero, which is the `offset` (see [`_bend_reference`](@ref)).
+Targets Bmad cannot express -- a pattern matching several elements, or a parameter with no Bmad
 attribute -- raise an error.
 """
 function _bmad_control_target(cname::String, param::String, facility::YAMLNode)
@@ -539,10 +541,10 @@ function _bmad_control_target(cname::String, param::String, facility::YAMLNode)
   if haskey(props, "kind") && String(props["kind"]) == "Controller"
     occursin(r"^[A-Za-z_][A-Za-z0-9_]*$", path) ||
         error("controller $cname: `$param` is not a variable of controller $slave")
-    return "$slave[$path]", 1.0
+    return "$slave[$path]", 1.0, 0.0
   end
 
-  path == "length" && return "$slave[L]", 1.0
+  path == "length" && return "$slave[L]", 1.0, 0.0
 
   m = match(r"^MagneticMultipoleP\.([KB])([ns])([0-9]+)(L?)$", path)
   if m !== nothing
@@ -559,14 +561,16 @@ function _bmad_control_target(cname::String, param::String, facility::YAMLNode)
 
     # The normal component of the element's own multipole is its strength attribute, which the
     # element translation writes without the length or the factorial.
-    native = get(_NATIVE_STRENGTH, haskey(props, "kind") ? String(props["kind"]) : "", nothing)
+    ele_kind = haskey(props, "kind") ? String(props["kind"]) : ""
+    native = get(_NATIVE_STRENGTH, ele_kind, nothing)
     if native !== nothing && native[1] == order && !skew && !(integrated && ele_length == 0)
+      offset = ele_kind == "Bend" ? _bend_reference(props, slave, m[1] == "K") : 0.0
       return "$slave[$(m[1] == "K" ? native[2] : native[3])]",
-             integrated ? 1 / ele_length : 1.0
+             integrated ? 1 / ele_length : 1.0, offset
     end
 
     fact = order <= 20 ? factorial(order) : factorial(big(order))
-    return "$slave[$(skew ? "A" : "B")$order]", (integrated ? 1.0 : ele_length) / fact
+    return "$slave[$(skew ? "A" : "B")$order]", (integrated ? 1.0 : ele_length) / fact, 0.0
   end
 
   error("controller $cname: control parameter `$param` is not yet translated to Bmad")
@@ -606,9 +610,14 @@ function _make_bmad_controller(ele::YAMLNode, facility::YAMLNode)
     for control in props["controls"]
       haskey(control, "parameter") && haskey(control, "expression") ||
           error("$name: a controls entry needs both a `parameter` and an `expression`")
-      target, factor = _bmad_control_target(name, String(control["parameter"]), facility)
+      target, factor, offset = _bmad_control_target(name, String(control["parameter"]), facility)
       expression = String(control["expression"])
-      push!(slaves, factor ≈ 1 ? "$target: $expression" : "$target: $factor*($expression)")
+      factor ≈ 1 || (expression = "$factor*($expression)")
+      # An `overlay` sets the attribute, so an attribute Bmad measures from something other than
+      # zero needs that something taken off. A `group` varies the attribute instead, and what it
+      # is measured from is the same before and after, so there the offset cancels.
+      bmad_type == "overlay" && !(offset ≈ 0) && (expression = "$expression - ($offset)")
+      push!(slaves, "$target: $expression")
     end
   end
 
@@ -794,17 +803,20 @@ end
 The multipole order that is an element's own strength, and the Bmad attributes that hold it.
 
 Each entry maps a PALS element kind to `(order, normalized_attribute, field_attribute)`: a
-quadrupole's order-1 field is Bmad's `K1` (or `B1_GRADIENT`), not a `B1` multipole. Kinds whose
-strength does not line up one-to-one with a PALS multipole -- a bend's `G`, a kicker's `HKICK`,
-a solenoid's `KS` -- are deliberately absent, and keep the multipole form.
+quadrupole's order-1 field is Bmad's `K1` (or `B1_GRADIENT`), not a `B1` multipole. A bend's
+order-0 field is `DG` (or `DB_FIELD`), which Bmad measures from the reference bend rather than
+from zero, so that one is written with an offset (see [`_bend_reference`](@ref)). Kinds whose
+strength does not line up one-to-one with a PALS multipole -- a kicker's `HKICK`, a solenoid's
+`KS` -- are deliberately absent, and keep the multipole form.
 """
-const _NATIVE_STRENGTH = Dict("Quadrupole" => (1, "K1", "B1_GRADIENT"),
+const _NATIVE_STRENGTH = Dict("Bend"       => (0, "DG", "DB_FIELD"),
+                              "Quadrupole" => (1, "K1", "B1_GRADIENT"),
                               "Sextupole"  => (2, "K2", "B2_GRADIENT"),
                               "Octupole"   => (3, "K3", "B3_GRADIENT"))
 
 #---------------------------------------------------------------------------------------------------
 """
-    _native_strength!(full::FullRepresentation, ele_kind::String)
+    _native_strength!(full::FullRepresentation, ele_kind::String, offset::Real = 0.0)
 
 Take the element's own multipole out of `full` and return its Bmad attribute fragments.
 
@@ -816,12 +828,16 @@ in the skew part is left behind in `full` as an ordinary multipole. That rotatio
 tilt does not simply become the Bmad element `tilt`, which is already spoken for by
 `BodyShiftP.z_rot`.
 
+`offset` is subtracted from the value written, for the one native attribute Bmad does not
+measure from zero: a bend's `DG` is the departure of the field from the reference bend (see
+[`_bend_reference`](@ref)).
+
 Return an empty vector -- leaving `full` untouched, so the multipole form is used -- for kinds
 that have no such attribute, and for an integrated multipole on a zero-length element, which no
 non-integrated attribute can express. As elsewhere in this conversion, an element with no
 `length` is taken to be one metre long.
 """
-function _native_strength!(full::FullRepresentation, ele_kind::String)
+function _native_strength!(full::FullRepresentation, ele_kind::String, offset::Real = 0.0)
   haskey(_NATIVE_STRENGTH, ele_kind) || return String[]
   order, normalized_attr, field_attr = _NATIVE_STRENGTH[ele_kind]
   haskey(full.magnitude, order) || return String[]
@@ -837,9 +853,49 @@ function _native_strength!(full::FullRepresentation, ele_kind::String)
   full.integrated[order] = false
   delete!(full.tilt, order)
 
-  real(strength) ≈ 0 && return String[]
+  # Compared against the offset rather than against zero: a bend whose field is the reference
+  # bend has no departure from it to write, and a PALS file states the two to the same handful
+  # of digits, which is not enough to subtract exactly. For an offset of zero -- every other
+  # native attribute -- this is the same exact test as before.
+  real(strength) ≈ offset && return String[]
   attribute = full.normalized[order] ? normalized_attr : field_attr
-  return ["$attribute = $(real(strength))"]
+  return ["$attribute = $(real(strength) - offset)"]
+end
+
+#---------------------------------------------------------------------------------------------------
+"""
+    _bend_reference(props::YAMLNode, name::String, normalized::Bool)
+
+Return the reference bend strength a `Bend`'s order-0 normal multipole is measured against.
+
+PALS states the field of a bend outright, as `MagneticMultipoleP.Kn0` (or `Bn0`). Bmad states it
+as `DG` (or `DB_FIELD`), the departure of the field from the reference bend the element geometry
+is built on, so the reference has to come off the PALS value: `dg = Kn0 - g_ref`. The reference
+is `BendP.g_ref` -- or the curvature `1/radius_ref` of that same bend -- for a `normalized`
+multipole, and `BendP.Bn0_ref` for an unnormalized one. A bend with no reference of its own does
+not bend, and the offset is zero.
+
+The two flavors cannot be mixed: going from one to the other takes the reference momentum, which
+belongs to the branch and not to the element, so a normalized field measured against an
+unnormalized reference (or the reverse) raises an error.
+"""
+function _bend_reference(props::YAMLNode, name::String, normalized::Bool)
+  haskey(props, "BendP") || return 0.0
+  bendP = props["BendP"]
+  has_g = haskey(bendP, "g_ref") || haskey(bendP, "radius_ref")
+  has_B = haskey(bendP, "Bn0_ref")
+
+  if normalized
+    has_B && !has_g &&
+        error("$name: the bend field (Kn0) and its reference bend (Bn0_ref) are not both normalized")
+    haskey(bendP, "g_ref")      && return Float64(bendP["g_ref"])
+    haskey(bendP, "radius_ref") && return 1 / Float64(bendP["radius_ref"])
+  else
+    has_g && !has_B &&
+        error("$name: the bend field (Bn0) and its reference bend (g_ref) are not both normalized")
+    has_B && return Float64(bendP["Bn0_ref"])
+  end
+  return 0.0
 end
 
 #---------------------------------------------------------------------------------------------------
@@ -1143,7 +1199,10 @@ function _make_bmad_ele(ele::YAMLNode)
       end
 
       # The element's own multipole is its Bmad strength attribute; the rest stay multipoles.
-      append!(attrs, _native_strength!(full, ele_kind))
+      # A bend's is `DG`, which Bmad measures from the reference bend rather than from zero.
+      offset = ele_kind == "Bend" && haskey(full.normalized, 0) ?
+               _bend_reference(props, node_key(props), full.normalized[0]) : 0.0
+      append!(attrs, _native_strength!(full, ele_kind, offset))
 
       rep = _KindMap(ele_kind)(full)   # pick the element-specific representation, then down-convert
       mp_attrs = _mp_key(rep)
