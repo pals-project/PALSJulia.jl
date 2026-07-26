@@ -193,6 +193,80 @@ const _STRENGTH_FIXTURE = """
             - ring
   """
 
+# A bend for each form its order-0 field can take: a plain one, one whose field is the reference
+# bend itself, an integrated one measured against a `radius_ref`, and an unnormalized one.  The
+# controllers drive b1's field absolutely and b2's relatively.
+const _BEND_FIXTURE = """
+  PALS:
+    facility:
+      - beg:
+          kind: BeginningEle
+          ReferenceP:
+            species_ref: electron
+            pc_ref: 3E6
+      - b1:
+          kind: Bend
+          length: 1
+          BendP:
+            g_ref: 0.5
+          MagneticMultipoleP:
+            Kn0: 0.75
+      - b2:
+          kind: Bend
+          length: 1
+          BendP:
+            g_ref: 0.5
+          MagneticMultipoleP:
+            Kn0: 0.5
+            Kn1: 0.2
+      - b3:
+          kind: Bend
+          length: 2
+          BendP:
+            radius_ref: 4
+          MagneticMultipoleP:
+            Kn0L: 1.5
+      - b4:
+          kind: Bend
+          length: 1
+          BendP:
+            Bn0_ref: 2.0
+          MagneticMultipoleP:
+            Bn0: 3.0
+      - knob:
+          kind: Controller
+          control_type: ABSOLUTE
+          variables:
+            kk0: 0.6
+          controls:
+            - parameter: b1>MagneticMultipoleP.Kn0
+              expression: kk0
+      - bump:
+          kind: Controller
+          control_type: RELATIVE
+          variables:
+            dkk0: 0.0
+          controls:
+            - parameter: b2>MagneticMultipoleP.Kn0
+              expression: dkk0
+      - ring:
+          kind: BeamLine
+          line:
+            - beg
+            - b1
+            - b2
+            - b3
+            - b4
+      - lat:
+          kind: Lattice
+          branches:
+            - ring
+  """
+
+# `_BEND_FIXTURE` with b1's reference bend given as a field, which its normalized `Kn0` has no
+# way of being measured against.
+const _BEND_MISMATCH_FIXTURE = replace(_BEND_FIXTURE, "g_ref: 0.5" => "Bn0_ref: 0.5", count = 1)
+
 # The MetaP components Bmad keeps, one it has no place for, one that is a structure rather than
 # a string, and one whose text contains the quote character it would normally be wrapped in.
 const _META_FIXTURE = """
@@ -469,6 +543,42 @@ _parsed(dir, text) = (path = joinpath(dir, "fixture.pals.yaml");
       @test occursin("kk: overlay = {q1[K1]: a,\n\t\tq2[K1]: 0.5*(a),\n\t\tq3[B1_GRADIENT]: a," *
                      "\n\t\tq4[A1]: 0.5*(a),\n\t\tq1[B3]: 0.08333333333333333*(a)}," *
                      "\n\tvar = {a},\n\ta = 1.0\n", out)
+    end
+  end
+
+  @testset "a bend's order-0 multipole becomes its Bmad DG" begin
+    mktempdir() do dir
+      bmad = pals_to_bmad(_parsed(dir, _BEND_FIXTURE))
+      out_path = joinpath(dir, "fixture.pals_out.bmad")
+      write_bmad_file(bmad, out_path)
+      out = read(out_path, String)
+
+      # PALS states the bend field outright; Bmad states its departure from the reference bend.
+      @test occursin("b1: SBend,\n\tL = 1,\n\tg = 0.5,\n\tDG = 0.25\n", out)
+
+      # A bend whose field is the reference bend departs from it by nothing, so there is no DG to
+      # write.  The orders that are not the bend's own are multipoles as they are anywhere else.
+      @test occursin("b2: SBend,\n\tL = 1,\n\tg = 0.5,\n\tB1 = 0.2,\n\tscale_multipoles = F\n", out)
+
+      # DG is not length integrated, so an integrated PALS field is divided by the length before
+      # the reference comes off it -- and the reference may be given as the radius of the bend.
+      @test occursin("b3: SBend,\n\tL = 2,\n\trho = 4,\n\tDG = 0.5\n", out)
+
+      # An unnormalized field is measured against the unnormalized reference, in the same way.
+      @test occursin("b4: SBend,\n\tL = 1,\n\tB_field = 2.0,\n\tfield_master = T,\n\tDB_FIELD = 1.0\n", out)
+
+      # An overlay sets DG, so it has to take the reference off what PALS drives.  A group varies
+      # DG instead, and the reference it is measured from is the same before and after.
+      @test occursin("knob: overlay = {b1[DG]: kk0 - (0.5)},\n\tvar = {kk0},\n\tkk0 = 0.6\n", out)
+      @test occursin("bump: group = {b2[DG]: dkk0},\n\tvar = {dkk0},\n\tdkk0 = 0.0\n", out)
+    end
+  end
+
+  @testset "a bend field and reference of different kinds are reported" begin
+    mktempdir() do dir
+      # Normalizing one against the other takes the reference momentum, which belongs to the
+      # branch rather than to the element.
+      @test_throws "are not both normalized" pals_to_bmad(_parsed(dir, _BEND_MISMATCH_FIXTURE))
     end
   end
 
