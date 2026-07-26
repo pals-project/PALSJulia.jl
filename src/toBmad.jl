@@ -56,6 +56,7 @@ An in-memory model of a Bmad lattice.
 
 Produced by [`pals_to_bmad`](@ref) and serialized to a file by [`write_bmad_file`](@ref).
 The fields mirror the sections of a Bmad lattice file:
+  - `constants`      : `name = value` definitions, in definition order.
   - `parameters`     : global `parameter[...] = ...` settings (species, energy, geometry).
   - `beginning`      : `beginning[...] = ...` initial Twiss, coupling and dispersion settings.
   - `particle_start` : `particle_start[...] = ...` initial-coordinate settings.
@@ -65,6 +66,7 @@ The fields mirror the sections of a Bmad lattice file:
   - `use`            : branch names for the final `use, ...` statement.
 """
 struct BmadLattice
+  constants::Vector{String}
   parameters::Vector{String}
   beginning::Vector{String}
   particle_start::Vector{String}
@@ -73,8 +75,8 @@ struct BmadLattice
   beamlines::Vector{BmadBeamline}
   use::Vector{String}
 end
-BmadLattice() = BmadLattice(String[], String[], String[], BmadEleDef[], BmadController[],
-                            BmadBeamline[], String[])
+BmadLattice() = BmadLattice(String[], String[], String[], String[], BmadEleDef[],
+                            BmadController[], BmadBeamline[], String[])
 
 #---------------------------------------------------------------------------------------------------
 """
@@ -94,11 +96,24 @@ write_bmad_file(pals_to_bmad(yaml), filename)
 ```
 """
 function pals_to_bmad(yaml::YAMLNode)
-  facility = yaml["PALS"]["facility"]
+  pals = yaml["PALS"]
+  facility = pals["facility"]
   lat = BmadLattice()
+
+  # Constants and variables may be defined directly under `PALS` as well as in the facility.
+  for key in ("constants", "variables")
+    haskey(pals, key) && append!(lat.constants, _bmad_constants(pals[key]))
+  end
+
   N_lattices = 0
   for ele in facility
     props = ele[1]
+    # The compact `constants:`/`variables:` list is a facility entry in its own right, with no
+    # `kind` of its own; every other entry the translation looks at is a named element.
+    if node_key(props) in ("constants", "variables")
+      append!(lat.constants, _bmad_constants(props))
+      continue
+    end
     haskey(props, "kind") || continue
     pals_kind = String(props["kind"])
     if pals_kind == "BeginningEle"
@@ -118,7 +133,7 @@ function pals_to_bmad(yaml::YAMLNode)
     elseif pals_kind == "Controller"
       push!(lat.controllers, _make_bmad_controller(ele, facility))
     elseif pals_kind == "constant" || pals_kind == "variable"
-      error("$(node_key(props)): `$pals_kind` definitions are not yet translated to Bmad")
+      push!(lat.constants, _bmad_constant(props, pals_kind))
     else
       push!(lat.elements, _make_bmad_ele(ele))
     end
@@ -167,12 +182,30 @@ end
 
 Serialize the [`BmadLattice`](@ref) `lat` to `filename` as a Bmad lattice file.
 
-Write the global, beginning-Twiss and particle-start parameters, the element definitions, the
-`overlay`/`group` definitions, the beamline (`line`) definitions, and the branch (`use`)
-statement, each in its own labelled section.
+Write the constant and variable definitions, the global, beginning-Twiss and particle-start
+parameters, the element definitions, the `overlay`/`group` definitions, the beamline (`line`)
+definitions, and the branch (`use`) statement, each in its own labelled section. The constants
+come first because Bmad, unlike PALS, resolves a name against what the file has defined *above*
+the point of use.
 """
 function write_bmad_file(lat::BmadLattice, filename::String)
   open(filename, "w") do io
+    n_section = 0
+    # Head each section with the same rule and title, one blank line clear of the one before.
+    function section(title)
+      (n_section += 1) == 1 || write(io, "\n")
+      write(io, "!======================================================================\n",
+            "! $title \n\n")
+    end
+
+    if !isempty(lat.constants)
+      section("Constant and variable definitions")
+      for c in lat.constants
+        write(io, c * "\n")
+      end
+    end
+
+    section("Lattice parameters")
     for p in lat.parameters
       write(io, p * "\n")
     end
@@ -188,25 +221,22 @@ function write_bmad_file(lat::BmadLattice, filename::String)
         write(io, p * "\n")
       end
     end
-    write(io, "\n!======================================================================" * "\n")
-    write(io, "! Element definitions " * "\n\n")
+
+    section("Element definitions")
     for ele in lat.elements
       write(io, _format_bmad_ele(ele) * "\n")
     end
+
+    # A controller spans several lines, so the definitions are set apart from one another.
     if !isempty(lat.controllers)
-      write(io, "!======================================================================" * "\n")
-      write(io, "! Controller definitions " * "\n\n")
-      for ctrl in lat.controllers
-        write(io, _format_bmad_controller(ctrl) * "\n")
-      end
+      section("Controller definitions")
+      write(io, join(_format_bmad_controller.(lat.controllers), "\n\n") * "\n")
     end
-    write(io, "!======================================================================" * "\n")
-    write(io, "! Beamline definitions " * "\n\n")
-    for bl in lat.beamlines
-      write(io, _format_bmad_line(bl) * "\n\n")
-    end
-    write(io, "!======================================================================" * "\n")
-    write(io, "! Branch structure " * "\n\n")
+
+    section("Beamline definitions")
+    isempty(lat.beamlines) || write(io, join(_format_bmad_line.(lat.beamlines), "\n\n") * "\n")
+
+    section("Branch structure")
     !isempty(lat.use) && write(io, "use, " * join(lat.use, ", "))
   end
   return nothing
@@ -233,12 +263,16 @@ end
 
 Render a [`BmadController`](@ref) as a Bmad `name: overlay = {...}, var = {...}, v = init`
 definition.
+
+A control expression is a line's worth of text on its own, so each slave, the variable list and
+each variable's initial value get a tab-indented continuation line of their own. Every broken
+line ends in the comma that continues it.
 """
 function _format_bmad_controller(ctrl::BmadController)
-  s = "$(ctrl.name): $(ctrl.type) = {" * join(ctrl.slaves, ", ") * "}"
-  isempty(ctrl.vars) || (s *= ", var = {" * join(ctrl.vars, ", ") * "}")
+  s = "$(ctrl.name): $(ctrl.type) = {" * join(ctrl.slaves, ",\n\t\t") * "}"
+  isempty(ctrl.vars) || (s *= ",\n\tvar = {" * join(ctrl.vars, ", ") * "}")
   for init in ctrl.inits
-    s *= ", " * init
+    s *= ",\n\t" * init
   end
   return s
 end
@@ -367,32 +401,83 @@ end
 
 #---------------------------------------------------------------------------------------------------
 """
-    _ctrl_variables(props::YAMLNode)
+    _name_value_pairs(node::YAMLNode)
 
-Return a controller's `variables` as `name => value-text` pairs, in definition order.
+Return a PALS name/value list as `name => value-text` pairs, in definition order.
 
-Accepts both forms the standard allows: a map (`vv: 0.3`) and a sequence of single-key maps
-(`- vv: 0.3`). A variable written with no value takes PALS' default of zero.
+Accepts both forms the standard allows for such a list: a map (`vv: 0.3`) and a sequence of
+single-key maps (`- vv: 0.3`). An entry written with no value takes PALS' default of zero, and
+one whose value is a structure rather than a single value is skipped.
 """
-function _ctrl_variables(props::YAMLNode)
-  vars = Pair{String,String}[]
-  haskey(props, "variables") || return vars
-  variables = props["variables"]
-  function add!(node)
-    (is_map(node) || is_sequence(node)) && return
-    value = strip(String(node))
-    push!(vars, node_key(node) => (value in ("", "~", "null") ? "0" : value))
+function _name_value_pairs(node::YAMLNode)
+  pairs = Pair{String,String}[]
+  function add!(child)
+    (is_map(child) || is_sequence(child)) && return
+    push!(pairs, node_key(child) => _value_text(child))
   end
-  if is_map(variables)
-    for key in keys(variables)
-      add!(variables[key])
+  if is_map(node)
+    for key in keys(node)
+      add!(node[key])
     end
-  elseif is_sequence(variables)
-    for entry in variables, i in eachindex(entry)
+  elseif is_sequence(node)
+    for entry in node, i in eachindex(entry)
       add!(entry[i])
     end
   end
-  return vars
+  return pairs
+end
+
+#---------------------------------------------------------------------------------------------------
+"""
+    _value_text(node::YAMLNode)
+
+Return the text of a value `node`, with a value left unwritten taken as PALS' default of zero.
+"""
+function _value_text(node::YAMLNode)
+  text = strip(String(node))
+  return text in ("", "~", "null") ? "0" : String(text)
+end
+
+#---------------------------------------------------------------------------------------------------
+"""
+    _ctrl_variables(props::YAMLNode)
+
+Return a controller's `variables` as `name => value-text` pairs, in definition order.
+"""
+function _ctrl_variables(props::YAMLNode)
+  haskey(props, "variables") || return Pair{String,String}[]
+  return _name_value_pairs(props["variables"])
+end
+
+#---------------------------------------------------------------------------------------------------
+"""
+    _bmad_constants(node::YAMLNode)
+
+Translate a compact-form `constants:`/`variables:` list into Bmad `name = value` definitions.
+
+Bmad draws no distinction between the two: both become a named value the rest of the lattice
+file may use in an expression, so both lists translate the same way.
+"""
+_bmad_constants(node::YAMLNode) =
+    ["$name = $value" for (name, value) in _name_value_pairs(node)]
+
+#---------------------------------------------------------------------------------------------------
+"""
+    _bmad_constant(props::YAMLNode, pals_kind::String)
+
+Translate a full-form (`kind: constant`, `kind: variable`) definition into a Bmad
+`name = value` definition.
+
+A definition whose `value` is a structure rather than a single value has no Bmad equivalent and
+raises an error; one with no `value` at all takes PALS' default of zero.
+"""
+function _bmad_constant(props::YAMLNode, pals_kind::String)
+  name = node_key(props)
+  haskey(props, "value") || return "$name = 0"
+  value = props["value"]
+  (is_map(value) || is_sequence(value)) &&
+      error("$name: the `value` of a `$pals_kind` is not a single value")
+  return "$name = $(_value_text(value))"
 end
 
 #---------------------------------------------------------------------------------------------------
@@ -831,6 +916,21 @@ end
 
 #---------------------------------------------------------------------------------------------------
 """
+    _bmad_quote(str::String)
+
+Return `str` as a quoted Bmad string constant, or `nothing` if it cannot be quoted.
+
+Bmad accepts either quote character but has no escape for one inside a string, so a `str`
+holding a double quote is wrapped in single quotes. A `str` holding both is unrepresentable.
+"""
+function _bmad_quote(str::String)
+  occursin('"', str) || return "\"$str\""
+  occursin('\'', str) && return nothing
+  return "'$str'"
+end
+
+#---------------------------------------------------------------------------------------------------
+"""
     _make_bmad_ele(ele::YAMLNode)
 
 Translate a single PALS element into a [`BmadEleDef`](@ref).
@@ -1059,7 +1159,33 @@ function _make_bmad_ele(ele::YAMLNode)
       end
 
     elseif key == "MetaP"
-      println("MetaP not supported in Bmad")
+      metaP = props["MetaP"]
+      for mkey in keys(metaP)
+        # Bmad keeps three metadata strings. The rest of MetaP (ID, location, history and any
+        # custom nodes) has nowhere to go in Bmad, so it is dropped.
+        bkey = mkey == "alias"       ? "alias" :
+               mkey == "label"       ? "type"  :
+               mkey == "description" ? "descrip" : ""
+        if bkey == ""
+          println("$(node_key(props)): MetaP.$mkey has no Bmad equivalent, not translated")
+          continue
+        end
+
+        # `description` (and any component, in principle) may be a structure rather than a
+        # string, which a Bmad attribute cannot hold.
+        val = metaP[mkey]
+        if is_map(val) || is_sequence(val)
+          println("$(node_key(props)): MetaP.$mkey is not a simple string, not translated")
+          continue
+        end
+
+        str = _bmad_quote(String(val))
+        if isnothing(str)
+          println("$(node_key(props)): MetaP.$mkey holds both quote characters, not translated")
+          continue
+        end
+        push_attr!("$bkey = $str")
+      end
     elseif key == "PatchP"
       patchP = props["PatchP"]
       for pkey in keys(patchP)

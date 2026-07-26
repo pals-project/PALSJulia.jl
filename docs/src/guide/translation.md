@@ -141,10 +141,14 @@ and their SciBmad/Bmad equivalents.
 - BnN(L) --> BnN(L)
 
 ### MetaP --> MetaParams
-- alias --> alias
+- alias --> alias (Bmad: alias)
+- label --> label (Bmad: type)
+- description --> description (Bmad: descrip)
 - ID --> none
-- label --> label
-- description --> description
+- location --> none
+- history --> none
+- Note: any other (non-standard) component --> none
+- Note: a component holding a structure rather than a string is not translated.
 
 ### ParticleP --> Create new bunch
 
@@ -199,6 +203,17 @@ and their SciBmad/Bmad equivalents.
 ### Lattices
 - Beamlines --> Beamlines
 - To be added: Lattices in PALS --> Lattices
+
+### Constants and variables --> Bmad `name = value` definitions
+- `constants:` / `variables:` list entry --> `name = value`
+- `kind: constant` / `kind: variable` definition --> `name = value`
+- Note: Bmad draws no constant/variable distinction, so both translate the same way.
+- Note: definitions directly under the `PALS` node are translated as well as the facility's own.
+- Note: a definition with no `value` takes the PALS default of zero.
+- Note: the definitions are written, in the order the PALS file gives them, ahead of every
+  other section of the Bmad file. Bmad, unlike PALS, resolves a name against what the file
+  has defined *above* the point of use.
+- Not translated to SciBmad.
 
 ### TODO
 - translating expression
