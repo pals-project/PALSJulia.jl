@@ -365,8 +365,8 @@ and their SciBmad/Bmad equivalents.</p>
 <section id="bendp-bendparams">
 <h3>BendP –&gt; BendParams<a class="headerlink" href="#bendp-bendparams" title="Link to this heading">¶</a></h3>
 <ul class="simple">
-<li><p>radius_ref -&gt; caluclated</p></li>
-<li><p>Bn0_ref -&gt; calculated</p></li>
+<li><p>radius_ref -&gt; caluclated (Bmad: rho)</p></li>
+<li><p>Bn0_ref -&gt; calculated (Bmad: B_field)</p></li>
 <li><p>e1 –&gt; e1</p></li>
 <li><p>e2 –&gt; e2</p></li>
 <li><p>e1_rect –&gt; calculated</p></li>
@@ -413,6 +413,16 @@ and their SciBmad/Bmad equivalents.</p>
 <li><p>tiltN –&gt; tiltN</p></li>
 <li><p>[BK][ns]NL? –&gt; [BK][ns]NL?</p></li>
 <li><p>BnN(L) –&gt; BnN(L)</p></li>
+<li><p>Note (Bmad): the normal component of the multipole that is an element’s own strength becomes
+that strength: <code class="docutils literal notranslate"><span class="pre">Kn1</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">K1</span></code> for a quadrupole, <code class="docutils literal notranslate"><span class="pre">Kn2</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">K2</span></code>, <code class="docutils literal notranslate"><span class="pre">Kn3</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">K3</span></code>, and <code class="docutils literal notranslate"><span class="pre">Kn0</span></code> –&gt;
+<code class="docutils literal notranslate"><span class="pre">dg</span></code> for a bend (<code class="docutils literal notranslate"><span class="pre">Bn1</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">B1_GRADIENT</span></code>, …, <code class="docutils literal notranslate"><span class="pre">Bn0</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">db_field</span></code>). Every other order stays
+a multipole, and becomes the integrated <code class="docutils literal notranslate"><span class="pre">An</span></code>/<code class="docutils literal notranslate"><span class="pre">Bn</span></code>.</p></li>
+<li><p>Note (Bmad): PALS states a bend’s field outright, where Bmad states its departure from the
+reference bend. So <code class="docutils literal notranslate"><span class="pre">Kn0</span></code> is translated as <code class="docutils literal notranslate"><span class="pre">dg</span> <span class="pre">=</span> <span class="pre">Kn0</span> <span class="pre">-</span> <span class="pre">g_ref</span></code> – against <code class="docutils literal notranslate"><span class="pre">1/radius_ref</span></code> when
+the reference bend is given as a radius, and against <code class="docutils literal notranslate"><span class="pre">Bn0_ref</span></code> when the field is not
+normalized. A field equal to the reference bend departs from it by nothing, and no <code class="docutils literal notranslate"><span class="pre">dg</span></code> is
+written. The two flavors cannot be mixed: measuring a <code class="docutils literal notranslate"><span class="pre">Kn0</span></code> against a <code class="docutils literal notranslate"><span class="pre">Bn0_ref</span></code> (or the
+reverse) takes the reference momentum, which belongs to the branch and not to the element.</p></li>
 </ul>
 </section>
 <section id="metap-metaparams">

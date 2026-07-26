@@ -102,8 +102,8 @@ and their SciBmad/Bmad equivalents.
 ### BeamBeamP --> Not in SciBmad yet
 
 ### BendP --> BendParams
-- radius_ref -> caluclated
-- Bn0_ref -> calculated
+- radius_ref -> caluclated (Bmad: rho)
+- Bn0_ref -> calculated (Bmad: B_field)
 - e1 --> e1
 - e2 --> e2
 - e1_rect --> calculated
@@ -139,6 +139,16 @@ and their SciBmad/Bmad equivalents.
 - tiltN --> tiltN
 - [BK][ns]NL? --> [BK][ns]NL?
 - BnN(L) --> BnN(L)
+- Note (Bmad): the normal component of the multipole that is an element's own strength becomes
+  that strength: `Kn1` --> `K1` for a quadrupole, `Kn2` --> `K2`, `Kn3` --> `K3`, and `Kn0` -->
+  `dg` for a bend (`Bn1` --> `B1_GRADIENT`, ..., `Bn0` --> `db_field`). Every other order stays
+  a multipole, and becomes the integrated `An`/`Bn`.
+- Note (Bmad): PALS states a bend's field outright, where Bmad states its departure from the
+  reference bend. So `Kn0` is translated as `dg = Kn0 - g_ref` -- against `1/radius_ref` when
+  the reference bend is given as a radius, and against `Bn0_ref` when the field is not
+  normalized. A field equal to the reference bend departs from it by nothing, and no `dg` is
+  written. The two flavors cannot be mixed: measuring a `Kn0` against a `Bn0_ref` (or the
+  reverse) takes the reference momentum, which belongs to the branch and not to the element.
 
 ### MetaP --> MetaParams
 - alias --> alias (Bmad: alias)
