@@ -193,6 +193,83 @@ const _STRENGTH_FIXTURE = """
             - ring
   """
 
+# The MetaP components Bmad keeps, one it has no place for, one that is a structure rather than
+# a string, and one whose text contains the quote character it would normally be wrapped in.
+const _META_FIXTURE = """
+  PALS:
+    facility:
+      - beg:
+          kind: BeginningEle
+          ReferenceP:
+            species_ref: electron
+            pc_ref: 3E6
+      - q1:
+          kind: Quadrupole
+          length: 0.5
+          MetaP:
+            alias: q_one
+            label: AGSBPM
+            description: A quadrupole
+            ID: 0137-85
+            history:
+              - 2022-04-01: Fixed water leak to vacuum.
+      - q2:
+          kind: Quadrupole
+          length: 0.5
+          MetaP:
+            label: 'has a " double quote'
+      - ring:
+          kind: BeamLine
+          line:
+            - beg
+            - q1
+            - q2
+      - lat:
+          kind: Lattice
+          branches:
+            - ring
+  """
+
+# Constants and variables in both the forms the standard allows -- the compact `constants:` /
+# `variables:` lists and the full `kind: constant` / `kind: variable` definitions -- defined
+# both directly under `PALS` and in the facility, one of them written with no value, and an
+# element whose length is given as one of them.
+const _CONSTANT_FIXTURE = """
+  PALS:
+    constants:
+      - c_top: 1.5
+    facility:
+      - constants:
+          - c_one: 0.3
+          - c_two: 2 * c_one
+      - variables:
+          - v_one: 0.5
+          - v_two:
+      - m_e:
+          kind: constant
+          value: mass_of("electron")
+      - my_var:
+          kind: variable
+          value: 37
+      - beg:
+          kind: BeginningEle
+          ReferenceP:
+            species_ref: electron
+            pc_ref: 3E6
+      - q1:
+          kind: Quadrupole
+          length: c_one
+      - ring:
+          kind: BeamLine
+          line:
+            - beg
+            - q1
+      - lat:
+          kind: Lattice
+          branches:
+            - ring
+  """
+
 # `_CONTROLLER_FIXTURE` with its `knob` control aimed at every quadrupole at once.
 const _PATTERN_FIXTURE =
     replace(_CONTROLLER_FIXTURE, "parameter: q1>MagneticMultipoleP.Kn1" =>
@@ -294,12 +371,13 @@ _parsed(dir, text) = (path = joinpath(dir, "fixture.pals.yaml");
       out = read(out_path, String)
 
       # ABSOLUTE sets the parameter, so it is an overlay.  `Kn1` is a quadrupole's own
-      # strength, which Bmad keeps in `K1` in the same units, so nothing is rescaled.
-      @test occursin("knob: overlay = {q1[K1]: 2*k}, var = {k}, k = 0.3", out)
+      # strength, which Bmad keeps in `K1` in the same units, so nothing is rescaled.  The
+      # variable list and each initial value get a continuation line of their own.
+      @test occursin("knob: overlay = {q1[K1]: 2*k},\n\tvar = {k},\n\tk = 0.3\n", out)
 
       # RELATIVE adds to the parameter, so it is a group.  `Ks2L` is already integrated --
       # no length -- but is skew and second order, hence A2 and the 1/2! of the convention.
-      @test occursin("bump: group = {s1[A2]: 0.5*(dk)}, var = {dk}, dk = 0.0", out)
+      @test occursin("bump: group = {s1[A2]: 0.5*(dk)},\n\tvar = {dk},\n\tdk = 0.0\n", out)
 
       # q1's strength is its own `K1`, so it has no multipole left to scale.  s1's is skew,
       # which Bmad has no sextupole attribute for, so it stays the multipole `A2` -- and Bmad
@@ -386,9 +464,54 @@ _parsed(dir, text) = (path = joinpath(dir, "fixture.pals.yaml");
       # An element that is only multipoles keeps them all: 0.7 / 3!.
       @test occursin("m1: AB_Multipole,\n\tB3 = 0.11666666666666665\n", out)
 
-      # Every control lands on the attribute its element was given, scaled the same way.
-      @test occursin("kk: overlay = {q1[K1]: a, q2[K1]: 0.5*(a), q3[B1_GRADIENT]: a, " *
-                     "q4[A1]: 0.5*(a), q1[B3]: 0.08333333333333333*(a)}, var = {a}, a = 1.0", out)
+      # Every control lands on the attribute its element was given, scaled the same way, and
+      # each gets a line to itself.
+      @test occursin("kk: overlay = {q1[K1]: a,\n\t\tq2[K1]: 0.5*(a),\n\t\tq3[B1_GRADIENT]: a," *
+                     "\n\t\tq4[A1]: 0.5*(a),\n\t\tq1[B3]: 0.08333333333333333*(a)}," *
+                     "\n\tvar = {a},\n\ta = 1.0\n", out)
+    end
+  end
+
+  @testset "MetaP becomes the Bmad metadata strings" begin
+    mktempdir() do dir
+      bmad = pals_to_bmad(_parsed(dir, _META_FIXTURE))
+      out_path = joinpath(dir, "fixture.pals_out.bmad")
+      write_bmad_file(bmad, out_path)
+      out = read(out_path, String)
+
+      # Bmad has three metadata strings: alias, type (PALS `label`) and descrip (`description`).
+      @test occursin("q1: Quadrupole,\n\tL = 0.5,\n\talias = \"q_one\",\n\ttype = \"AGSBPM\"," *
+                     "\n\tdescrip = \"A quadrupole\"\n", out)
+
+      # The components Bmad has no place for are dropped rather than forced into one.
+      @test !occursin("0137-85", out)
+      @test !occursin("water leak", out)
+
+      # Bmad cannot escape a quote inside a string, so a string holding one of the two quote
+      # characters is wrapped in the other.
+      @test occursin("q2: Quadrupole,\n\tL = 0.5,\n\ttype = 'has a \" double quote'\n", out)
+    end
+  end
+
+  @testset "constants and variables become Bmad definitions" begin
+    mktempdir() do dir
+      bmad = pals_to_bmad(_parsed(dir, _CONSTANT_FIXTURE))
+      out_path = joinpath(dir, "fixture.pals_out.bmad")
+      write_bmad_file(bmad, out_path)
+      out = read(out_path, String)
+
+      # Bmad draws no constant/variable distinction: both are a name with a value, written in
+      # definition order because a Bmad name has to be defined above the point of use.  Those
+      # defined directly under `PALS` are translated alongside the facility's own.
+      @test occursin("c_top = 1.5\nc_one = 0.3\nc_two = 2 * c_one\nv_one = 0.5\nv_two = 0\n" *
+                     "m_e = mass_of(\"electron\")\nmy_var = 37\n", out)
+
+      # Which is also why the whole section comes before anything that could use one.
+      @test findfirst("c_one = 0.3", out).start < findfirst("parameter[particle]", out).start
+      @test findfirst("my_var = 37", out).start < findfirst("q1: Quadrupole", out).start
+
+      # An element parameter given as a constant is carried over as it was written.
+      @test occursin("q1: Quadrupole,\n\tL = c_one\n", out)
     end
   end
 
