@@ -418,10 +418,14 @@ and their SciBmad/Bmad equivalents.</p>
 <section id="metap-metaparams">
 <h3>MetaP –&gt; MetaParams<a class="headerlink" href="#metap-metaparams" title="Link to this heading">¶</a></h3>
 <ul class="simple">
-<li><p>alias –&gt; alias</p></li>
+<li><p>alias –&gt; alias (Bmad: alias)</p></li>
+<li><p>label –&gt; label (Bmad: type)</p></li>
+<li><p>description –&gt; description (Bmad: descrip)</p></li>
 <li><p>ID –&gt; none</p></li>
-<li><p>label –&gt; label</p></li>
-<li><p>description –&gt; description</p></li>
+<li><p>location –&gt; none</p></li>
+<li><p>history –&gt; none</p></li>
+<li><p>Note: any other (non-standard) component –&gt; none</p></li>
+<li><p>Note: a component holding a structure rather than a string is not translated.</p></li>
 </ul>
 </section>
 <section id="particlep-create-new-bunch">
@@ -502,6 +506,20 @@ and their SciBmad/Bmad equivalents.</p>
 <ul class="simple">
 <li><p>Beamlines –&gt; Beamlines</p></li>
 <li><p>To be added: Lattices in PALS –&gt; Lattices</p></li>
+</ul>
+</section>
+<section id="constants-and-variables-bmad-name-value-definitions">
+<h3>Constants and variables –&gt; Bmad <code class="docutils literal notranslate"><span class="pre">name</span> <span class="pre">=</span> <span class="pre">value</span></code> definitions<a class="headerlink" href="#constants-and-variables-bmad-name-value-definitions" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">constants:</span></code> / <code class="docutils literal notranslate"><span class="pre">variables:</span></code> list entry –&gt; <code class="docutils literal notranslate"><span class="pre">name</span> <span class="pre">=</span> <span class="pre">value</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">kind:</span> <span class="pre">constant</span></code> / <code class="docutils literal notranslate"><span class="pre">kind:</span> <span class="pre">variable</span></code> definition –&gt; <code class="docutils literal notranslate"><span class="pre">name</span> <span class="pre">=</span> <span class="pre">value</span></code></p></li>
+<li><p>Note: Bmad draws no constant/variable distinction, so both translate the same way.</p></li>
+<li><p>Note: definitions directly under the <code class="docutils literal notranslate"><span class="pre">PALS</span></code> node are translated as well as the facility’s own.</p></li>
+<li><p>Note: a definition with no <code class="docutils literal notranslate"><span class="pre">value</span></code> takes the PALS default of zero.</p></li>
+<li><p>Note: the definitions are written, in the order the PALS file gives them, ahead of every
+other section of the Bmad file. Bmad, unlike PALS, resolves a name against what the file
+has defined <em>above</em> the point of use.</p></li>
+<li><p>Not translated to SciBmad.</p></li>
 </ul>
 </section>
 <section id="todo">
@@ -588,6 +606,7 @@ and their SciBmad/Bmad equivalents.</p>
 <li><a class="reference internal" href="#solenoidp-bmultipoleparams">SolenoidP –&gt; BMultipoleParams</a></li>
 <li><a class="reference internal" href="#trackingp-universalparams-tracking-method">TrackingP –&gt; UniversalParams.tracking_method</a></li>
 <li><a class="reference internal" href="#lattices">Lattices</a></li>
+<li><a class="reference internal" href="#constants-and-variables-bmad-name-value-definitions">Constants and variables –&gt; Bmad <code class="docutils literal notranslate"><span class="pre">name</span> <span class="pre">=</span> <span class="pre">value</span></code> definitions</a></li>
 <li><a class="reference internal" href="#todo">TODO</a></li>
 </ul>
 </li>
