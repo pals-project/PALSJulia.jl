@@ -469,9 +469,29 @@ const _PATTERN_FIXTURE =
     replace(_CONTROLLER_FIXTURE, "parameter: q1>MagneticMultipoleP.Kn1" =>
                                  "parameter: q.*>MagneticMultipoleP.Kn1")
 
+# `_CONTROLLER_FIXTURE` with its `knob` control naming its slave by kind as well as by name.
+const _KIND_FIXTURE =
+    replace(_CONTROLLER_FIXTURE, "parameter: q1>" => "parameter: Quadrupole::q1>")
+
+# The same, but asking for a kind q1 is not.
+const _WRONG_KIND_FIXTURE =
+    replace(_CONTROLLER_FIXTURE, "parameter: q1>" => "parameter: Sextupole::q1>")
+
+# `_CONTROLLER_FIXTURE` with its `knob` control reaching q1 through the BeamLine it sits in.
+const _BEAMLINE_QUALIFIED_FIXTURE =
+    replace(_CONTROLLER_FIXTURE, "parameter: q1>" => "parameter: ring>>q1>")
+
 # Writes `text` to a file in `dir` and returns the parsed tree.
 _parsed(dir, text) = (path = joinpath(dir, "fixture.pals.yaml");
                       write(path, text); parse_file(path))
+
+# Write a translated lattice out to `dir` and read it back, for the tests that only want to
+# look at the text.
+_written(writer, dir, lat, ext) = (path = joinpath(dir, "fixture.pals_out.$ext");
+                                   writer(lat, path); read(path, String))
+_bmad_text(dir, lat)    = _written(write_bmad_file, dir, lat, "bmad")
+_madx_text(dir, lat)    = _written(write_madx_file, dir, lat, "madx")
+_scibmad_text(dir, lat) = _written(write_scibmad_file, dir, lat, "jl")
 
 @testset "PALS translation" begin
 
@@ -1029,6 +1049,46 @@ _parsed(dir, text) = (path = joinpath(dir, "fixture.pals.yaml");
       @test_throws "selects slaves by pattern" pals_to_bmad(yaml)
       @test_throws "selects slaves by pattern" pals_to_madx(yaml)
       @test_throws "selects slaves by pattern" pals_to_scibmad(yaml)
+    end
+  end
+
+  @testset "a control target may name its slave's kind" begin
+    mktempdir() do dir
+      # `{kind}::{name}` narrows a name to one kind. All three formats give an element the one
+      # name, so the qualifier is checked against the element found and then dropped.
+      yaml = _parsed(dir, _KIND_FIXTURE)
+      @test occursin("overlay = {q1[K1]: 2*k}", _bmad_text(dir, pals_to_bmad(yaml)))
+      @test occursin("q1->k1 :=", _madx_text(dir, pals_to_madx(yaml)))
+      @test occursin("(q1, :Kn1)", _scibmad_text(dir, pals_to_scibmad(yaml)))
+
+      # A qualifier the element does not answer to is an error, not a silent miss.
+      wrong = _parsed(dir, _WRONG_KIND_FIXTURE)
+      @test_throws "asks for a Sextupole but q1 is a Quadrupole" pals_to_bmad(wrong)
+      @test_throws "asks for a Sextupole but q1 is a Quadrupole" pals_to_madx(wrong)
+      @test_throws "asks for a Sextupole but q1 is a Quadrupole" pals_to_scibmad(wrong)
+    end
+  end
+
+  @testset "a control target reached through a BeamLine is reported" begin
+    mktempdir() do dir
+      # PALS's `>>` and `>>>` name the BeamLine or Lattice an element is reached through, which
+      # lets one occurrence of a repeated element be driven on its own. None of the three
+      # formats has that, and `>>` splits into an empty field, so it is caught before the split
+      # rather than reported as a malformed target.
+      yaml = _parsed(dir, _BEAMLINE_QUALIFIED_FIXTURE)
+      @test_throws "reaches its element through a BeamLine or Lattice" pals_to_bmad(yaml)
+      @test_throws "reaches its element through a BeamLine or Lattice" pals_to_madx(yaml)
+      @test_throws "reaches its element through a BeamLine or Lattice" pals_to_scibmad(yaml)
+    end
+  end
+
+  @testset "a periodic branch becomes Bmad's closed geometry" begin
+    mktempdir() do dir
+      # `periodic` arrives as a YAML node, so it has to be rendered before it is compared --
+      # comparing the node itself is always false, which made every branch come out open.
+      out = _bmad_text(dir, pals_to_bmad(_parsed(dir, _MADX_CLASH_FIXTURE)))
+      @test occursin("parameter[geometry] = closed", out)
+      @test !occursin("parameter[geometry] = open", out)
     end
   end
 

@@ -113,7 +113,7 @@ function pals_to_scibmad(yaml::YAMLNode)
     elseif kind == "BeamLine"
       push!(lat.beamlines, _make_scibmad_beamline(ele, facility))
     elseif kind == "Controller"
-      push!(lat.controllers, _make_scibmad_controller(ele))
+      push!(lat.controllers, _make_scibmad_controller(ele, facility))
     elseif kind == "constant" || kind == "variable"
       error("$(String(keys(ele)[1])): `$kind` definitions are not yet translated to SciBmad")
     else
@@ -295,19 +295,41 @@ end
 
 #---------------------------------------------------------------------------------------------------
 """
-    _scibmad_control_target(cname::String, param::String)
+    _scibmad_control_target(cname::String, param::String, facility::YAMLNode)
 
 Translate a controller's `parameter` target into a SciBmad `(element, :property)` pair.
 
 Return `(element, property)`. SciBmad keeps the PALS parameter names, so a group-qualified
-target such as `q>MagneticMultipoleP.Kn1` needs only its group prefix dropped. Targets SciBmad
-cannot express -- a pattern matching several elements -- raise an error.
+target such as `q>MagneticMultipoleP.Kn1` needs only its group prefix dropped.
+
+A target may name its element by kind as well as by name, as `{kind}::{name}`; the qualifier is
+checked against the element found and then dropped, SciBmad naming each element once.
+
+Targets SciBmad cannot express -- a pattern matching several elements, or a `>>` or `>>>`
+qualifier naming the BeamLine or Lattice an element is reached through -- raise an error.
 """
-function _scibmad_control_target(cname::String, param::String)
+function _scibmad_control_target(cname::String, param::String, facility::YAMLNode)
+  occursin(">>", param) &&
+      error("controller $cname: `$param` reaches its element through a BeamLine or Lattice " *
+            "qualifier, which has no SciBmad equivalent")
+
   parts = split(param, ">")
   length(parts) == 2 ||
       error("controller $cname: control parameter `$param` is not of the form `element>parameter`")
   slave, path = String(parts[1]), String(parts[2])
+
+  # An element may be named by its kind as well as by its name.
+  if occursin("::", slave)
+    qualifier = split(slave, "::")
+    length(qualifier) == 2 ||
+        error("controller $cname: `$param` does not name a single element kind")
+    kind_wanted, slave = String(qualifier[1]), String(qualifier[2])
+    props = _facility_props(facility, slave)
+    props === nothing && error("controller $cname: `$param` names no element of the facility")
+    ele_kind = haskey(props, "kind") ? String(props["kind"]) : ""
+    kind_wanted == ele_kind ||
+        error("controller $cname: `$param` asks for a $kind_wanted but $slave is a $ele_kind")
+  end
 
   occursin(r"^[A-Za-z_][A-Za-z0-9_]*$", slave) ||
       error("controller $cname: `$param` selects slaves by pattern, which a SciBmad Controller cannot express")
@@ -324,7 +346,7 @@ end
 
 #---------------------------------------------------------------------------------------------------
 """
-    _make_scibmad_controller(ele::YAMLNode)
+    _make_scibmad_controller(ele::YAMLNode, facility::YAMLNode)
 
 Translate a `Controller` element into a [`SciBmadController`](@ref).
 
@@ -332,7 +354,7 @@ Each control becomes a function of the controller's variables, which SciBmad pas
 arguments. `control_type: RELATIVE` adds its expression to the value the element already
 carries -- that is what makes it relative -- while `ABSOLUTE` replaces it.
 """
-function _make_scibmad_controller(ele::YAMLNode)
+function _make_scibmad_controller(ele::YAMLNode, facility::YAMLNode)
   props = ele[keys(ele)[1]]
   name = String(keys(ele)[1])
 
@@ -354,7 +376,7 @@ function _make_scibmad_controller(ele::YAMLNode)
     for control in props["controls"]
       haskey(control, "parameter") && haskey(control, "expression") ||
           error("$name: a controls entry needs both a `parameter` and an `expression`")
-      slave, property = _scibmad_control_target(name, String(control["parameter"]))
+      slave, property = _scibmad_control_target(name, String(control["parameter"]), facility)
       expression = String(control["expression"])
       control_type == "RELATIVE" && (expression = "ele.$property + ($expression)")
       push!(slaves, "($slave, :$property) => $signature -> $expression")
