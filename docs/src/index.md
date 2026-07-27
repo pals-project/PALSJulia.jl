@@ -3,8 +3,9 @@
 **PALSJulia** is a Julia parser for the Particle Accelerator Lattice Standard
 ([PALS](https://github.com/campa-consortium/pals)). It reads PALS-format lattice
 files, performs lattice expansion, and translates lattices into
-[SciBmad](https://github.com/bmad-sim/SciBmad.jl) and
-[Bmad](https://www.classe.cornell.edu/bmad/) formats.
+[SciBmad](https://github.com/bmad-sim/SciBmad.jl),
+[Bmad](https://www.classe.cornell.edu/bmad/) and
+[MAD-X](https://mad.web.cern.ch/mad/) formats.
 
 Under the hood, the package is a thin Julia wrapper around the
 `yaml_c_wrapper` C library (a [rapidyaml](https://github.com/biojppm/rapidyaml)
@@ -33,8 +34,8 @@ guide/translation
    [Reading and expanding lattices](guide/lattices.md).
 3. **Evaluate** the mathematical expressions in the expanded lattice to
    numbers — see [Evaluating expressions](guide/expressions.md).
-4. **Translate** a PALS lattice to SciBmad or Bmad format — see
-   [Translating to SciBmad and Bmad](guide/translation.md).
+4. **Translate** a PALS lattice to SciBmad, Bmad or MAD-X format — see
+   [Translating to SciBmad, Bmad and MAD-X](guide/translation.md).
 
 The complete docstring reference is in the **API Reference** (linked in the
 sidebar).

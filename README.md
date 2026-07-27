@@ -6,6 +6,7 @@ In addition, `PALSJulia` provides translation functions:
 
 - From `PALS` files to [`Bmad`](https://github.com/bmad-sim/bmad-ecosystem) lattice files.
 - From `PALS` files to [`SciBmad`](https://github.com/bmad-sim/SciBmad.jl) lattice files.
+- From `PALS` files to [`MAD-X`](https://mad.web.cern.ch/mad/) lattice files.
 
 For a translator from `Bmad` to `PALS`, the `Bmad` based `Tao` program can be used.
 A translator from `SciBmad` to `PALS` is planned.
