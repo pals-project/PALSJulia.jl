@@ -160,7 +160,9 @@ function _add_bmad_branches!(lat::BmadLattice, branches)
     elseif is_map(bl)
       bl_props = bl[1]
       name = node_key(bl_props)
-      periodic = (haskey(bl_props, "periodic") && bl_props["periodic"] == "true") ? "closed" : "open"
+      # `periodic` is a YAML node, not a String, so it has to be rendered before it is compared.
+      periodic = (haskey(bl_props, "periodic") &&
+                  lowercase(String(bl_props["periodic"])) == "true") ? "closed" : "open"
     elseif is_sequence(bl)
       error("Expanding lattices is not done during PALS>Bmad translation")
     else
@@ -522,20 +524,45 @@ multipole that *is* the element's own strength becomes `K1`, `K2`, `K3` or a ben
 [`_native_strength!`](@ref)), which is not length integrated, so there an integrated PALS
 parameter is the one that needs the length; and `DG`, alone among them, is measured from the
 reference bend rather than from zero, which is the `offset` (see [`_bend_reference`](@ref)).
-Targets Bmad cannot express -- a pattern matching several elements, or a parameter with no Bmad
+
+A target may name its element by kind as well as by name, as `{kind}::{name}`; the qualifier is
+checked against the element found and then dropped, the Bmad file naming each element once.
+
+Targets Bmad cannot express -- a pattern matching several elements, a `>>` or `>>>` qualifier
+naming the BeamLine or Lattice an element is reached through, or a parameter with no Bmad
 attribute -- raise an error.
 """
 function _bmad_control_target(cname::String, param::String, facility::YAMLNode)
+  # Bmad has a `branch>>ele` qualifier of its own, but a PALS BeamLine is not a Bmad branch --
+  # it may be spliced into a longer line -- so the two do not correspond.
+  occursin(">>", param) &&
+      error("controller $cname: `$param` reaches its element through a BeamLine or Lattice " *
+            "qualifier, which has no Bmad equivalent")
+
   parts = split(param, ">")
   length(parts) == 2 ||
       error("controller $cname: control parameter `$param` is not of the form `element>parameter`")
   slave, path = String(parts[1]), String(parts[2])
+
+  # An element may be named by its kind as well as by its name.
+  kind_wanted = nothing
+  if occursin("::", slave)
+    qualifier = split(slave, "::")
+    length(qualifier) == 2 ||
+        error("controller $cname: `$param` does not name a single element kind")
+    kind_wanted, slave = String(qualifier[1]), String(qualifier[2])
+  end
 
   occursin(r"^[A-Za-z_][A-Za-z0-9_]*$", slave) ||
       error("controller $cname: `$param` selects slaves by pattern, which a Bmad overlay cannot express")
 
   props = _facility_props(facility, slave)
   props === nothing && error("controller $cname: `$param` names no element of the facility")
+  if kind_wanted !== nothing
+    ele_kind = haskey(props, "kind") ? String(props["kind"]) : ""
+    kind_wanted == ele_kind ||
+        error("controller $cname: `$param` asks for a $kind_wanted but $slave is a $ele_kind")
+  end
 
   # A controller may drive another controller's variable, and so may a Bmad overlay.
   if haskey(props, "kind") && String(props["kind"]) == "Controller"
