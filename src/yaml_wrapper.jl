@@ -112,13 +112,15 @@ The five tree views are:
   so carry no `kind`; a `BeamLine` referenced inside a `line` is a sub-line whose
   contents are spliced directly into the enclosing line, so no nested `BeamLine`
   survives in the expanded tree. Elements of a `multipass` line carry a
-  `multipass_index` giving their 1-based position within that line's expansion
-  (the nearest enclosing `multipass` line wins when they nest). Every dependent
-  parameter is computed and present: each element carries its `ReferenceP`,
-  `FloorP` and `s_position`, the derived members of every parameter family it
-  uses, and the non-zero defaults of the groups it carries; each branch is
-  capped with a `branch_end` `Placeholder` holding its final reference and
-  floor.
+  `multipass_index` giving their pass number — how many times a particle will
+  have travelled through that physical element by that point — so every element
+  of one traversal shares an index (the nearest enclosing `multipass` line wins
+  when they nest). Every dependent parameter is computed and present: each
+  element carries its `element_index` (its position, counting from one, in the
+  branch line that holds it), its `ReferenceP`, `FloorP` and `s_position`, the
+  derived members of every parameter family it uses, and the non-zero defaults
+  of the groups it carries; each branch is capped with a `branch_end`
+  `Placeholder` holding its final reference and floor, numbered with the rest.
 - `expanded`: the same lattice with all of that removed — what the author wrote
   decides which parameters stay. It is `full_expanded` with nodes pruned rather
   than an earlier snapshot, so a parameter present in both views holds the same
