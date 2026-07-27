@@ -103,9 +103,12 @@ PALS:
       # The two copies are the same node of the same definition, but only the
       # expanded one has been expanded: `cell: repeat: 3` is unrolled to 3
       # entries there, while the definition in leftover still holds the 1 entry
-      # it was written with.
+      # it was written with. Expansion then caps the branch with a zero-length
+      # `branch_end` Placeholder holding its final floor placement and reference
+      # parameters, so the expanded line is one longer than the unrolling.
       @test length(c.leftover[1]) == 1
-      @test length(c.full_expanded[1]) == 3
+      @test [String(keys(n)[1]) for n in c.full_expanded[1]] ==
+            ["d1", "d1", "d1", "branch_end"]
       # Both copies resolve back to the same class.
       @test corr[c.full_expanded[1]] == c
       @test corr[c.leftover[1]] == c
