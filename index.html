@@ -197,7 +197,7 @@
 <li class="toctree-l1"><a class="reference internal" href="guide/parsing.html">Parsing and writing YAML</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guide/lattices.html">Reading and expanding lattices</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guide/expressions.html">Evaluating expressions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="guide/translation.html">Translating to SciBmad and Bmad</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/translation.html">Translating to SciBmad, Bmad and MAD-X</a></li>
 </ul>
 
 </div><div class="sidebar-tree">
@@ -254,8 +254,9 @@
 <p><strong>PALSJulia</strong> is a Julia parser for the Particle Accelerator Lattice Standard
 (<a class="reference external" href="https://github.com/campa-consortium/pals">PALS</a>). It reads PALS-format lattice
 files, performs lattice expansion, and translates lattices into
-<a class="reference external" href="https://github.com/bmad-sim/SciBmad.jl">SciBmad</a> and
-<a class="reference external" href="https://www.classe.cornell.edu/bmad/">Bmad</a> formats.</p>
+<a class="reference external" href="https://github.com/bmad-sim/SciBmad.jl">SciBmad</a>,
+<a class="reference external" href="https://www.classe.cornell.edu/bmad/">Bmad</a> and
+<a class="reference external" href="https://mad.web.cern.ch/mad/">MAD-X</a> formats.</p>
 <p>Under the hood, the package is a thin Julia wrapper around the
 <code class="docutils literal notranslate"><span class="pre">yaml_c_wrapper</span></code> C library (a <a class="reference external" href="https://github.com/biojppm/rapidyaml">rapidyaml</a>
 backend) shipped with
@@ -274,8 +275,8 @@ expand the line into an ordered list of elements — see
 <a class="reference internal" href="guide/lattices.html"><span class="std std-doc">Reading and expanding lattices</span></a>.</p></li>
 <li><p><strong>Evaluate</strong> the mathematical expressions in the expanded lattice to
 numbers — see <a class="reference internal" href="guide/expressions.html"><span class="std std-doc">Evaluating expressions</span></a>.</p></li>
-<li><p><strong>Translate</strong> a PALS lattice to SciBmad or Bmad format — see
-<a class="reference internal" href="guide/translation.html"><span class="std std-doc">Translating to SciBmad and Bmad</span></a>.</p></li>
+<li><p><strong>Translate</strong> a PALS lattice to SciBmad, Bmad or MAD-X format — see
+<a class="reference internal" href="guide/translation.html"><span class="std std-doc">Translating to SciBmad, Bmad and MAD-X</span></a>.</p></li>
 </ol>
 <p>The complete docstring reference is in the <strong>API Reference</strong> (linked in the
 sidebar).</p>
