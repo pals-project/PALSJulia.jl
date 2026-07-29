@@ -274,6 +274,13 @@ and their SciBmad/Bmad/MAD-X equivalents.
   that strength: `Kn1` --> `K1` for a quadrupole, `Kn2` --> `K2`, `Kn3` --> `K3`, and `Kn0` -->
   `dg` for a bend (`Bn1` --> `B1_GRADIENT`, ..., `Bn0` --> `db_field`). Every other order stays
   a multipole, and becomes the integrated `An`/`Bn`.
+- Note (Bmad): a Bmad bend carries a quadrupole and a sextupole component of its own besides its
+  bending field, so a bend's `Kn1` --> `K1` and `Kn2` --> `K2` as well (`Bn1` -->
+  `B1_GRADIENT`, `Bn2` --> `B2_GRADIENT`). These two hold a normal field only, and are components
+  added to a field the bend already has rather than the strength that makes it a bend, so an
+  order with a skew part -- a `Ks1`/`Ks2`, or a `tilt1`/`tilt2` that rotates one into being --
+  keeps both parts in the `An`/`Bn` form instead. A bend has no attribute above order 2, so its
+  higher multipoles stay `An`/`Bn` either way.
 - Note (Bmad): PALS states a bend's field outright, where Bmad states its departure from the
   reference bend. So `Kn0` is translated as `dg = Kn0 - g_ref` -- against `1/radius_ref` when
   the reference bend is given as a radius, and against `Bn0_ref` when the field is not

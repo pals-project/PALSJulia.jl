@@ -524,6 +524,8 @@ multipole that *is* the element's own strength becomes `K1`, `K2`, `K3` or a ben
 [`_native_strength!`](@ref)), which is not length integrated, so there an integrated PALS
 parameter is the one that needs the length; and `DG`, alone among them, is measured from the
 reference bend rather than from zero, which is the `offset` (see [`_bend_reference`](@ref)).
+A bend's added `K1` and `K2` are used only when that order has no skew part, so a controller
+driving one of those has to look at the skew component to know which attribute it will find.
 
 A target may name its element by kind as well as by name, as `{kind}::{name}`; the qualifier is
 checked against the element found and then dropped, the Bmad file naming each element once.
@@ -589,10 +591,12 @@ function _bmad_control_target(cname::String, param::String, facility::YAMLNode)
     # The normal component of the element's own multipole is its strength attribute, which the
     # element translation writes without the length or the factorial.
     ele_kind = haskey(props, "kind") ? String(props["kind"]) : ""
-    native = get(_NATIVE_STRENGTH, ele_kind, nothing)
-    if native !== nothing && native[1] == order && !skew && !(integrated && ele_length == 0)
-      offset = ele_kind == "Bend" ? _bend_reference(props, slave, m[1] == "K") : 0.0
-      return "$slave[$(m[1] == "K" ? native[2] : native[3])]",
+    native_kind = get(_NATIVE_STRENGTH, ele_kind, nothing)
+    native = native_kind === nothing ? nothing : get(native_kind, order, nothing)
+    if native !== nothing && !skew && !(integrated && ele_length == 0) &&
+           !(ele_kind == "Bend" && order > 0 && _has_skew(props, order))
+      offset = ele_kind == "Bend" && order == 0 ? _bend_reference(props, slave, m[1] == "K") : 0.0
+      return "$slave[$(m[1] == "K" ? native[1] : native[2])]",
              integrated ? 1 / ele_length : 1.0, offset
     end
 
@@ -827,66 +831,90 @@ end
 """
     _NATIVE_STRENGTH
 
-The multipole order that is an element's own strength, and the Bmad attributes that hold it.
+The multipole orders an element kind holds as its own strength, and the Bmad attributes that hold
+them.
 
-Each entry maps a PALS element kind to `(order, normalized_attribute, field_attribute)`: a
-quadrupole's order-1 field is Bmad's `K1` (or `B1_GRADIENT`), not a `B1` multipole. A bend's
-order-0 field is `DG` (or `DB_FIELD`), which Bmad measures from the reference bend rather than
-from zero, so that one is written with an offset (see [`_bend_reference`](@ref)). Kinds whose
-strength does not line up one-to-one with a PALS multipole -- a kicker's `HKICK`, a solenoid's
-`KS` -- are deliberately absent, and keep the multipole form.
+Each entry maps a PALS element kind to a map from multipole order to
+`(normalized_attribute, field_attribute)`: a quadrupole's order-1 field is Bmad's `K1` (or
+`B1_GRADIENT`), not a `B1` multipole. A bend carries a quadrupole and a sextupole component of
+its own as well as its bending field, so it has three. A bend's order-0 field is `DG` (or
+`DB_FIELD`), which Bmad measures from the reference bend rather than from zero, so that one is
+written with an offset (see [`_bend_reference`](@ref)). Kinds whose strength does not line up
+one-to-one with a PALS multipole -- a kicker's `HKICK`, a solenoid's `KS` -- are deliberately
+absent, and keep the multipole form.
+
+A bend has no attribute above order 2, so its higher multipoles keep the `An`/`Bn` form.
 """
-const _NATIVE_STRENGTH = Dict("Bend"       => (0, "DG", "DB_FIELD"),
-                              "Quadrupole" => (1, "K1", "B1_GRADIENT"),
-                              "Sextupole"  => (2, "K2", "B2_GRADIENT"),
-                              "Octupole"   => (3, "K3", "B3_GRADIENT"))
+const _NATIVE_STRENGTH =
+    Dict("Bend"       => Dict(0 => ("DG", "DB_FIELD"), 1 => ("K1", "B1_GRADIENT"),
+                              2 => ("K2", "B2_GRADIENT")),
+         "Quadrupole" => Dict(1 => ("K1", "B1_GRADIENT")),
+         "Sextupole"  => Dict(2 => ("K2", "B2_GRADIENT")),
+         "Octupole"   => Dict(3 => ("K3", "B3_GRADIENT")))
 
 #---------------------------------------------------------------------------------------------------
 """
     _native_strength!(full::FullRepresentation, ele_kind::String, offset::Real = 0.0)
 
-Take the element's own multipole out of `full` and return its Bmad attribute fragments.
+Take the multipoles that are an element's own strength out of `full` and return their Bmad
+attribute fragments.
 
 The strength of a Bmad quadrupole is its `K1`, so that is where a PALS `Kn1` belongs: leaving it
 in a `B1` multipole would give an element whose nominal strength is zero and whose field comes
-entirely from a multipole slot. The native attribute is not length integrated, so an integrated
-PALS value is divided by the element length; a tilted one is rotated first, and whatever lands
-in the skew part is left behind in `full` as an ordinary multipole. That rotation is why the
-tilt does not simply become the Bmad element `tilt`, which is already spoken for by
-`BodyShiftP.z_rot`.
+entirely from a multipole slot. A bend has a `K1` and a `K2` of its own on top of its bending
+field, so a bend's `Kn1` and `Kn2` land there in the same way. A native attribute is not length
+integrated, so an integrated PALS value is divided by the element length; a tilted one is rotated
+first, and whatever lands in the skew part is left behind in `full` as an ordinary multipole.
+That rotation is why the tilt does not simply become the Bmad element `tilt`, which is already
+spoken for by `BodyShiftP.z_rot`.
 
-`offset` is subtracted from the value written, for the one native attribute Bmad does not
+`offset` is subtracted from the order-0 value written, for the one native attribute Bmad does not
 measure from zero: a bend's `DG` is the departure of the field from the reference bend (see
 [`_bend_reference`](@ref)).
 
-Return an empty vector -- leaving `full` untouched, so the multipole form is used -- for kinds
-that have no such attribute, and for an integrated multipole on a zero-length element, which no
-non-integrated attribute can express. As elsewhere in this conversion, an element with no
-`length` is taken to be one metre long.
+An order is left in `full` untouched, to be written in the multipole form, when it has no native
+attribute for this kind; when an integrated multipole sits on a zero-length element, which no
+non-integrated attribute can express; and, for a bend's added `K1` and `K2`, when the field has a
+skew part. As elsewhere in this conversion, an element with no `length` is taken to be one metre
+long.
 """
 function _native_strength!(full::FullRepresentation, ele_kind::String, offset::Real = 0.0)
   haskey(_NATIVE_STRENGTH, ele_kind) || return String[]
-  order, normalized_attr, field_attr = _NATIVE_STRENGTH[ele_kind]
-  haskey(full.magnitude, order) || return String[]
+  native = _NATIVE_STRENGTH[ele_kind]
 
-  L = full.integrated[order] ? full.L : 1.0
-  L == 0 && return String[]
-  strength = first([1 1im] * full.magnitude[order]) *
-             _tilt_rotation(order, get(full.tilt, order, 0.0)) / L
+  attrs = String[]
+  for order in sort(collect(keys(full.magnitude)))
+    haskey(native, order) || continue
 
-  # What is left is a skew multipole of the same order, in the same units the native attribute
-  # was just read in: no longer integrated, and with the tilt already applied.
-  full.magnitude[order] = [0.0, imag(strength)]
-  full.integrated[order] = false
-  delete!(full.tilt, order)
+    L = full.integrated[order] ? full.L : 1.0
+    L == 0 && continue
+    strength = first([1 1im] * full.magnitude[order]) *
+               _tilt_rotation(order, get(full.tilt, order, 0.0)) / L
 
-  # Compared against the offset rather than against zero: a bend whose field is the reference
-  # bend has no departure from it to write, and a PALS file states the two to the same handful
-  # of digits, which is not enough to subtract exactly. For an offset of zero -- every other
-  # native attribute -- this is the same exact test as before.
-  real(strength) ≈ offset && return String[]
-  attribute = full.normalized[order] ? normalized_attr : field_attr
-  return ["$attribute = $(real(strength) - offset)"]
+    # A bend's `K1` and `K2` are components added to a field the element already has, not the
+    # strength that makes it the element it is, and Bmad has no skew attribute to go with them.
+    # So an order with a skew part is left whole in the `An`/`Bn` form, which holds both parts in
+    # the one convention, rather than split between a native attribute and a multipole slot.
+    if ele_kind == "Bend" && order > 0 && !(imag(strength) ≈ 0)
+      continue
+    end
+
+    # What is left is a skew multipole of the same order, in the same units the native attribute
+    # was just read in: no longer integrated, and with the tilt already applied.
+    full.magnitude[order] = [0.0, imag(strength)]
+    full.integrated[order] = false
+    delete!(full.tilt, order)
+
+    # Order 0 is compared against the offset rather than against zero: a bend whose field is the
+    # reference bend has no departure from it to write, and a PALS file states the two to the
+    # same handful of digits, which is not enough to subtract exactly. For every other order --
+    # and for an offset of zero -- this is the same exact test as before.
+    off = order == 0 ? offset : 0.0
+    real(strength) ≈ off && continue
+    attribute = full.normalized[order] ? native[order][1] : native[order][2]
+    push!(attrs, "$attribute = $(real(strength) - off)")
+  end
+  return attrs
 end
 
 #---------------------------------------------------------------------------------------------------
@@ -923,6 +951,25 @@ function _bend_reference(props::YAMLNode, name::String, normalized::Bool)
     has_B && return Float64(bendP["Bn0_ref"])
   end
   return 0.0
+end
+
+#---------------------------------------------------------------------------------------------------
+"""
+    _has_skew(props::YAMLNode, order::Int)
+
+Return whether the element has a nonzero skew multipole of the given `order`.
+
+Which Bmad attribute an order lands in can depend on it: a bend's `K1` and `K2` are used only for
+a field with no skew part (see [`_native_strength!`](@ref)), so a controller driving one has to
+ask. Any of the four spellings of the component -- normalized or not, integrated or not -- counts.
+"""
+function _has_skew(props::YAMLNode, order::Int)
+  haskey(props, "MagneticMultipoleP") || return false
+  mmP = props["MagneticMultipoleP"]
+  for key in ("Ks$order", "Ks$(order)L", "Bs$order", "Bs$(order)L")
+    haskey(mmP, key) && !(Float64(mmP[key]) ≈ 0) && return true
+  end
+  return false
 end
 
 #---------------------------------------------------------------------------------------------------
@@ -1225,8 +1272,9 @@ function _make_bmad_ele(ele::YAMLNode)
         error("$(node_key(props)): Multipoles of one element must be all normalized or all unnormalized.")
       end
 
-      # The element's own multipole is its Bmad strength attribute; the rest stay multipoles.
-      # A bend's is `DG`, which Bmad measures from the reference bend rather than from zero.
+      # The multipoles that are the element's own strength become Bmad strength attributes; the
+      # rest stay multipoles. A bend's order-0 attribute is `DG`, which Bmad measures from the
+      # reference bend rather than from zero.
       offset = ele_kind == "Bend" && haskey(full.normalized, 0) ?
                _bend_reference(props, node_key(props), full.normalized[0]) : 0.0
       append!(attrs, _native_strength!(full, ele_kind, offset))
