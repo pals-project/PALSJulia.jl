@@ -269,6 +269,70 @@ const _BEND_FIXTURE = """
 # way of being measured against.
 const _BEND_MISMATCH_FIXTURE = replace(_BEND_FIXTURE, "g_ref: 0.5" => "Bn0_ref: 0.5", count = 1)
 
+# The multipoles a bend carries besides its bending field: the quadrupole and sextupole
+# components Bmad holds in `K1` and `K2`, an order above those two, and the same components with
+# a skew part -- given outright for b2 and coming out of a tilt for b3 -- which no `K` attribute
+# can hold.
+const _BEND_MULTIPOLE_FIXTURE = """
+  PALS:
+    facility:
+      - beg:
+          kind: BeginningEle
+          ReferenceP:
+            species_ref: electron
+            pc_ref: 3E6
+      - b1:
+          kind: Bend
+          length: 2
+          BendP:
+            g_ref: 0.5
+          MagneticMultipoleP:
+            Kn0: 0.5
+            Kn1: 0.2
+            Kn2L: 1.2
+            Kn3: 0.4
+      - b2:
+          kind: Bend
+          length: 0.5
+          BendP:
+            g_ref: 0.5
+          MagneticMultipoleP:
+            Kn1: 0.2
+            Ks1: 0.8
+      - b3:
+          kind: Bend
+          length: 0.5
+          BendP:
+            g_ref: 0.5
+          MagneticMultipoleP:
+            Kn2: 1.0
+            tilt2: 0.1
+      - kk:
+          kind: Controller
+          variables:
+            a: 1.0
+          controls:
+            - parameter: b1>MagneticMultipoleP.Kn1
+              expression: a
+            - parameter: b1>MagneticMultipoleP.Kn2L
+              expression: a
+            - parameter: b1>MagneticMultipoleP.Kn3
+              expression: a
+            - parameter: b2>MagneticMultipoleP.Kn1
+              expression: a
+      - ring:
+          kind: BeamLine
+          line:
+            - beg
+            - b1
+            - b2
+            - b3
+      - lat:
+          kind: Lattice
+          branches:
+            - ring
+  """
+
 # The MetaP components Bmad keeps, one it has no place for, one that is a structure rather than
 # a string, and one whose text contains the quote character it would normally be wrapped in.
 const _META_FIXTURE = """
@@ -855,8 +919,8 @@ _scibmad_text(dir, lat) = _written(write_scibmad_file, dir, lat, "jl")
       @test occursin("b1: SBend,\n\tL = 1,\n\tg = 0.5,\n\tDG = 0.25\n", out)
 
       # A bend whose field is the reference bend departs from it by nothing, so there is no DG to
-      # write.  The orders that are not the bend's own are multipoles as they are anywhere else.
-      @test occursin("b2: SBend,\n\tL = 1,\n\tg = 0.5,\n\tB1 = 0.2,\n\tscale_multipoles = F\n", out)
+      # write.  Its order-1 field is the K1 a Bmad bend has of its own.
+      @test occursin("b2: SBend,\n\tL = 1,\n\tg = 0.5,\n\tK1 = 0.2\n", out)
 
       # DG is not length integrated, so an integrated PALS field is divided by the length before
       # the reference comes off it -- and the reference may be given as the radius of the bend.
@@ -869,6 +933,40 @@ _scibmad_text(dir, lat) = _written(write_scibmad_file, dir, lat, "jl")
       # DG instead, and the reference it is measured from is the same before and after.
       @test occursin("knob: overlay = {b1[DG]: kk0 - (0.5)},\n\tvar = {kk0},\n\tkk0 = 0.6\n", out)
       @test occursin("bump: group = {b2[DG]: dkk0},\n\tvar = {dkk0},\n\tdkk0 = 0.0\n", out)
+    end
+  end
+
+  @testset "a bend's order-1 and order-2 multipoles become its Bmad K1 and K2" begin
+    mktempdir() do dir
+      bmad = pals_to_bmad(_parsed(dir, _BEND_MULTIPOLE_FIXTURE))
+      out_path = joinpath(dir, "fixture.pals_out.bmad")
+      write_bmad_file(bmad, out_path)
+      out = read(out_path, String)
+
+      # A Bmad bend has a K1 and a K2 of its own, in the same units as the PALS field: K2 is not
+      # length integrated, so the integrated 1.2 is divided by the length.  A bend has nothing
+      # above order 2, so the order-3 field stays a multipole, integrated and with the 1/n!:
+      # 0.4 * 2 / 3! here.
+      @test occursin("b1: SBend,\n\tL = 2,\n\tg = 0.5,\n\tK1 = 0.2,\n\tK2 = 0.6," *
+                     "\n\tB3 = 0.13333333333333333,\n\tscale_multipoles = F\n", out)
+
+      # K1 and K2 hold a normal field only, and the two are components added to a field the bend
+      # already has rather than the strength that makes it a bend.  So an order with a skew part
+      # keeps both parts in the An/Bn form: 0.2 * 0.5 and 0.8 * 0.5.
+      @test occursin("b2: SBend,\n\tL = 0.5,\n\tg = 0.5,\n\tA1 = 0.4,\n\tB1 = 0.1," *
+                     "\n\tscale_multipoles = F\n", out)
+
+      # A tilt is a skew part too: an order-2 multipole tilted by 0.1 turns by 0.3 rad, so this
+      # one is B2 = cos(0.3) * 0.5 / 2! and A2 = -sin(0.3) * 0.5 / 2!.
+      @test occursin("b3: SBend,\n\tL = 0.5,\n\tg = 0.5,\n\tA2 = -0.0738800", out)
+      @test occursin("B2 = 0.2388341", out)
+
+      # Every control lands on the attribute its element was given, scaled the same way: K2 is
+      # not integrated, so an integrated PALS parameter picks up 1/L, while B3 and B1 are, so
+      # a non-integrated one picks up L (and the 1/n!).
+      @test occursin("kk: overlay = {b1[K1]: a,\n\t\tb1[K2]: 0.5*(a)," *
+                     "\n\t\tb1[B3]: 0.3333333333333333*(a),\n\t\tb2[B1]: 0.5*(a)}," *
+                     "\n\tvar = {a},\n\ta = 1.0\n", out)
     end
   end
 
