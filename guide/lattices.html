@@ -263,12 +263,12 @@ merged in.</p></li>
 a flat ordered sequence of elements and every dependent parameter computed.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">expanded</span></code></strong> — the same lattice with the computed parameters pruned, leaving
 what the author wrote.</p></li>
-<li><p><strong><code class="docutils literal notranslate"><span class="pre">leftover</span></code></strong> — everything else the document contained.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">adjunct</span></code></strong> — everything else the document contained.</p></li>
 </ul>
 <p>Each view is an ordinary <code class="docutils literal notranslate"><span class="pre">YAMLNode</span></code>, so everything in
 <a class="reference internal" href="parsing.html"><span class="std std-doc">Parsing and writing YAML</span></a> applies to it.</p>
-<section id="the-expanded-views-and-leftover">
-<h2>The expanded views and <code class="docutils literal notranslate"><span class="pre">leftover</span></code><a class="headerlink" href="#the-expanded-views-and-leftover" title="Link to this heading">¶</a></h2>
+<section id="the-expanded-views-and-adjunct">
+<h2>The expanded views and <code class="docutils literal notranslate"><span class="pre">adjunct</span></code><a class="headerlink" href="#the-expanded-views-and-adjunct" title="Link to this heading">¶</a></h2>
 <p>Expansion picks one lattice — the root lattice — and resolves it. The two
 expanded views hold <em>only</em> that result, and are rooted at the lattice entry
 itself, without the <code class="docutils literal notranslate"><span class="pre">PALS:</span></code>/<code class="docutils literal notranslate"><span class="pre">facility:</span></code> scaffolding the lattice was written
@@ -282,12 +282,12 @@ under:</p>
 </div>
 <p>so the lattice is reached as <code class="docutils literal notranslate"><span class="pre">lat.full_expanded[&quot;lat1&quot;]</span></code>, not through
 <code class="docutils literal notranslate"><span class="pre">[&quot;PALS&quot;][&quot;facility&quot;]</span></code>.</p>
-<p>Everything the root lattice did not absorb stays in <code class="docutils literal notranslate"><span class="pre">leftover</span></code>, which <em>does</em>
+<p>Everything the root lattice did not absorb stays in <code class="docutils literal notranslate"><span class="pre">adjunct</span></code>, which <em>does</em>
 keep the full <code class="docutils literal notranslate"><span class="pre">PALS:</span></code>/<code class="docutils literal notranslate"><span class="pre">facility:</span></code> document: element and beamline definitions,
 <code class="docutils literal notranslate"><span class="pre">use</span></code> statements, constants and variables, <code class="docutils literal notranslate"><span class="pre">Controller</span></code>s, <code class="docutils literal notranslate"><span class="pre">set</span></code> commands, and any
 <code class="docutils literal notranslate"><span class="pre">Lattice</span></code> other than the one expanded. Definitions that expansion substituted
 into the lattice are copied rather than moved, so they appear in both views — the
-definition in <code class="docutils literal notranslate"><span class="pre">leftover</span></code>, its inlined copy in the expanded lattice.</p>
+definition in <code class="docutils literal notranslate"><span class="pre">adjunct</span></code>, its inlined copy in the expanded lattice.</p>
 </section>
 <section id="full-expanded-and-expanded">
 <h2><code class="docutils literal notranslate"><span class="pre">full_expanded</span></code> and <code class="docutils literal notranslate"><span class="pre">expanded</span></code><a class="headerlink" href="#full-expanded-and-expanded" title="Link to this heading">¶</a></h2>
@@ -321,7 +321,7 @@ lattice back out without the computed values.</p></li>
 <span class="n">println</span><span class="p">(</span><span class="n">pj</span><span class="o">.</span><span class="n">to_yaml_string</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">combined</span><span class="p">))</span>
 <span class="n">println</span><span class="p">(</span><span class="n">pj</span><span class="o">.</span><span class="n">to_yaml_string</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">full_expanded</span><span class="p">))</span>
 <span class="n">println</span><span class="p">(</span><span class="n">pj</span><span class="o">.</span><span class="n">to_yaml_string</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">expanded</span><span class="p">))</span>
-<span class="n">println</span><span class="p">(</span><span class="n">pj</span><span class="o">.</span><span class="n">to_yaml_string</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">leftover</span><span class="p">))</span>
+<span class="n">println</span><span class="p">(</span><span class="n">pj</span><span class="o">.</span><span class="n">to_yaml_string</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">adjunct</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>To expand a single named lattice from a file that defines several, pass its
@@ -379,19 +379,19 @@ by relative path, <code class="docutils literal notranslate"><span class="pre">c
 processing, so
 most of their nodes correspond: the constant <code class="docutils literal notranslate"><span class="pre">a_const</span></code>, for instance, exists in
 <code class="docutils literal notranslate"><span class="pre">original</span></code>, in <code class="docutils literal notranslate"><span class="pre">combined</span></code>, and — since it is not part of the lattice — in
-<code class="docutils literal notranslate"><span class="pre">leftover</span></code>. <code class="docutils literal notranslate"><span class="pre">node_correspondence</span></code> builds that mapping: given any node, it returns
+<code class="docutils literal notranslate"><span class="pre">adjunct</span></code>. <code class="docutils literal notranslate"><span class="pre">node_correspondence</span></code> builds that mapping: given any node, it returns
 the nodes it corresponds to in the other views.</p>
 <div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">lat</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">parse_and_expand_pals</span><span class="p">(</span><span class="s">&quot;ex.pals.yaml&quot;</span><span class="p">)</span>
 <span class="n">corr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">node_correspondence</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The result is a <code class="docutils literal notranslate"><span class="pre">Dict</span></code> keyed by <code class="docutils literal notranslate"><span class="pre">YAMLNode</span></code>. Looking up a node returns a named
-tuple whose fields — <code class="docutils literal notranslate"><span class="pre">original</span></code>, <code class="docutils literal notranslate"><span class="pre">combined</span></code>, <code class="docutils literal notranslate"><span class="pre">full_expanded</span></code>, <code class="docutils literal notranslate"><span class="pre">leftover</span></code> — are each a
+tuple whose fields — <code class="docutils literal notranslate"><span class="pre">original</span></code>, <code class="docutils literal notranslate"><span class="pre">combined</span></code>, <code class="docutils literal notranslate"><span class="pre">full_expanded</span></code>, <code class="docutils literal notranslate"><span class="pre">adjunct</span></code> — are each a
 <code class="docutils literal notranslate"><span class="pre">Vector{YAMLNode}</span></code> listing the corresponding nodes in that view:</p>
 <div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">a_const</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lat</span><span class="o">.</span><span class="n">combined</span><span class="p">[</span><span class="s">&quot;PALS&quot;</span><span class="p">][</span><span class="s">&quot;facility&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="s">&quot;constants&quot;</span><span class="p">][</span><span class="s">&quot;a_const&quot;</span><span class="p">]</span>
 
 <span class="n">corr</span><span class="p">[</span><span class="n">a_const</span><span class="p">]</span><span class="o">.</span><span class="n">original</span><span class="w">       </span><span class="c"># [ the a_const node in the original tree ]</span>
-<span class="n">corr</span><span class="p">[</span><span class="n">a_const</span><span class="p">]</span><span class="o">.</span><span class="n">leftover</span><span class="w">       </span><span class="c"># [ the a_const node in the leftover tree ]</span>
+<span class="n">corr</span><span class="p">[</span><span class="n">a_const</span><span class="p">]</span><span class="o">.</span><span class="n">adjunct</span><span class="w">       </span><span class="c"># [ the a_const node in the adjunct tree ]</span>
 <span class="n">corr</span><span class="p">[</span><span class="n">a_const</span><span class="p">]</span><span class="o">.</span><span class="n">full_expanded</span><span class="w">  </span><span class="c"># [] — the lattice never referenced it</span>
 </pre></div>
 </div>
@@ -402,8 +402,8 @@ look a class up starting from <em>any</em> of those four trees and get the same 
 </pre></div>
 </div>
 <p>Because expansion splits the document, a <code class="docutils literal notranslate"><span class="pre">combined</span></code> node can reach
-<code class="docutils literal notranslate"><span class="pre">full_expanded</span></code>, <code class="docutils literal notranslate"><span class="pre">leftover</span></code>, or both. A beamline named by the root lattice is a
-good example: its definition stays in <code class="docutils literal notranslate"><span class="pre">leftover</span></code> while a copy of it is inlined
+<code class="docutils literal notranslate"><span class="pre">full_expanded</span></code>, <code class="docutils literal notranslate"><span class="pre">adjunct</span></code>, or both. A beamline named by the root lattice is a
+good example: its definition stays in <code class="docutils literal notranslate"><span class="pre">adjunct</span></code> while a copy of it is inlined
 into the expanded lattice, and both belong to the same class.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">expanded</span></code> view takes no part in the correspondence: it is a pruned copy of
 <code class="docutils literal notranslate"><span class="pre">full_expanded</span></code> rather than a step in the derivation chain, so a node in it is
@@ -428,12 +428,12 @@ copy, which is why each field is a <em>vector</em>: one <code class="docutils li
 <p>A vector is empty when a view has no corresponding node. For example, the
 <code class="docutils literal notranslate"><span class="pre">destination_pointer</span></code> scalar that expansion synthesises exists only in
 <code class="docutils literal notranslate"><span class="pre">full_expanded</span></code>, so its <code class="docutils literal notranslate"><span class="pre">original</span></code> and <code class="docutils literal notranslate"><span class="pre">combined</span></code> vectors are empty; a constant
-the lattice never refers to exists only in <code class="docutils literal notranslate"><span class="pre">leftover</span></code>, so its <code class="docutils literal notranslate"><span class="pre">full_expanded</span></code>
+the lattice never refers to exists only in <code class="docutils literal notranslate"><span class="pre">adjunct</span></code>, so its <code class="docutils literal notranslate"><span class="pre">full_expanded</span></code>
 vector is empty.</p>
 <p>!!! note “The mapping is exact, not heuristic”
 The correspondence is not recovered by re-matching the finished trees. The
 views are built as a derivation chain (<code class="docutils literal notranslate"><span class="pre">original</span></code> → <code class="docutils literal notranslate"><span class="pre">combined</span></code> →
-<code class="docutils literal notranslate"><span class="pre">full_expanded</span></code> and <code class="docutils literal notranslate"><span class="pre">leftover</span></code>), and the provenance of every node is
+<code class="docutils literal notranslate"><span class="pre">full_expanded</span></code> and <code class="docutils literal notranslate"><span class="pre">adjunct</span></code>), and the provenance of every node is
 recorded as it is copied. <code class="docutils literal notranslate"><span class="pre">node_correspondence</span></code> reads back that recorded
 provenance, so the mapping is exact even where nodes are duplicated,
 merged, or renamed during expansion.</p>
@@ -489,11 +489,11 @@ constant and variable defined directly under the <code class="docutils literal n
 both the full (<code class="docutils literal notranslate"><span class="pre">kind:</span> <span class="pre">constant</span></code> / <code class="docutils literal notranslate"><span class="pre">kind:</span> <span class="pre">variable</span></code>) and compact
 (<code class="docutils literal notranslate"><span class="pre">constants:</span></code> / <code class="docutils literal notranslate"><span class="pre">variables:</span></code> list) forms:</p>
 <p>Constants and variables are defined at facility level rather than inside the
-lattice, so they are found in <code class="docutils literal notranslate"><span class="pre">lat.leftover</span></code> — searching <code class="docutils literal notranslate"><span class="pre">lat.full_expanded</span></code> for one
+lattice, so they are found in <code class="docutils literal notranslate"><span class="pre">lat.adjunct</span></code> — searching <code class="docutils literal notranslate"><span class="pre">lat.full_expanded</span></code> for one
 matches nothing, as the <code class="docutils literal notranslate"><span class="pre">PALS</span></code>/<code class="docutils literal notranslate"><span class="pre">facility</span></code> node it lives under is not part of
 that tree:</p>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">pj</span><span class="o">.</span><span class="n">match_names</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">leftover</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a_const&quot;</span><span class="p">)</span><span class="w">   </span><span class="c"># one named constant</span>
-<span class="n">pj</span><span class="o">.</span><span class="n">match_names</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">leftover</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a_.*&quot;</span><span class="p">)</span><span class="w">      </span><span class="c"># every constant/var named a_…</span>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">pj</span><span class="o">.</span><span class="n">match_names</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">adjunct</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a_const&quot;</span><span class="p">)</span><span class="w">   </span><span class="c"># one named constant</span>
+<span class="n">pj</span><span class="o">.</span><span class="n">match_names</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">adjunct</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a_.*&quot;</span><span class="p">)</span><span class="w">      </span><span class="c"># every constant/var named a_…</span>
 </pre></div>
 </div>
 <p>For a compact-form entry the matched node is the <code class="docutils literal notranslate"><span class="pre">name:</span> <span class="pre">value</span></code> scalar; for a
@@ -520,12 +520,12 @@ a parameter path) or, as a <em>bare</em> name, a constant or variable:</p>
 <span class="n">pj</span><span class="o">.</span><span class="n">parameter_value</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;F1&gt;ReferenceP.species_ref&quot;</span><span class="p">)</span><span class="w">  </span><span class="c"># &quot;#3He&quot;  (a string)</span>
 <span class="n">pj</span><span class="o">.</span><span class="n">parameter_value</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q1&gt;BendP.g&quot;</span><span class="p">)</span><span class="w">                 </span><span class="c"># 0.0     (unset → default)</span>
 <span class="n">pj</span><span class="o">.</span><span class="n">parameter_value</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q1&quot;</span><span class="p">)</span><span class="w">                         </span><span class="c"># missing (an element is not a value)</span>
-<span class="n">pj</span><span class="o">.</span><span class="n">parameter_value</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a_const&quot;</span><span class="p">)</span><span class="w">                    </span><span class="c"># a constant (from leftover)</span>
+<span class="n">pj</span><span class="o">.</span><span class="n">parameter_value</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a_const&quot;</span><span class="p">)</span><span class="w">                    </span><span class="c"># a constant (from adjunct)</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">parameter_value</span></code> searches only two of <code class="docutils literal notranslate"><span class="pre">lat</span></code>’s five views: <code class="docutils literal notranslate"><span class="pre">lat.full_expanded</span></code>,
 which holds the element parameters, and then, if the name is not found there,
-<code class="docutils literal notranslate"><span class="pre">lat.leftover</span></code>, which holds the facility-level constants, variables, and any
+<code class="docutils literal notranslate"><span class="pre">lat.adjunct</span></code>, which holds the facility-level constants, variables, and any
 definitions not spliced into the lattice. The raw <code class="docutils literal notranslate"><span class="pre">lat.original</span></code> and
 <code class="docutils literal notranslate"><span class="pre">lat.combined</span></code> views are <strong>not</strong> searched, and neither is <code class="docutils literal notranslate"><span class="pre">lat.expanded</span></code>: a
 dependent parameter is a legitimate thing to ask for, and only <code class="docutils literal notranslate"><span class="pre">full_expanded</span></code>
@@ -621,7 +621,7 @@ accepts a file path and an optional <code class="docutils literal notranslate"><
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Reading and expanding lattices</a><ul>
-<li><a class="reference internal" href="#the-expanded-views-and-leftover">The expanded views and <code class="docutils literal notranslate"><span class="pre">leftover</span></code></a></li>
+<li><a class="reference internal" href="#the-expanded-views-and-adjunct">The expanded views and <code class="docutils literal notranslate"><span class="pre">adjunct</span></code></a></li>
 <li><a class="reference internal" href="#full-expanded-and-expanded"><code class="docutils literal notranslate"><span class="pre">full_expanded</span></code> and <code class="docutils literal notranslate"><span class="pre">expanded</span></code></a></li>
 <li><a class="reference internal" href="#basic-use">Basic use</a></li>
 <li><a class="reference internal" href="#reporting-problems">Reporting problems</a></li>
