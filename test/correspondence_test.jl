@@ -40,36 +40,36 @@ PALS:
     @testset "returns a Dict keyed by node" begin
       @test corr isa Dict
       @test !isempty(corr)
-      # The combined, expanded and leftover roots are keys.
+      # The combined, expanded and adjunct roots are keys.
       @test haskey(corr, lat.combined)
       @test haskey(corr, lat.full_expanded)
-      @test haskey(corr, lat.leftover)
+      @test haskey(corr, lat.adjunct)
     end
 
     # a_const is not part of the lattice and nothing in it refers to a_const, so
-    # expansion leaves it behind: one node in original, combined and leftover,
+    # expansion leaves it behind: one node in original, combined and adjunct,
     # and none in expanded.
     a_const = lat.combined["PALS"]["facility"][1]["constants"]["a_const"]
     entry = corr[a_const]
 
-    @testset "a node outside the lattice maps into leftover, not expanded" begin
+    @testset "a node outside the lattice maps into adjunct, not expanded" begin
       @test length(entry.original) == 1
       @test length(entry.combined) == 1
-      @test length(entry.leftover) == 1
+      @test length(entry.adjunct) == 1
       @test isempty(entry.full_expanded)
       @test String(entry.original[1]) == "0.3 * r_electron"
       @test String(entry.combined[1]) == "0.3 * r_electron"
-      # The leftover copy has its expression evaluated to a number, while the
+      # The adjunct copy has its expression evaluated to a number, while the
       # original/combined copies keep the original expression text.
-      @test Float64(entry.leftover[1]) == evaluate_pals_expression("0.3 * r_electron")
+      @test Float64(entry.adjunct[1]) == evaluate_pals_expression("0.3 * r_electron")
       # The queried node appears in its own tree's vector.
       @test entry.combined[1] == a_const
     end
 
     @testset "lookup is consistent from any tree" begin
-      # Reaching the class from the original or leftover node gives the same set.
+      # Reaching the class from the original or adjunct node gives the same set.
       @test corr[entry.original[1]] == entry
-      @test corr[entry.leftover[1]] == entry
+      @test corr[entry.adjunct[1]] == entry
     end
 
     @testset "repeat gives one-to-many correspondence" begin
@@ -81,16 +81,16 @@ PALS:
       @test length(c.full_expanded) >= 3
       # Every expanded copy resolves back to this same class.
       @test all(corr[n] == c for n in c.full_expanded)
-      # The definition it was expanded from is still standing in leftover, and
+      # The definition it was expanded from is still standing in adjunct, and
       # belongs to the same class.
-      @test length(c.leftover) == 1
-      @test corr[c.leftover[1]] == c
+      @test length(c.adjunct) == 1
+      @test corr[c.adjunct[1]] == c
     end
 
     @testset "a definition used by the lattice reaches both trees" begin
       # main_line is named by lat1's branches, so expansion inlines a copy of its
       # definition into the lattice while the definition itself stays in
-      # leftover. The combined node ties the two sides together. `line` is the
+      # adjunct. The combined node ties the two sides together. `line` is the
       # node to follow, not `kind`: inlining main_line made it a branch, and a
       # branch has no kind, so no expanded node answers to main_line's.
       ml = lat.combined["PALS"]["facility"][4]["main_line"]
@@ -98,20 +98,20 @@ PALS:
 
       c = corr[ml["line"]]
       @test length(c.combined) == 1
-      @test length(c.leftover) == 1
+      @test length(c.adjunct) == 1
       @test length(c.full_expanded) == 1
       # The two copies are the same node of the same definition, but only the
       # expanded one has been expanded: `cell: repeat: 3` is unrolled to 3
-      # entries there, while the definition in leftover still holds the 1 entry
+      # entries there, while the definition in adjunct still holds the 1 entry
       # it was written with. Expansion then caps the branch with a zero-length
       # `branch_end` Placeholder holding its final floor placement and reference
       # parameters, so the expanded line is one longer than the unrolling.
-      @test length(c.leftover[1]) == 1
+      @test length(c.adjunct[1]) == 1
       @test [String(keys(n)[1]) for n in c.full_expanded[1]] ==
             ["d1", "d1", "d1", "branch_end"]
       # Both copies resolve back to the same class.
       @test corr[c.full_expanded[1]] == c
-      @test corr[c.leftover[1]] == c
+      @test corr[c.adjunct[1]] == c
     end
 
     @testset "unmapped nodes are absent from the Dict" begin

@@ -7,7 +7,7 @@ using PALSJulia: parameter_value, parse_and_expand_pals
 # expression parameter (to show it comes back evaluated, i.e. from `expanded`,
 # not from the raw views), and a non-numeric one. Two quads with different Bn1
 # exercise the conflict case. Facility-level constants and a variable live in the
-# leftover tree.
+# adjunct tree.
 const PARAM_LATTICE = """
 PALS:
   facility:
@@ -64,9 +64,9 @@ PALS:
       @test pv("q1>not_a_param") === 0.0        # no schema: unknown == unset -> 0
     end
 
-    @testset "constants and variables fall through to leftover" begin
+    @testset "constants and variables fall through to adjunct" begin
       @test pv("a_two") == 5.0                  # compact-form constant
-      @test pv("a_expr") == 1.5                 # evaluated in leftover during expansion
+      @test pv("a_expr") == 1.5                 # evaluated in adjunct during expansion
       @test pv("my_var") == 37.0                # full-form variable
     end
 
