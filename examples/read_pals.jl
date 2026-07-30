@@ -26,5 +26,5 @@ println(pj.to_yaml_string(lat.full_expanded))
 println("\n", "-"^50)
 
 println("Printing what expansion left over:")
-println(pj.to_yaml_string(lat.leftover))
+println(pj.to_yaml_string(lat.adjunct))
 

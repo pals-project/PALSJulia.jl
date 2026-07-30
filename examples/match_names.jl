@@ -9,7 +9,7 @@
 # the string resolves to — elements, parameter groups, parameters, constants, or
 # variables — which live in the tree you searched. Elements are searched for in
 # the `full_expanded` view; constants and variables are not part of the lattice,
-# so they are found in `leftover`.
+# so they are found in `adjunct`.
 
 using PALSJulia
 import PALSJulia as pj
@@ -42,10 +42,10 @@ show_matches("Q1a")
 
 # ── Constants and variables ───────────────────────────────────────────────────
 # A bare name also matches constants/variables by name. These are defined at
-# facility level rather than inside the lattice, so search the leftover view.
+# facility level rather than inside the lattice, so search the adjunct view.
 println("\nConstants and variables:")
-show_matches("a_const"; tree = lat.leftover)
-show_matches(".*_var"; tree = lat.leftover)
+show_matches("a_const"; tree = lat.adjunct)
+show_matches(".*_var"; tree = lat.adjunct)
 
 # ── Editing matched parameters in place ───────────────────────────────────────
 # The returned nodes belong to lat.full_expanded, so they can be modified directly.

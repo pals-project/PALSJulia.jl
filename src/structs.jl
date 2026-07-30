@@ -135,7 +135,7 @@ struct LatticesHandle
   combined::Ptr{Cvoid}
   expanded::Ptr{Cvoid}
   full_expanded::Ptr{Cvoid}
-  leftover::Ptr{Cvoid}
+  adjunct::Ptr{Cvoid}
   problems::StringListC
 end
 
@@ -147,7 +147,7 @@ struct NodeLinkC
   original::Csize_t
   combined::Csize_t
   full_expanded::Csize_t
-  leftover::Csize_t
+  adjunct::Csize_t
 end
 
 struct CorrespondenceMapC
@@ -204,6 +204,6 @@ struct Lattices
   combined::YAMLNode
   expanded::YAMLNode
   full_expanded::YAMLNode
-  leftover::YAMLNode
+  adjunct::YAMLNode
   problems::Vector{String}
 end

@@ -4,7 +4,7 @@ A PALS lattice may write numeric values as mathematical *expressions* —
 `0.3 * r_electron`, `a_const^2`, `mass_of("proton")`. When
 `parse_and_expand_pals` expands a lattice it evaluates every such expression to
 a plain number — across the expanded views (**`expanded`** and
-**`full_expanded`**, which hold the same values) and **`leftover`** — so the
+**`full_expanded`**, which hold the same values) and **`adjunct`** — so the
 expanded lattice is fully numeric and ready for a simulation program to consume.
 The `original` and `combined` views always keep the expression text exactly as
 written.

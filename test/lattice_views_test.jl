@@ -39,7 +39,7 @@ PALS:
 
     @testset "the five views are five distinct trees" begin
       trees = [v.tree for v in (lat.original, lat.combined, lat.expanded,
-                                lat.full_expanded, lat.leftover)]
+                                lat.full_expanded, lat.adjunct)]
       @test length(unique(objectid.(trees))) == 5
       @test isempty(lat.problems)
     end
@@ -54,9 +54,9 @@ PALS:
       end
     end
 
-    @testset "leftover keeps the facility scaffolding" begin
-      @test haskey(lat.leftover, "PALS")
-      @test !haskey(lat.leftover, "ring")
+    @testset "adjunct keeps the facility scaffolding" begin
+      @test haskey(lat.adjunct, "PALS")
+      @test !haskey(lat.adjunct, "ring")
     end
 
     @testset "both expanded views are rooted at the lattice" begin

@@ -220,7 +220,7 @@ PALS:
 
       # m_e is not part of the lattice and nothing in it refers to m_e, so it is
       # left over — evaluated all the same.
-      @test Float64(lat.leftover["PALS"]["facility"][3]["m_e"]["value"]) ≈
+      @test Float64(lat.adjunct["PALS"]["facility"][3]["m_e"]["value"]) ≈
             510998.95069000003
 
       # The combined tree keeps the original expression text.
@@ -249,7 +249,7 @@ PALS:
 
       m_3he = evaluate_pals_expression("mass_of(\"#3He\")")
       # The constants block is not part of the lattice, so it is left over.
-      consts = lat.leftover["PALS"]["facility"][1]["constants"]
+      consts = lat.adjunct["PALS"]["facility"][1]["constants"]
       dh1a = inlined(lat, "lat1", "main_line", "DH1A")
 
       # mass_of(species) resolves the `species: "#3He"` constant by name.
@@ -273,7 +273,7 @@ PALS:
       cur2 = cur1 / 2.99792458e8
       # Controllers are facility-level, so they are left over rather than part of
       # the lattice; their expressions are evaluated all the same.
-      fac = lat.leftover["PALS"]["facility"]
+      fac = lat.adjunct["PALS"]["facility"]
       ps27 = fac[2]["ps27"]
 
       # An initial value is a constant expression -- it may use the built-in and

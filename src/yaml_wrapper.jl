@@ -72,7 +72,7 @@ end
     parse_and_expand_pals(filename, root_lattice=""; problems=:print) -> Lattices
 
 Parse a PALS lattice file and return its `original`, `combined`, `expanded`,
-`full_expanded` and `leftover` views, together with the list of expansion
+`full_expanded` and `adjunct` views, together with the list of expansion
 `problems`, as a [`Lattices`](@ref).
 
 # Arguments
@@ -126,18 +126,18 @@ The five tree views are:
   than an earlier snapshot, so a parameter present in both views holds the same
   value in both. Use it to see the inputs rather than their consequences, or to
   write a lattice back out without the computed values.
-- `leftover`: everything the expanded views do not carry, keeping its
+- `adjunct`: everything the expanded views do not carry, keeping its
   `PALS`/`facility` scaffolding: element and beamline definitions, `use`
   statements, constants and variables, `Controller`s, `set` commands, and any
   `Lattice` that was not the one expanded. A definition that expansion
   substituted into the lattice is *copied*, so it appears in both trees.
 
 Every mathematical expression is evaluated to a number across the expanded views
-and `leftover` (see [`evaluate_pals_expression`](@ref);
+and `adjunct` (see [`evaluate_pals_expression`](@ref);
 `random()`/`random_gauss()` are left as text). `Controller` elements are
 evaluated against their own scoped variable tables, with each control
 `expression` computed and stored back in its control entry; controllers are
-facility-level, so they are found in `leftover`.
+facility-level, so they are found in `adjunct`.
 
 Each view is backed by its own `YAMLNode`; all five are freed independently
 when their nodes are garbage collected.
@@ -162,7 +162,7 @@ function parse_and_expand_pals(filename::String, root_lattice::String="";
   # failure. This raises a normal Julia error; it does not abort the process.
   if handles.original == C_NULL || handles.combined == C_NULL ||
      handles.expanded == C_NULL || handles.full_expanded == C_NULL ||
-     handles.leftover == C_NULL
+     handles.adjunct == C_NULL
     detail = isempty(problem_list) ? "" : "\n  " * join(problem_list, "\n  ")
     error("Failed to parse lattice file: $filename$detail")
   end
@@ -174,7 +174,7 @@ function parse_and_expand_pals(filename::String, root_lattice::String="";
     _root_node(handles.combined),
     _root_node(handles.expanded),
     _root_node(handles.full_expanded),
-    _root_node(handles.leftover),
+    _root_node(handles.adjunct),
     problem_list,
   )
 end
@@ -225,24 +225,24 @@ const NodeCorrespondence = @NamedTuple{
   original::Vector{YAMLNode},
   combined::Vector{YAMLNode},
   full_expanded::Vector{YAMLNode},
-  leftover::Vector{YAMLNode}}
+  adjunct::Vector{YAMLNode}}
 
 """
     node_correspondence(lat::Lattices) -> Dict{YAMLNode, NodeCorrespondence}
 
 Map every node of a [`Lattices`](@ref) to the nodes it corresponds to across the
-`original`, `combined`, `full_expanded` and `leftover` trees.
+`original`, `combined`, `full_expanded` and `adjunct` trees.
 
 The correspondence is exact: it is computed from provenance recorded while the
 trees were derived from one another (`original` → `combined` → `full_expanded`
-and `leftover`), not by re-matching after the fact. Because expansion can
+and `adjunct`), not by re-matching after the fact. Because expansion can
 duplicate a node (scalar substitution, `repeat`, `inherit`, forks), the
 correspondence is one-to-many — a single `combined`/`original` node can map to
 several `full_expanded` copies — so each field of the returned value is a
 `Vector{YAMLNode}`.
 
 Expansion splits the document, so a node of `combined` may land in
-`full_expanded`, in `leftover`, or in both: a definition that was substituted
+`full_expanded`, in `adjunct`, or in both: a definition that was substituted
 into the lattice is copied there while its definition stays behind. Those copies
 share one equivalence class, tied together through the `combined` node they came
 from.
@@ -254,12 +254,12 @@ found by the path it sits at, not by a recorded link.
 # Returns
 A `Dict` keyed by `YAMLNode`. For any node that participates in the
 correspondence, `map[node]` is a named tuple
-`(; original, combined, full_expanded, leftover)` of `Vector{YAMLNode}`, listing
+`(; original, combined, full_expanded, adjunct)` of `Vector{YAMLNode}`, listing
 every corresponding node grouped by tree. The queried node appears in its own
 tree's vector, so the four vectors together are the full equivalence class of
 `node`. A vector is empty when a tree has no corresponding node (e.g. the
 synthesised `destination_pointer` scalar exists only in `full_expanded`, and a
-constant that the lattice never references exists only in `leftover`).
+constant that the lattice never references exists only in `adjunct`).
 
 # Example
 ```julia
@@ -268,7 +268,7 @@ corr = node_correspondence(lat)
 
 a_const = lat.combined["PALS"]["facility"][1]["constants"]["a_const"]
 corr[a_const].original       # the same constant in the original tree
-corr[a_const].leftover       # constants are not part of the lattice, so they land here
+corr[a_const].adjunct       # constants are not part of the lattice, so they land here
 corr[a_const].full_expanded  # empty unless the lattice referenced it
 ```
 """
@@ -276,7 +276,7 @@ function node_correspondence(lat::Lattices)
   ot = lat.original.tree
   ct = lat.combined.tree
   et = lat.full_expanded.tree
-  lt = lat.leftover.tree
+  lt = lat.adjunct.tree
 
   cmap = @ccall (libyaml()).build_correspondence_map(
     ot.handle::Ptr{Cvoid}, ct.handle::Ptr{Cvoid}, et.handle::Ptr{Cvoid},
@@ -293,7 +293,7 @@ function node_correspondence(lat::Lattices)
   # original/combined nodes of one logical entity with its copy in one of the two
   # derived trees; union those keys and then read off the connected components.
   # Copies that share a combined node — the same definition in `full_expanded`
-  # and in `leftover` — are joined transitively through it.
+  # and in `adjunct` — are joined transitively through it.
   Key = Tuple{Symbol,Csize_t}
   parent = Dict{Key,Key}()
 
@@ -313,7 +313,7 @@ function node_correspondence(lat::Lattices)
   for l in links
     # A link names a node in exactly one of the two derived trees.
     kd = l.full_expanded != YAML_NULL_ID ? add!((:full_expanded, l.full_expanded)) :
-                                           add!((:leftover, l.leftover))
+                                           add!((:adjunct, l.adjunct))
     if l.combined != YAML_NULL_ID
       kc = add!((:combined, l.combined))
       uni!(kd, kc)
@@ -331,7 +331,7 @@ function node_correspondence(lat::Lattices)
 
   treeof(tag) = tag === :original ? lat.original.tree :
                 tag === :combined ? lat.combined.tree :
-                tag === :full_expanded ? lat.full_expanded.tree : lat.leftover.tree
+                tag === :full_expanded ? lat.full_expanded.tree : lat.adjunct.tree
   nodeof(k) = YAMLNode(treeof(k[1]), k[2])
 
   result = Dict{YAMLNode,NodeCorrespondence}()
@@ -340,7 +340,7 @@ function node_correspondence(lat::Lattices)
       original = YAMLNode[nodeof(k) for k in members if k[1] === :original],
       combined = YAMLNode[nodeof(k) for k in members if k[1] === :combined],
       full_expanded = YAMLNode[nodeof(k) for k in members if k[1] === :full_expanded],
-      leftover = YAMLNode[nodeof(k) for k in members if k[1] === :leftover],
+      adjunct = YAMLNode[nodeof(k) for k in members if k[1] === :adjunct],
     )
     for k in members
       result[nodeof(k)] = entry
@@ -380,7 +380,7 @@ include constant and variable names.
 
 Which tree to search follows from that: elements are in `lat.full_expanded`, while
 constants and variables are defined at facility level and so are found in
-`lat.leftover`. Searching `lat.full_expanded` for a constant matches nothing, since
+`lat.adjunct`. Searching `lat.full_expanded` for a constant matches nothing, since
 the `PALS`/`facility` node it would be defined under is not part of that tree.
 
 Not yet implemented from *Element Name Matching*: `#N` instance selection,
@@ -396,7 +396,7 @@ lat = parse_and_expand_pals("lattice.pals.yaml")
 match_names(lat.full_expanded, "B1.*>BendP.e1")       # e1 of every B1… bend
 match_names(lat.full_expanded, "Quadrupole::.*")      # every quadrupole element
 match_names(lat.full_expanded, "inj>>>arc>>Q.*>length")  # length of arc's Q… in lattice inj
-match_names(lat.leftover, "a_.*")                # constants/variables named a_…
+match_names(lat.adjunct, "a_.*")                # constants/variables named a_…
 ```
 """
 function match_names(node::YAMLNode, match_string::AbstractString)
@@ -428,7 +428,7 @@ path) or, as a *bare* name (no lattice/branch/kind qualifier and no path), a
 constant or variable — the same constructs `match_names` resolves.
 
 Only two of `lat`'s five views are searched: `lat.full_expanded`, which holds the
-element parameters, and then, if the name is not found there, `lat.leftover`,
+element parameters, and then, if the name is not found there, `lat.adjunct`,
 which holds the facility-level constants, variables, and any definitions not
 spliced into the lattice. The raw `lat.original` and `lat.combined` views are
 **not** searched — they carry unevaluated, pre-expansion text. `lat.expanded` is
@@ -457,13 +457,13 @@ lat = parse_and_expand_pals("lattice.pals.yaml")
 
 parameter_value(lat, "quad1>MagneticMultipoleP.Bn1")  # 1.0        (from full_expanded)
 parameter_value(lat, "quad1>BendP.g")                 # 0.0        (unset → default)
-parameter_value(lat, "a_const")                       # a constant (from leftover)
+parameter_value(lat, "a_const")                       # a constant (from adjunct)
 parameter_value(lat, "quad1>nope.nope")               # missing
 ```
 """
 function parameter_value(lat::Lattices, match_string::AbstractString)
   pv = @ccall (libyaml()).get_lattice_parameter_value(
-    lat.full_expanded.tree.handle::Ptr{Cvoid}, lat.leftover.tree.handle::Ptr{Cvoid},
+    lat.full_expanded.tree.handle::Ptr{Cvoid}, lat.adjunct.tree.handle::Ptr{Cvoid},
     String(match_string)::Cstring)::ParamValueC
   return _param_value_result(pv)
 end
