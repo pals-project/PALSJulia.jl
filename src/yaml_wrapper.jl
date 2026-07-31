@@ -26,24 +26,27 @@ end
 
 # ─── parse_and_expand_pals ────────────────────────────────────────────────────
 
-# Copy the C-owned problem strings into a Julia Vector{String} and free the
-# underlying C array. Always frees, even when the list is empty.
-function _take_problem_list(sl::StringListC)
-  n = Int(sl.count)
-  out = Vector{String}(undef, n)
+# Copy the C-owned problems into a Julia Vector{Problem} and free the underlying
+# C array. Always frees, even when the list is empty. Both strings are copied out
+# with unsafe_string before the free, so nothing points into C memory afterwards.
+function _take_problem_list(pl::ProblemListC)
+  n = Int(pl.count)
+  out = Vector{Problem}(undef, n)
   if n > 0
-    ptrs = unsafe_wrap(Array, sl.items, n)
+    entries = unsafe_wrap(Array, pl.items, n)
     for i in 1:n
-      out[i] = unsafe_string(ptrs[i])
+      e = entries[i]
+      out[i] = Problem(unsafe_string(e.message), unsafe_string(e.path),
+                       ProblemSeverity(e.severity), ProblemOrigin(e.origin))
     end
   end
-  @ccall (libyaml()).free_lattice_problems(sl::StringListC)::Cvoid
+  @ccall (libyaml()).free_lattice_problems(pl::ProblemListC)::Cvoid
   return out
 end
 
 # Apply the `problems` output policy: `:print` (default) writes to stderr,
 # a filename string writes to that file, `:none` does nothing.
-function _report_problems(problems::Vector{String}, mode)
+function _report_problems(problems::Vector{Problem}, mode)
   if mode isa AbstractString
     open(mode, "w") do io
       if isempty(problems)
@@ -93,8 +96,11 @@ Parse a PALS lattice file and return its `original`, `combined`, `expanded`,
 # Returns
 A `Lattices` with five independent tree views and a `problems` list. The same
 problems handed to `problems` are also returned in the `problems` field
-(a `Vector{String}`, empty when expansion was clean) regardless of the reporting
-mode, so `:none` still lets the caller inspect them programmatically.
+(a `Vector{`[`Problem`](@ref)`}`, empty when expansion was clean) regardless of
+the reporting mode, so `:none` still lets the caller inspect them
+programmatically. Each entry carries a `message`, the `path` it was found at, a
+`severity` and an `origin`; only a `PROBLEM_INPUT` can be cleared by editing the
+lattice.
 
 The five tree views are:
 - `original`: the tree as read in, mapping each file (including any `include`d
@@ -163,7 +169,8 @@ function parse_and_expand_pals(filename::String, root_lattice::String="";
   if handles.original == C_NULL || handles.combined == C_NULL ||
      handles.expanded == C_NULL || handles.full_expanded == C_NULL ||
      handles.adjunct == C_NULL
-    detail = isempty(problem_list) ? "" : "\n  " * join(problem_list, "\n  ")
+    detail = isempty(problem_list) ? "" :
+             "\n  " * join((p.message for p in problem_list), "\n  ")
     error("Failed to parse lattice file: $filename$detail")
   end
 

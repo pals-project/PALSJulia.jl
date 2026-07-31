@@ -119,11 +119,46 @@ Base.hash(n::YAMLNode, h::UInt) = hash(n.id, hash(objectid(n.tree), h))
 
 #---------------------------------------------------------------------------------------------------
 
-# Raw C struct mirroring `struct string_list` from yaml_c_wrapper.h: an owning
-# array of C strings and its length. Carries the problems found while building
-# the full_expanded tree; freed with free_lattice_problems.
-struct StringListC
-  items::Ptr{Cstring}
+"""
+Whether a problem leaves the expanded trees trustworthy.
+
+- `PROBLEM_ERROR` — the document is wrong here and expansion could not work
+  around it. Do not trust the affected part of the trees.
+- `PROBLEM_WARNING` — expansion produced a usable result; something was assumed
+  or skipped, but the trees are still sound.
+
+Mirrors `enum problem_severity` in yaml_c_wrapper.h.
+"""
+@enum ProblemSeverity::Cint PROBLEM_ERROR = 0 PROBLEM_WARNING = 1
+
+"""
+Who has to act on a problem.
+
+- `PROBLEM_INPUT` — the document is wrong; the lattice author can fix it.
+- `PROBLEM_UNSUPPORTED` — valid PALS that pals-cpp does not implement yet.
+  Editing the lattice will not clear it.
+- `PROBLEM_UNSPECIFIED` — the PALS standard does not define the case, so nothing
+  was invented. Neither the author nor the library is in the wrong.
+
+Mirrors `enum problem_origin` in yaml_c_wrapper.h.
+"""
+@enum ProblemOrigin::Cint PROBLEM_INPUT = 0 PROBLEM_UNSUPPORTED = 1 PROBLEM_UNSPECIFIED = 2
+
+# Raw C struct mirroring `struct problem` from yaml_c_wrapper.h. Both strings are
+# owned by the C side and are freed with free_lattice_problems; the two enums are
+# C `int`s. Layout must match field for field and in order.
+struct ProblemC
+  message::Cstring
+  path::Cstring
+  severity::Cint
+  origin::Cint
+end
+
+# Raw C struct mirroring `struct problem_list`: an owning array of ProblemC and
+# its length. Carries the problems found while building the full_expanded tree;
+# freed with free_lattice_problems.
+struct ProblemListC
+  items::Ptr{ProblemC}
   count::Csize_t
 end
 
@@ -136,7 +171,7 @@ struct LatticesHandle
   expanded::Ptr{Cvoid}
   full_expanded::Ptr{Cvoid}
   adjunct::Ptr{Cvoid}
-  problems::StringListC
+  problems::ProblemListC
 end
 
 #---------------------------------------------------------------------------------------------------
@@ -186,6 +221,36 @@ const PARAM_VALUE_STRING = Cint(2)
 #---------------------------------------------------------------------------------------------------
 
 """
+One problem found while reading or expanding a document.
+
+- `message` — human-readable description, always present.
+- `path` — the logical spot it was found at, such as `"q1>ApertureP.shape"`.
+  Empty when the problem is not tied to one place. This is a location within the
+  document, not a file name or a line number; `message` already names the file
+  where the file is the point.
+- `severity` — a [`ProblemSeverity`](@ref): can the trees still be trusted?
+- `origin` — a [`ProblemOrigin`](@ref): whose problem is it?
+
+Only a `PROBLEM_INPUT` can be cleared by editing the lattice, which is what makes
+the last field worth reading: a tool that fails on any problem at all will fail
+on lattices whose author has nothing left to fix.
+"""
+struct Problem
+  message::String
+  path::String
+  severity::ProblemSeverity
+  origin::ProblemOrigin
+end
+
+function Base.show(io::IO, p::Problem)
+  print(io, p.severity === PROBLEM_ERROR ? "ERROR" : "WARNING")
+  p.origin === PROBLEM_UNSUPPORTED && print(io, " (unsupported)")
+  p.origin === PROBLEM_UNSPECIFIED && print(io, " (unspecified by PALS)")
+  isempty(p.path) || print(io, " at ", p.path)
+  print(io, ": ", p.message)
+end
+
+"""
 Five representations of a lattice, each as a root `YAMLNode`, plus the list of
 problems found while expanding it.
 
@@ -194,10 +259,16 @@ values; `full_expanded` additionally carries every parameter the bookkeeper
 computed, while `expanded` keeps only what the author wrote. See
 [`parse_and_expand_pals`](@ref) for what each view holds.
 
-`problems` is a `Vector{String}` — one human-readable message per problem
+`problems` is a `Vector{`[`Problem`](@ref)`}` — one entry per problem
 encountered during expansion (undefined lattice, dangling element/line
-references, undefined `inherit`/`repeat`/`Fork` targets, and expressions that
-could not be evaluated). It is empty when expansion was clean.
+references, undefined `inherit`/`repeat`/`Fork` targets, misspelled names, and
+expressions that could not be evaluated). It is empty when expansion was clean.
+Filter it on `severity` or `origin` to decide what is worth acting on:
+
+```julia
+lat = parse_and_expand_pals("ex.pals.yaml"; problems = :none)
+mine = filter(p -> p.origin === PROBLEM_INPUT, lat.problems)
+```
 """
 struct Lattices
   original::YAMLNode
@@ -205,5 +276,5 @@ struct Lattices
   expanded::YAMLNode
   full_expanded::YAMLNode
   adjunct::YAMLNode
-  problems::Vector{String}
+  problems::Vector{Problem}
 end
