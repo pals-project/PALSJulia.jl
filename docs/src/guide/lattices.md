@@ -112,8 +112,34 @@ A typical report looks like:
 
 ```
 parse_and_expand_pals: 2 problem(s) encountered during lattice expansion:
-  - reference to undefined element or line 'NoSuchElement'
-  - could not evaluate expression for BendP.edge_int2: 0.02 * thingB>MagneticMultipoleP.NotThere
+  - ERROR: reference to undefined element or line 'NoSuchElement'
+  - ERROR: could not evaluate expression for BendP.edge_int2: 0.02 * thingB>MagneticMultipoleP.NotThere
+```
+
+### Reading the list programmatically
+
+Whatever the reporting mode, the same list comes back in `lat.problems` as a
+`Vector{Problem}`, so `:none` still lets you inspect it. Each entry carries more
+than its `message`:
+
+- `path` — where it was found (`"q1>ApertureP.shape"`), empty when the problem
+  is not tied to one spot.
+- `severity` — `PROBLEM_ERROR` when the trees can no longer be trusted around
+  the fault, `PROBLEM_WARNING` when expansion produced a sound result anyway.
+- `origin` — `PROBLEM_INPUT` when your lattice is what needs fixing,
+  `PROBLEM_UNSUPPORTED` when it is valid PALS that pals-cpp does not implement
+  yet, and `PROBLEM_UNSPECIFIED` when the PALS standard does not define the
+  case, so nothing was invented.
+
+The last one is the one to filter on before failing a build, since editing the
+lattice can only ever clear a `PROBLEM_INPUT`:
+
+```julia
+lat = pj.parse_and_expand_pals("ex.pals.yaml"; problems = :none)
+
+mine = filter(p -> p.origin === pj.PROBLEM_INPUT, lat.problems)
+isempty(mine) || error("$(length(mine)) problem(s) to fix:\n" *
+                       join(("  " * string(p) for p in mine), "\n"))
 ```
 
 Only values that look like expressions (an operator, a parenthesis, an

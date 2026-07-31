@@ -337,8 +337,22 @@ PALS:
       local lat
       @test isempty(capture_stderr(() -> (lat = parse_and_expand_pals(path; problems=:none))))
       @test !isempty(lat.problems)
-      @test any(p -> occursin("NoSuchElement", p), lat.problems)
-      @test any(p -> occursin("inherit: 'ghost_ancestor' is not defined", p), lat.problems)
+      @test any(p -> occursin("NoSuchElement", p.message), lat.problems)
+      @test any(p -> occursin("inherit: 'ghost_ancestor' is not defined", p.message), lat.problems)
+
+      # Each problem is classified, not just described. A dangling reference is
+      # the author's to fix and leaves the trees untrustworthy around it.
+      dangling = only(filter(p -> occursin("NoSuchElement", p.message), lat.problems))
+      @test dangling.severity === PROBLEM_ERROR
+      @test dangling.origin === PROBLEM_INPUT
+
+      # Nothing in this list is left unclassified by accident: the enums round
+      # -trip from C, so an unmapped integer would throw rather than compare.
+      @test all(p -> p.severity isa ProblemSeverity, lat.problems)
+      @test all(p -> p.origin isa ProblemOrigin, lat.problems)
+      # `path` is empty rather than undefined when a problem is not tied to one
+      # spot, so it is always safe to read.
+      @test all(p -> p.path isa String, lat.problems)
 
       # A clean lattice carries an empty problems list.
       @test isempty(parse_and_expand_pals(clean; problems=:none).problems)

@@ -51,4 +51,10 @@ include("toSciBmad.jl")
 
 export parse_and_expand_pals, evaluate_pals_expression, node_correspondence, match_names, pals_to_bmad, write_bmad_file, pals_to_madx, write_madx_file, pals_to_scibmad, write_scibmad_file, export_manipulators
 
+# The problem list returned by parse_and_expand_pals is meant to be filtered on
+# these, so they have to be usable unqualified.
+export Problem, ProblemSeverity, ProblemOrigin
+export PROBLEM_ERROR, PROBLEM_WARNING
+export PROBLEM_INPUT, PROBLEM_UNSUPPORTED, PROBLEM_UNSPECIFIED
+
 end
