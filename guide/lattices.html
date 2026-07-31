@@ -351,14 +351,39 @@ offending value as text — and collects a list of every such problem.</p>
 </div>
 <p>A typical report looks like:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">parse_and_expand_pals</span><span class="p">:</span> <span class="mi">2</span> <span class="n">problem</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="n">encountered</span> <span class="n">during</span> <span class="n">lattice</span> <span class="n">expansion</span><span class="p">:</span>
-  <span class="o">-</span> <span class="n">reference</span> <span class="n">to</span> <span class="n">undefined</span> <span class="n">element</span> <span class="ow">or</span> <span class="n">line</span> <span class="s1">&#39;NoSuchElement&#39;</span>
-  <span class="o">-</span> <span class="n">could</span> <span class="ow">not</span> <span class="n">evaluate</span> <span class="n">expression</span> <span class="k">for</span> <span class="n">BendP</span><span class="o">.</span><span class="n">edge_int2</span><span class="p">:</span> <span class="mf">0.02</span> <span class="o">*</span> <span class="n">thingB</span><span class="o">&gt;</span><span class="n">MagneticMultipoleP</span><span class="o">.</span><span class="n">NotThere</span>
+  <span class="o">-</span> <span class="n">ERROR</span><span class="p">:</span> <span class="n">reference</span> <span class="n">to</span> <span class="n">undefined</span> <span class="n">element</span> <span class="ow">or</span> <span class="n">line</span> <span class="s1">&#39;NoSuchElement&#39;</span>
+  <span class="o">-</span> <span class="n">ERROR</span><span class="p">:</span> <span class="n">could</span> <span class="ow">not</span> <span class="n">evaluate</span> <span class="n">expression</span> <span class="k">for</span> <span class="n">BendP</span><span class="o">.</span><span class="n">edge_int2</span><span class="p">:</span> <span class="mf">0.02</span> <span class="o">*</span> <span class="n">thingB</span><span class="o">&gt;</span><span class="n">MagneticMultipoleP</span><span class="o">.</span><span class="n">NotThere</span>
+</pre></div>
+</div>
+<section id="reading-the-list-programmatically">
+<h3>Reading the list programmatically<a class="headerlink" href="#reading-the-list-programmatically" title="Link to this heading">¶</a></h3>
+<p>Whatever the reporting mode, the same list comes back in <code class="docutils literal notranslate"><span class="pre">lat.problems</span></code> as a
+<code class="docutils literal notranslate"><span class="pre">Vector{Problem}</span></code>, so <code class="docutils literal notranslate"><span class="pre">:none</span></code> still lets you inspect it. Each entry carries more
+than its <code class="docutils literal notranslate"><span class="pre">message</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">path</span></code> — where it was found (<code class="docutils literal notranslate"><span class="pre">&quot;q1&gt;ApertureP.shape&quot;</span></code>), empty when the problem
+is not tied to one spot.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">severity</span></code> — <code class="docutils literal notranslate"><span class="pre">PROBLEM_ERROR</span></code> when the trees can no longer be trusted around
+the fault, <code class="docutils literal notranslate"><span class="pre">PROBLEM_WARNING</span></code> when expansion produced a sound result anyway.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">origin</span></code> — <code class="docutils literal notranslate"><span class="pre">PROBLEM_INPUT</span></code> when your lattice is what needs fixing,
+<code class="docutils literal notranslate"><span class="pre">PROBLEM_UNSUPPORTED</span></code> when it is valid PALS that pals-cpp does not implement
+yet, and <code class="docutils literal notranslate"><span class="pre">PROBLEM_UNSPECIFIED</span></code> when the PALS standard does not define the
+case, so nothing was invented.</p></li>
+</ul>
+<p>The last one is the one to filter on before failing a build, since editing the
+lattice can only ever clear a <code class="docutils literal notranslate"><span class="pre">PROBLEM_INPUT</span></code>:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="n">lat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">parse_and_expand_pals</span><span class="p">(</span><span class="s">&quot;ex.pals.yaml&quot;</span><span class="p">;</span><span class="w"> </span><span class="n">problems</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ss">:none</span><span class="p">)</span>
+
+<span class="n">mine</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">filter</span><span class="p">(</span><span class="n">p</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">p</span><span class="o">.</span><span class="n">origin</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">PROBLEM_INPUT</span><span class="p">,</span><span class="w"> </span><span class="n">lat</span><span class="o">.</span><span class="n">problems</span><span class="p">)</span>
+<span class="n">isempty</span><span class="p">(</span><span class="n">mine</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">error</span><span class="p">(</span><span class="s">&quot;</span><span class="si">$</span><span class="p">(</span><span class="n">length</span><span class="p">(</span><span class="n">mine</span><span class="p">))</span><span class="s"> problem(s) to fix:</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">*</span>
+<span class="w">                       </span><span class="n">join</span><span class="p">((</span><span class="s">&quot;  &quot;</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">string</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">mine</span><span class="p">),</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>Only values that look like expressions (an operator, a parenthesis, an
 element‑parameter <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> reference, or an explicit <code class="docutils literal notranslate"><span class="pre">expr(...)</span></code>) are flagged when
 they fail to evaluate; a plain name, label, or boolean that happens not to be a
 number is left alone.</p>
+</section>
 </section>
 <section id="relative-includes">
 <h2>Relative includes<a class="headerlink" href="#relative-includes" title="Link to this heading">¶</a></h2>
@@ -624,7 +649,10 @@ accepts a file path and an optional <code class="docutils literal notranslate"><
 <li><a class="reference internal" href="#the-expanded-views-and-adjunct">The expanded views and <code class="docutils literal notranslate"><span class="pre">adjunct</span></code></a></li>
 <li><a class="reference internal" href="#full-expanded-and-expanded"><code class="docutils literal notranslate"><span class="pre">full_expanded</span></code> and <code class="docutils literal notranslate"><span class="pre">expanded</span></code></a></li>
 <li><a class="reference internal" href="#basic-use">Basic use</a></li>
-<li><a class="reference internal" href="#reporting-problems">Reporting problems</a></li>
+<li><a class="reference internal" href="#reporting-problems">Reporting problems</a><ul>
+<li><a class="reference internal" href="#reading-the-list-programmatically">Reading the list programmatically</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#relative-includes">Relative includes</a></li>
 <li><a class="reference internal" href="#correspondence-between-the-views">Correspondence between the views</a><ul>
 <li><a class="reference internal" href="#one-to-many-correspondences">One-to-many correspondences</a></li>
