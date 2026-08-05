@@ -9,18 +9,18 @@
 # Output lands in docs/api/build/ (Documenter's default, relative to this file).
 # ---------------------------------------------------------------------------
 
-using PALSJulia
+using PALSParserJ
 using Documenter
 
-DocMeta.setdocmeta!(PALSJulia, :DocTestSetup,
-                    :(using PALSJulia); recursive = true)
+DocMeta.setdocmeta!(PALSParserJ, :DocTestSetup,
+                    :(using PALSParserJ); recursive = true)
 
 makedocs(;
-  modules  = [PALSJulia],
+  modules  = [PALSParserJ],
   authors  = "Alex He and contributors",
-  sitename = "PALSJulia API Reference",
+  sitename = "PALSParserJ API Reference",
   format = Documenter.HTML(;
-    canonical = "https://pals-project.github.io/PALSJulia/api",
+    canonical = "https://pals-project.github.io/PALSParserJ.jl/api",
     edit_link = "main",
     assets    = String[],
     # Flat .html files (not pretty dir URLs) so the "← Documentation" redirect

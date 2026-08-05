@@ -1,8 +1,8 @@
 using Test
 # pals_to_bmad / write_bmad_file, pals_to_madx / write_madx_file and
 # pals_to_scibmad / write_scibmad_file are exported.
-using PALSJulia
-using PALSJulia: parse_file   # not exported by default; the translators now take a parsed tree
+using PALSParserJ
+using PALSParserJ: parse_file   # not exported by default; the translators now take a parsed tree
 
 # A small but structurally complete PALS lattice.  It exercises every branch of
 # the translator dispatch: a BeginningEle (reference / particle-start settings),

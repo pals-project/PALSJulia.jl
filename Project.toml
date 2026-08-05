@@ -1,4 +1,4 @@
-name = "PALSJulia"
+name = "PALSParserJ"
 uuid = "3ffa0026-5f68-41f0-beae-2f2b11b650a3"
 version = "0.1.0"
 authors = ["David Sagan <david.sagan@gmail.com>", "Alex He <adh236@cornell.edu>"]

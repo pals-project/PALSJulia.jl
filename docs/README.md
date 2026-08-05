@@ -19,9 +19,9 @@ the `gh-pages` branch. Pull requests get a full preview at
 `previews/PR<number>/` with a link posted as a PR comment; the preview is
 deleted on PR close by `.github/workflows/docs-cleanup.yml`.
 
-> **Note:** the API build loads the `PALSJulia` module to read its docstrings,
-> but it does not call into the `yaml_c_wrapper` C library, so the compiled
-> library from `pals-cpp` is **not** required to build the docs.
+> **Note:** the API build loads the `PALSParserJ` module to read its docstrings,
+> but it does not call into the C library, so a compiled `libPALSParserCpp` is
+> **not** required to build the docs.
 
 ## One-time repository setup
 
@@ -31,7 +31,7 @@ deleted on PR close by `.github/workflows/docs-cleanup.yml`.
    **Read and write permissions** so the workflow can push to `gh-pages` and
    comment on PRs.
 
-The published site is at <https://pals-project.github.io/PALSJulia/>.
+The published site is at <https://pals-project.github.io/PALSParserJ.jl/>.
 
 > **Note on fork PRs:** previews deploy by pushing to `gh-pages`; PRs opened from
 > a *fork* have a read-only token and cannot deploy a preview. PRs from branches

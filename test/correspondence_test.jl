@@ -1,6 +1,6 @@
 using Test
-using PALSJulia
-using PALSJulia: parse_and_expand_pals, node_correspondence, parse_string
+using PALSParserJ
+using PALSParserJ: parse_and_expand_pals, node_correspondence, parse_string
 
 # A self-contained lattice: `a_const` sits outside the expanded lattice (so it
 # is left over rather than expanded), while `repeat: 3` exercises the

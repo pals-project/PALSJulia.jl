@@ -1,6 +1,6 @@
 # Translating to SciBmad, Bmad and MAD-X
 
-PALSJulia can translate a PALS-format lattice into three accelerator formats:
+PALSParserJ can translate a PALS-format lattice into three accelerator formats:
 
 - **`src/toSciBmad.jl`** — emits a [SciBmad](https://github.com/bmad-sim/SciBmad.jl)
   / [Beamlines](https://github.com/bmad-sim/Beamlines.jl) description.
@@ -22,8 +22,8 @@ parameters); and `write_bmad_file` / `write_madx_file` / `write_scibmad_file` ta
 structure and an output path and serialize the lattice file:
 
 ```julia
-using PALSJulia
-using PALSJulia: parse_file
+using PALSParserJ
+using PALSParserJ: parse_file
 
 bmad = pals_to_bmad(parse_file(joinpath("lattice_files", "bta.pals.yaml")))
 write_bmad_file(bmad, joinpath("lattice_files", "bta.pals_out.bmad"))
@@ -35,7 +35,7 @@ scibmad = pals_to_scibmad(parse_file(joinpath("lattice_files", "convert.pals.yam
 write_scibmad_file(scibmad, joinpath("lattice_files", "convert.pals_out.jl"))
 ```
 
-The [`examples/`](https://github.com/pals-project/PALSJulia/tree/main/examples)
+The [`examples/`](https://github.com/pals-project/PALSParserJ.jl/tree/main/examples)
 directory has runnable scripts, such as `examples/pals_to_bmad.jl` and
 `examples/pals_to_madx.jl`.
 

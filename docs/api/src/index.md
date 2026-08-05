@@ -1,8 +1,8 @@
 ```@meta
-CurrentModule = PALSJulia
+CurrentModule = PALSParserJ
 ```
 
-# PALSJulia API Reference
+# PALSParserJ API Reference
 
 Complete reference for every documented function and type, generated
 automatically from the package docstrings.
@@ -20,7 +20,7 @@ automatically from the package docstrings.
 ## Public API
 
 ```@autodocs
-Modules = [PALSJulia]
+Modules = [PALSParserJ]
 Order   = [:module, :type, :function]
 Public  = true
 Private = false
@@ -29,7 +29,7 @@ Private = false
 ## Internals
 
 ```@autodocs
-Modules = [PALSJulia]
+Modules = [PALSParserJ]
 Order   = [:type, :function]
 Public  = false
 Private = true

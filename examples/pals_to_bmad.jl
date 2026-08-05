@@ -1,7 +1,7 @@
-# Produces a file "PALSJulia/lattice_files/bta.pals_out.bmad"
+# Produces a file "PALSParserJ/lattice_files/bta.pals_out.bmad"
 
-using PALSJulia
-using PALSJulia: parse_file
+using PALSParserJ
+using PALSParserJ: parse_file
 
 pals_dir = joinpath(@__DIR__, "..")
 ex_file     = joinpath(pals_dir, "lattice_files", "bta.pals.yaml")

@@ -1,8 +1,8 @@
 ## Introduction
 
-`PALSJulia` is a parser for the Particle Accelerator Language Standard ([PALS](https://github.com/campa-consortium/pals)) for the Julia language. 
+`PALSParserJ` is a parser for the Particle Accelerator Language Standard ([PALS](https://github.com/campa-consortium/pals)) for the Julia language. 
 
-In addition, `PALSJulia` provides translation functions:
+In addition, `PALSParserJ` provides translation functions:
 
 - From `PALS` files to [`Bmad`](https://github.com/bmad-sim/bmad-ecosystem) lattice files.
 - From `PALS` files to [`SciBmad`](https://github.com/bmad-sim/SciBmad.jl) lattice files.
@@ -18,11 +18,11 @@ A translator from `SciBmad` to `PALS` is planned.
 
 ## Installation
 
-PALSJulia is a thin Julia wrapper around the `yaml_c_wrapper` C library shipped
-with [pals-cpp](https://github.com/pals-project/pals-cpp), so both repositories
-must be cloned side by side and the C library must be built first.
+PALSParserJ is a thin Julia wrapper around the C library built by
+[PALSParserCpp](https://github.com/pals-project/PALSParserCpp), so both
+repositories must be cloned side by side and the C library must be built first.
 
-**See the [Installation guide](https://pals-project.github.io/PALSJulia.jl/guide/installation.html)
+**See the [Installation guide](https://pals-project.github.io/PALSParserJ.jl/guide/installation.html)
 for full step-by-step instructions.**
 
 ## EXamples

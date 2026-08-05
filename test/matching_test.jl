@@ -1,6 +1,6 @@
 using Test
-using PALSJulia
-using PALSJulia: match_names, parse_string, node_key
+using PALSParserJ
+using PALSParserJ: match_names, parse_string, node_key
 
 # A self-contained two-lattice lattice: constants/variables at the top, elements
 # with ungrouped (`length`) and grouped (`BendP.e1`) parameters, a sub-line

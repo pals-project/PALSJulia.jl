@@ -8,8 +8,8 @@
 # written.
 # evaluate_pals_expression evaluates a single expression string on its own.
 
-using PALSJulia
-import PALSJulia as pj
+using PALSParserJ
+import PALSParserJ as pj
 
 ex_file = joinpath(@__DIR__, "..", "lattice_files", "ex.pals.yaml")
 

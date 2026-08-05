@@ -1,6 +1,6 @@
 using Test
-using PALSJulia
-using PALSJulia: parameter_value, parse_and_expand_pals
+using PALSParserJ
+using PALSParserJ: parameter_value, parse_and_expand_pals
 
 # A single expandable lattice. Its branch line inline-defines the elements (so
 # they are realised in the expanded tree), with a plain-number parameter, an
