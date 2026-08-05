@@ -1,0 +1,896 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="prev" title="Evaluating expressions" href="expressions.html">
+
+    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>Translating to SciBmad, Bmad and MAD-X - PALSParserJ</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=0e3277ac" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">PALSParserJ</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  <span class="sidebar-brand-text">PALSParserJ</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parsing.html">Parsing and writing YAML</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lattices.html">Reading and expanding lattices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="expressions.html">Evaluating expressions</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Translating to SciBmad, Bmad and MAD-X</a></li>
+</ul>
+
+</div><div class="sidebar-tree">
+  <ul>
+    <li class="toctree-l1">
+      <a class="reference internal"
+         href="../api/index.html">API Reference →</a>
+    </li>
+    <li class="toctree-l1">
+      <a class="reference external"
+         href="https://github.com/pals-project/PALSParserJ.jl">GitHub ↗</a>
+    </li>
+  </ul>
+</div></div>
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/pals-project/PALSParserJ.jl/blob/main/docs/src/guide/translation.md?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/pals-project/PALSParserJ.jl/edit/main/docs/src/guide/translation.md" rel="edit" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section class="tex2jax_ignore mathjax_ignore" id="translating-to-scibmad-bmad-and-mad-x">
+<h1>Translating to SciBmad, Bmad and MAD-X<a class="headerlink" href="#translating-to-scibmad-bmad-and-mad-x" title="Link to this heading">¶</a></h1>
+<p>PALSParserJ can translate a PALS-format lattice into three accelerator formats:</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">src/toSciBmad.jl</span></code></strong> — emits a <a class="reference external" href="https://github.com/bmad-sim/SciBmad.jl">SciBmad</a>
+/ <a class="reference external" href="https://github.com/bmad-sim/Beamlines.jl">Beamlines</a> description.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">src/toBmad.jl</span></code></strong> — emits a classic <a class="reference external" href="https://www.classe.cornell.edu/bmad/">Bmad</a>
+lattice.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">src/toMadx.jl</span></code></strong> — emits a <a class="reference external" href="https://mad.web.cern.ch/mad/">MAD-X</a> lattice.</p></li>
+</ul>
+<p>All three translators take a lattice already parsed by <code class="docutils literal notranslate"><span class="pre">parse_file</span></code>,
+walk the element list, and map each PALS element and its parameters
+onto the corresponding target-format element.</p>
+<section id="running-the-translators">
+<h2>Running the translators<a class="headerlink" href="#running-the-translators" title="Link to this heading">¶</a></h2>
+<p>Translating is a three-step process: parse, translate, write. <code class="docutils literal notranslate"><span class="pre">parse_file</span></code> reads a
+PALS-YAML file into a parsed tree (a <code class="docutils literal notranslate"><span class="pre">YAMLNode</span></code>); <code class="docutils literal notranslate"><span class="pre">pals_to_bmad</span></code> / <code class="docutils literal notranslate"><span class="pre">pals_to_madx</span></code> /
+<code class="docutils literal notranslate"><span class="pre">pals_to_scibmad</span></code> translate that tree into an in-memory model of the <em>target</em> lattice
+(a <code class="docutils literal notranslate"><span class="pre">BmadLattice</span></code> / <code class="docutils literal notranslate"><span class="pre">MadxLattice</span></code> / <code class="docutils literal notranslate"><span class="pre">SciBmadLattice</span></code> of elements, beamlines, and
+parameters); and <code class="docutils literal notranslate"><span class="pre">write_bmad_file</span></code> / <code class="docutils literal notranslate"><span class="pre">write_madx_file</span></code> / <code class="docutils literal notranslate"><span class="pre">write_scibmad_file</span></code> take that
+structure and an output path and serialize the lattice file:</p>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">PALSParserJ</span>
+<span class="k">using</span><span class="w"> </span><span class="n">PALSParserJ</span><span class="o">:</span><span class="w"> </span><span class="n">parse_file</span>
+
+<span class="n">bmad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pals_to_bmad</span><span class="p">(</span><span class="n">parse_file</span><span class="p">(</span><span class="n">joinpath</span><span class="p">(</span><span class="s">&quot;lattice_files&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;bta.pals.yaml&quot;</span><span class="p">)))</span>
+<span class="n">write_bmad_file</span><span class="p">(</span><span class="n">bmad</span><span class="p">,</span><span class="w"> </span><span class="n">joinpath</span><span class="p">(</span><span class="s">&quot;lattice_files&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;bta.pals_out.bmad&quot;</span><span class="p">))</span>
+
+<span class="n">madx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pals_to_madx</span><span class="p">(</span><span class="n">parse_file</span><span class="p">(</span><span class="n">joinpath</span><span class="p">(</span><span class="s">&quot;lattice_files&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;bta.pals.yaml&quot;</span><span class="p">)))</span>
+<span class="n">write_madx_file</span><span class="p">(</span><span class="n">madx</span><span class="p">,</span><span class="w"> </span><span class="n">joinpath</span><span class="p">(</span><span class="s">&quot;lattice_files&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;bta.pals_out.madx&quot;</span><span class="p">))</span>
+
+<span class="n">scibmad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pals_to_scibmad</span><span class="p">(</span><span class="n">parse_file</span><span class="p">(</span><span class="n">joinpath</span><span class="p">(</span><span class="s">&quot;lattice_files&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;convert.pals.yaml&quot;</span><span class="p">)))</span>
+<span class="n">write_scibmad_file</span><span class="p">(</span><span class="n">scibmad</span><span class="p">,</span><span class="w"> </span><span class="n">joinpath</span><span class="p">(</span><span class="s">&quot;lattice_files&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;convert.pals_out.jl&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>The <a class="reference external" href="https://github.com/pals-project/PALSParserJ.jl/tree/main/examples"><code class="docutils literal notranslate"><span class="pre">examples/</span></code></a>
+directory has runnable scripts, such as <code class="docutils literal notranslate"><span class="pre">examples/pals_to_bmad.jl</span></code> and
+<code class="docutils literal notranslate"><span class="pre">examples/pals_to_madx.jl</span></code>.</p>
+</section>
+<section id="element-and-parameter-mapping">
+<h2>Element and parameter mapping<a class="headerlink" href="#element-and-parameter-mapping" title="Link to this heading">¶</a></h2>
+<p>PALS element kinds and their parameters do not map one-to-one onto Bmad or MAD-X. The
+translators encode the conversions — renamed parameters, unit changes, and
+cases that have no equivalent (and are skipped with a warning). For example,
+an <code class="docutils literal notranslate"><span class="pre">ApertureP</span></code> becomes a Bmad <code class="docutils literal notranslate"><span class="pre">ApertureParams</span></code>, with <code class="docutils literal notranslate"><span class="pre">x_min</span></code>/<code class="docutils literal notranslate"><span class="pre">x_max</span></code> mapped to
+<code class="docutils literal notranslate"><span class="pre">x1_limit</span></code>/<code class="docutils literal notranslate"><span class="pre">x2_limit</span></code> (or derived from <code class="docutils literal notranslate"><span class="pre">x_center</span></code>/<code class="docutils literal notranslate"><span class="pre">x_width</span></code>).</p>
+<p>The complete, element-by-element list of these mappings is given in the
+<a class="reference internal" href="#parameter-mapping-reference">Parameter mapping reference</a> below. Consult it
+when adding support for a new element or when a parameter comes through
+untranslated. MAD-X differs from Bmad widely enough to be worth reading
+<a class="reference internal" href="#what-mad-x-does-differently">What MAD-X does differently</a> first.</p>
+</section>
+<section id="extending-a-translator">
+<h2>Extending a translator<a class="headerlink" href="#extending-a-translator" title="Link to this heading">¶</a></h2>
+<p>To add support for a new element or parameter:</p>
+<ol class="arabic simple">
+<li><p>Find its PALS definition and decide on the target-format equivalent; record
+it in the <a class="reference internal" href="#parameter-mapping-reference">Parameter mapping reference</a> below.</p></li>
+<li><p>Add the mapping to the element builder — <code class="docutils literal notranslate"><span class="pre">_make_bmad_ele</span></code> in
+<code class="docutils literal notranslate"><span class="pre">src/toBmad.jl</span></code>, <code class="docutils literal notranslate"><span class="pre">_make_madx_ele</span></code> in <code class="docutils literal notranslate"><span class="pre">src/toMadx.jl</span></code>, or <code class="docutils literal notranslate"><span class="pre">_make_scibmad_ele</span></code> in
+<code class="docutils literal notranslate"><span class="pre">src/toSciBmad.jl</span></code> — and to any helper it calls (e.g. <code class="docutils literal notranslate"><span class="pre">_ele_to_bmad_str</span></code>,
+<code class="docutils literal notranslate"><span class="pre">_make_bmad_line</span></code>, <code class="docutils literal notranslate"><span class="pre">_ele_to_madx_str</span></code>, or <code class="docutils literal notranslate"><span class="pre">_ele_to_scibmad_str</span></code>,
+<code class="docutils literal notranslate"><span class="pre">_make_scibmad_beamline</span></code>).</p></li>
+<li><p>Translate a lattice that exercises the element and check the output.</p></li>
+</ol>
+</section>
+<section id="what-mad-x-does-differently">
+<h2>What MAD-X does differently<a class="headerlink" href="#what-mad-x-does-differently" title="Link to this heading">¶</a></h2>
+<p>Bmad and MAD-X share a great deal, but a PALS lattice meets the differences at
+almost every element. The ones that shape the whole translation:</p>
+<ul class="simple">
+<li><p><strong>Every MAD-X strength is normalized.</strong> MAD-X has no field-valued attribute at
+all, where Bmad has <code class="docutils literal notranslate"><span class="pre">field_master</span></code> and <code class="docutils literal notranslate"><span class="pre">B1_GRADIENT</span></code>. A PALS component stated as
+a field (<code class="docutils literal notranslate"><span class="pre">Bn1</span></code>, <code class="docutils literal notranslate"><span class="pre">Bsol</span></code>, <code class="docutils literal notranslate"><span class="pre">bend_field_ref</span></code>) is therefore divided by the signed
+rigidity <code class="docutils literal notranslate"><span class="pre">P0/q</span></code>, which the file defines once as
+<code class="docutils literal notranslate"><span class="pre">pals_brho</span> <span class="pre">:=</span> <span class="pre">beam-&gt;brho</span> <span class="pre">*</span> <span class="pre">beam-&gt;charge</span> <span class="pre">/</span> <span class="pre">abs(beam-&gt;charge);</span></code> and leaves MAD-X to
+evaluate from its own <code class="docutils literal notranslate"><span class="pre">BEAM</span></code> command.</p></li>
+<li><p><strong>MAD-X coefficients carry no <code class="docutils literal notranslate"><span class="pre">1/n!</span></code>.</strong> MAD-X states a multipole as
+<code class="docutils literal notranslate"><span class="pre">Kn</span> <span class="pre">L</span> <span class="pre">=</span> <span class="pre">(L/Brho)</span> <span class="pre">d^n</span> <span class="pre">By/dx^n</span></code>, and so does PALS, so a PALS <code class="docutils literal notranslate"><span class="pre">KnN</span></code> is MAD-X’s <code class="docutils literal notranslate"><span class="pre">KN</span></code>
+outright. (Bmad’s <code class="docutils literal notranslate"><span class="pre">An</span></code>/<code class="docutils literal notranslate"><span class="pre">Bn</span></code> do carry the factorial, which is why the Bmad
+translation divides by one and this one does not.)</p></li>
+<li><p><strong>MAD-X has a skew attribute for each of the orders an element owns</strong> — <code class="docutils literal notranslate"><span class="pre">k1s</span></code>,
+<code class="docutils literal notranslate"><span class="pre">k2s</span></code>, <code class="docutils literal notranslate"><span class="pre">k3s</span></code> — so a tilted or skew multipole of the element’s own order needs no
+multipole element of its own. But MAD-X magnets are strictly single-order:
+a quadrupole may not carry a sextupole component, and only a <code class="docutils literal notranslate"><span class="pre">multipole</span></code> element
+has the <code class="docutils literal notranslate"><span class="pre">knl</span></code>/<code class="docutils literal notranslate"><span class="pre">ksl</span></code> arrays. Any other order on a magnet is reported and dropped.</p></li>
+<li><p><strong>A bend’s geometry and its field are the one <code class="docutils literal notranslate"><span class="pre">angle</span></code>.</strong> MAD-X does not use <code class="docutils literal notranslate"><span class="pre">k0</span></code>
+in its bend map, so it has no equivalent of Bmad’s <code class="docutils literal notranslate"><span class="pre">dg</span></code>, the departure of the
+field from the reference bend. PALS decouples the two (the actual field is <code class="docutils literal notranslate"><span class="pre">Kn0</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">Kn0_from_g_ref</span></code> says whether it defaults to the reference field); MAD-X cannot.
+The reference geometry is what is written out; a <code class="docutils literal notranslate"><span class="pre">Kn0</span></code> that disagrees with it is
+reported and dropped, because writing the field out instead would move every element
+downstream of the bend.</p></li>
+<li><p><strong>A misalignment lives outside the element definition.</strong> A PALS <code class="docutils literal notranslate"><span class="pre">BodyShiftP</span></code>
+becomes a <code class="docutils literal notranslate"><span class="pre">SELECT,</span> <span class="pre">FLAG=ERROR</span></code> / <code class="docutils literal notranslate"><span class="pre">EALIGN</span></code> pair after the <code class="docutils literal notranslate"><span class="pre">USE</span></code> statement, not an
+attribute of the element. MAD-X rotates about the entrance of an element where
+PALS and Bmad rotate about its centre, so the two agree only to first order in
+the angles.</p></li>
+<li><p><strong>MAD-X has no controller element.</strong> A PALS <code class="docutils literal notranslate"><span class="pre">Controller</span></code> becomes what MAD-X has
+instead: its variables become ordinary MAD-X variables and each of its controls
+becomes a deferred assignment, <code class="docutils literal notranslate"><span class="pre">q1-&gt;k1</span> <span class="pre">:=</span> <span class="pre">2*k;</span></code>. A <code class="docutils literal notranslate"><span class="pre">RELATIVE</span></code> controller has both
+the value it varies and its own starting point written into the assignment, MAD-X
+forbidding the circular <code class="docutils literal notranslate"><span class="pre">q1-&gt;k1</span> <span class="pre">:=</span> <span class="pre">q1-&gt;k1</span> <span class="pre">+</span> <span class="pre">dk</span></code> and having no notion of a knob’s
+delta. MAD-X variables are global where a PALS controller’s are its own, so a name
+two controllers both claim is prefixed with the controller that owns it.</p></li>
+<li><p><strong>MAD-X units are not PALS units.</strong> Energies are GeV against eV, voltages MV
+against V, frequencies MHz against Hz, and phases are counted in turns where PALS
+counts Twiss phases in radians. A value written as a number is converted during
+translation; one written as an expression is left for MAD-X to evaluate.</p></li>
+<li><p><strong>The longitudinal coordinate is measured against the energy.</strong> MAD-X’s <code class="docutils literal notranslate"><span class="pre">T</span></code>, <code class="docutils literal notranslate"><span class="pre">PT</span></code>
+and its dispersion are derivatives with respect to <code class="docutils literal notranslate"><span class="pre">pt</span> <span class="pre">=</span> <span class="pre">dE/(p0</span> <span class="pre">c)</span></code> where PALS
+uses <code class="docutils literal notranslate"><span class="pre">pz</span> <span class="pre">=</span> <span class="pre">dp/p0</span></code>, and <code class="docutils literal notranslate"><span class="pre">pt</span> <span class="pre">=</span> <span class="pre">beta</span> <span class="pre">*</span> <span class="pre">pz</span></code>. Those quantities are written out divided
+or multiplied by MAD-X’s own <code class="docutils literal notranslate"><span class="pre">beam-&gt;beta</span></code> rather than converted here.</p></li>
+<li><p><strong>Section order matters.</strong> A MAD-X name has to be defined above the point of use,
+<code class="docutils literal notranslate"><span class="pre">BEAM</span></code> has to precede <code class="docutils literal notranslate"><span class="pre">USE</span></code>, and <code class="docutils literal notranslate"><span class="pre">EALIGN</span></code> can only follow it, there being no
+expanded sequence to apply an error to before then. <code class="docutils literal notranslate"><span class="pre">write_madx_file</span></code> writes the
+sections in that order.</p></li>
+</ul>
+</section>
+<section id="parameter-mapping-reference">
+<h2>Parameter mapping reference<a class="headerlink" href="#parameter-mapping-reference" title="Link to this heading">¶</a></h2>
+<p>The following is the element-by-element mapping between PALS parameter groups
+and their SciBmad/Bmad/MAD-X equivalents.</p>
+<section id="element-kinds-mad-x-keywords">
+<h3>Element kinds –&gt; MAD-X keywords<a class="headerlink" href="#element-kinds-mad-x-keywords" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Bend –&gt; sbend (PALS has the one bend, whose reference geometry is a sector)</p></li>
+<li><p>CrabCavity –&gt; crabcavity</p></li>
+<li><p>Drift –&gt; drift</p></li>
+<li><p>Kicker –&gt; kicker</p></li>
+<li><p>Multipole –&gt; multipole</p></li>
+<li><p>Octupole –&gt; octupole</p></li>
+<li><p>Quadrupole –&gt; quadrupole</p></li>
+<li><p>RFCavity –&gt; rfcavity</p></li>
+<li><p>Sextupole –&gt; sextupole</p></li>
+<li><p>Solenoid –&gt; solenoid</p></li>
+<li><p>BeamBeam –&gt; beambeam</p></li>
+<li><p>Mask –&gt; collimator</p></li>
+<li><p>Instrument –&gt; instrument</p></li>
+<li><p>Marker, BeginningEle –&gt; marker</p></li>
+<li><p>Placeholder –&gt; placeholder</p></li>
+<li><p>Patch –&gt; changeref</p></li>
+<li><p>Taylor –&gt; matrix (the map itself is not yet translated)</p></li>
+<li><p>ACKicker, Wiggler, Converter, EGun, Foil, Match, Fiducial, FloorShift, Fork,
+ReferenceChange, Girder, UnionEle, Feedback –&gt; no MAD-X equivalent (an error)</p></li>
+</ul>
+</section>
+<section id="ackickerp-none">
+<h3>ACKickerP –&gt; None<a class="headerlink" href="#ackickerp-none" title="Link to this heading">¶</a></h3>
+</section>
+<section id="aperturep-apertureparams">
+<h3>ApertureP –&gt; ApertureParams<a class="headerlink" href="#aperturep-apertureparams" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>x_min –&gt; x1_limit</p></li>
+<li><p>x_max –&gt; x2_limit</p></li>
+<li><p>x_width and x_center:</p>
+<ul>
+<li><p>x1_limit = x_center - x_width / 2</p></li>
+<li><p>x2_limit = x_center + x_width / 2</p></li>
+</ul>
+</li>
+<li><p>Note: Either both min and max are defined, or width and center are defined, not both.</p></li>
+<li><p>y_min –&gt; y1_limit</p></li>
+<li><p>y_may –&gt; y2_limit</p></li>
+<li><p>y_width and y_center:</p>
+<ul>
+<li><p>y1_limit = y_center - y_width / 2</p></li>
+<li><p>y2_limit = y_center + y_width / 2</p></li>
+</ul>
+</li>
+<li><p>shape –&gt; aperture_shape</p>
+<ul>
+<li><p>RECTANGULAR –&gt; Rectangular</p></li>
+<li><p>ELLIPTICAL –&gt; Elliptical</p></li>
+<li><p>VERTICES –&gt; none</p></li>
+<li><p>CUSTOM_SHAPE –&gt; none</p></li>
+</ul>
+</li>
+<li><p>location –&gt; aperture_at</p>
+<ul>
+<li><p>ENTRANCE_END –&gt; Entrance</p></li>
+<li><p>EXIT_END –&gt; Exit</p></li>
+<li><p>BOTH_ENDS –&gt; BothEnds</p></li>
+<li><p>EVERYWHERE –&gt; BothEnds</p></li>
+<li><p>CENTER –&gt; BothEnds</p></li>
+<li><p>NOWHERE –&gt; none</p></li>
+</ul>
+</li>
+<li><p>aperture_shifts_with_body –&gt; aperture_shifts_with_body</p></li>
+<li><p>aperture_active –&gt; aperture_active</p></li>
+<li><p>vertices –&gt; none</p></li>
+<li><p>material –&gt; none</p></li>
+<li><p>thickness –&gt; none</p></li>
+<li><p>Note (MAD-X): MAD-X states a half extent about the axis and the offset of the
+centre separately, so both PALS forms come to <code class="docutils literal notranslate"><span class="pre">aperture</span> <span class="pre">=</span> <span class="pre">{x_half,</span> <span class="pre">y_half}</span></code> and
+<code class="docutils literal notranslate"><span class="pre">aper_offset</span> <span class="pre">=</span> <span class="pre">{x_center,</span> <span class="pre">y_center}</span></code>; <code class="docutils literal notranslate"><span class="pre">shape</span></code> becomes <code class="docutils literal notranslate"><span class="pre">apertype</span></code>
+(RECTANGULAR –&gt; rectangle, ELLIPTICAL –&gt; ellipse).</p></li>
+<li><p>Note (MAD-X): the <code class="docutils literal notranslate"><span class="pre">shape</span></code> decides which components describe the aperture. A
+<code class="docutils literal notranslate"><span class="pre">RECTANGULAR</span></code> or <code class="docutils literal notranslate"><span class="pre">ELLIPTICAL</span></code> one is bounded by its limits and ignores any vertices;
+a <code class="docutils literal notranslate"><span class="pre">VERTICES</span></code> (or <code class="docutils literal notranslate"><span class="pre">CUSTOM_SHAPE</span></code>) one is reported, MAD-X taking a vertex outline only
+from a file of its own, which PALS does not name.</p></li>
+<li><p>Note (MAD-X): MAD-X checks an aperture at the entrance of an element only, so
+<code class="docutils literal notranslate"><span class="pre">location</span></code> is not translated; nor are <code class="docutils literal notranslate"><span class="pre">aperture_shifts_with_body</span></code>, <code class="docutils literal notranslate"><span class="pre">material</span></code> and
+<code class="docutils literal notranslate"><span class="pre">thickness</span></code>, and an <code class="docutils literal notranslate"><span class="pre">aperture_active:</span> <span class="pre">false</span></code> cannot be expressed.</p></li>
+<li><p>Note (MAD-X): MAD-X cannot put an aperture on a drift — use a collimator — and
+its aperture values are positional, so a group that bounds one plane and not the
+other has the unbounded one written out as 1 m.</p></li>
+</ul>
+</section>
+<section id="beambeamp-not-in-scibmad-yet">
+<h3>BeamBeamP –&gt; Not in SciBmad yet<a class="headerlink" href="#beambeamp-not-in-scibmad-yet" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Note (MAD-X): sigma_x –&gt; sigx, sigma_y –&gt; sigy, charge –&gt; charge,
+N_particle –&gt; npart. MAD-X models the opposite beam as a four-dimensional lens,
+so sigma_z, alpha_x, beta_x, alpha_y, beta_y and energy have no equivalent.</p></li>
+</ul>
+</section>
+<section id="bendp-bendparams">
+<h3>BendP –&gt; BendParams<a class="headerlink" href="#bendp-bendparams" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>radius_ref -&gt; caluclated (Bmad: rho)</p></li>
+<li><p>Bn0_ref -&gt; calculated (Bmad: B_field)</p></li>
+<li><p>e1 –&gt; e1</p></li>
+<li><p>e2 –&gt; e2</p></li>
+<li><p>e1_rect –&gt; calculated</p></li>
+<li><p>e2_rect –&gt; calcualted</p></li>
+<li><p>edge1_int –&gt; edge1_int</p></li>
+<li><p>edge2_int –&gt; edge2_int</p></li>
+<li><p>g_ref –&gt; g_ref</p></li>
+<li><p>h1 –&gt; not in scibmad</p></li>
+<li><p>h2 –&gt; not in scibmad</p></li>
+<li><p>L_chord –&gt; calculated</p></li>
+<li><p>L_sagitta –&gt; calculated</p></li>
+<li><p>tilt_ref –&gt; tilt_ref</p></li>
+<li><p>Note (MAD-X): PALS states a bend’s geometry with any two of three sets of mutually
+dependent parameters — a curvature (<code class="docutils literal notranslate"><span class="pre">g_ref</span></code>, <code class="docutils literal notranslate"><span class="pre">radius_ref</span></code>, <code class="docutils literal notranslate"><span class="pre">Bn0_ref</span></code>), a length
+(<code class="docutils literal notranslate"><span class="pre">length</span></code>, <code class="docutils literal notranslate"><span class="pre">L_chord</span></code>, <code class="docutils literal notranslate"><span class="pre">L_rectangle</span></code>) and the angle (<code class="docutils literal notranslate"><span class="pre">angle_ref</span></code>) — one from each of
+two different sets. MAD-X wants one particular pair, the <code class="docutils literal notranslate"><span class="pre">angle</span></code> and the arc length
+<code class="docutils literal notranslate"><span class="pre">l</span></code>, so whichever pair was given is turned into that pair:
+<code class="docutils literal notranslate"><span class="pre">angle</span> <span class="pre">=</span> <span class="pre">g_ref</span> <span class="pre">*</span> <span class="pre">length</span></code>, <code class="docutils literal notranslate"><span class="pre">=</span> <span class="pre">2*asin(g_ref*L_chord/2)</span></code>, <code class="docutils literal notranslate"><span class="pre">=</span> <span class="pre">asin(g_ref*L_rectangle)</span></code>;
+<code class="docutils literal notranslate"><span class="pre">l</span> <span class="pre">=</span> <span class="pre">angle_ref</span> <span class="pre">/</span> <span class="pre">g_ref</span></code>, <code class="docutils literal notranslate"><span class="pre">=</span> <span class="pre">angle_ref*L_chord/(2*sin(angle_ref/2))</span></code>,
+<code class="docutils literal notranslate"><span class="pre">=</span> <span class="pre">angle_ref*L_rectangle/sin(angle_ref)</span></code>. Only <code class="docutils literal notranslate"><span class="pre">Bn0_ref</span></code> needs <code class="docutils literal notranslate"><span class="pre">pals_brho</span></code>, the rest
+being pure geometry. A bend that states too little for both is reported.</p></li>
+<li><p>Note (MAD-X): e1 –&gt; e1, e2 –&gt; e2 (a MAD-X sbend measures its pole faces against
+the same sector geometry PALS does). <code class="docutils literal notranslate"><span class="pre">e1_rect</span></code>/<code class="docutils literal notranslate"><span class="pre">e2_rect</span></code> are converted according to
+<code class="docutils literal notranslate"><span class="pre">ref_geometry</span></code>: <code class="docutils literal notranslate"><span class="pre">ARC</span></code>/<code class="docutils literal notranslate"><span class="pre">CHORD</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">e</span> <span class="pre">=</span> <span class="pre">e_rect</span> <span class="pre">+</span> <span class="pre">angle/2</span></code>; <code class="docutils literal notranslate"><span class="pre">ENTRANCE_COORDS</span></code> –&gt;
+<code class="docutils literal notranslate"><span class="pre">e1</span> <span class="pre">=</span> <span class="pre">e1_rect</span></code>, <code class="docutils literal notranslate"><span class="pre">e2</span> <span class="pre">=</span> <span class="pre">e2_rect</span> <span class="pre">+</span> <span class="pre">angle</span></code>; <code class="docutils literal notranslate"><span class="pre">EXIT_COORDS</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">e1</span> <span class="pre">=</span> <span class="pre">e1_rect</span> <span class="pre">+</span> <span class="pre">angle</span></code>,
+<code class="docutils literal notranslate"><span class="pre">e2</span> <span class="pre">=</span> <span class="pre">e2_rect</span></code>.</p></li>
+<li><p>Note (MAD-X): edge1_int –&gt; <code class="docutils literal notranslate"><span class="pre">fint</span> <span class="pre">=</span> <span class="pre">0.5,</span> <span class="pre">hgap</span> <span class="pre">=</span> <span class="pre">2*edge1_int</span></code>, edge2_int –&gt;
+<code class="docutils literal notranslate"><span class="pre">fintx</span></code>/<code class="docutils literal notranslate"><span class="pre">hgapx</span></code>; h1 –&gt; h1, h2 –&gt; h2; tilt_ref –&gt; tilt.</p></li>
+<li><p>Note (MAD-X): a MAD-X sbend is always an arc with vertically pure multipoles, so a
+<code class="docutils literal notranslate"><span class="pre">ref_geometry</span></code> other than <code class="docutils literal notranslate"><span class="pre">ARC</span></code>, or a <code class="docutils literal notranslate"><span class="pre">multipole_geometry</span></code> other than
+<code class="docutils literal notranslate"><span class="pre">FOLLOWS_REF_GEOMETRY</span></code>/<code class="docutils literal notranslate"><span class="pre">VERTICALLY_PURE</span></code>, is reported. <code class="docutils literal notranslate"><span class="pre">L_sagitta</span></code> is an output
+parameter and is an error.</p></li>
+<li><p>Note (MAD-X): <code class="docutils literal notranslate"><span class="pre">Kn0_from_g_ref:</span> <span class="pre">false</span></code> with no order-0 multipole set gives a bend with
+the reference geometry and no field of its own, which MAD-X — tracking through the
+same <code class="docutils literal notranslate"><span class="pre">angle</span></code> it bends the reference orbit with — cannot express, and is reported.</p></li>
+</ul>
+</section>
+<section id="bodyshiftp-alignmentparams">
+<h3>BodyShiftP –&gt; AlignmentParams<a class="headerlink" href="#bodyshiftp-alignmentparams" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>x_offset –&gt; x_offset</p></li>
+<li><p>y_offset –&gt; y_offset</p></li>
+<li><p>z_offset –&gt; z_offset</p></li>
+<li><p>x_rot –&gt; x_rot</p></li>
+<li><p>y_rot –&gt; y_rot</p></li>
+<li><p>z_rot –&gt; tilt</p></li>
+<li><p>Note (MAD-X): the whole group becomes an <code class="docutils literal notranslate"><span class="pre">EALIGN</span></code> command, not element attributes:
+x_offset –&gt; dx, y_offset –&gt; dy, z_offset –&gt; ds, x_rot –&gt; -dphi,
+y_rot –&gt; dtheta, z_rot –&gt; dpsi. MAD-X rotates about the entrance of an element
+where PALS rotates about its centre, so the two agree only to first order.</p></li>
+</ul>
+</section>
+<section id="electricmultipolep-not-in-scibmad-yet">
+<h3>ElectricMultipoleP –&gt; Not in SciBmad yet<a class="headerlink" href="#electricmultipolep-not-in-scibmad-yet" title="Link to this heading">¶</a></h3>
+</section>
+<section id="floorp-calculated">
+<h3>FloorP –&gt; Calculated<a class="headerlink" href="#floorp-calculated" title="Link to this heading">¶</a></h3>
+</section>
+<section id="coordinatesetp-set-in-floor-shift-element-to-be-added-to-scibmad">
+<h3>CoordinateSetP –&gt; Set in floor shift element (to be added to scibmad)<a class="headerlink" href="#coordinatesetp-set-in-floor-shift-element-to-be-added-to-scibmad" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Note (MAD-X): MAD-X has no element that sets the global coordinates of the reference
+curve, so the group is an error. <code class="docutils literal notranslate"><span class="pre">FloorShift</span></code> and <code class="docutils literal notranslate"><span class="pre">Fiducial</span></code>, the two kinds that
+carry it, have no MAD-X equivalent either.</p></li>
+</ul>
+</section>
+<section id="forkp-needs-to-be-implemented-in-scibmad">
+<h3>ForkP –&gt; Needs to be Implemented in scibmad<a class="headerlink" href="#forkp-needs-to-be-implemented-in-scibmad" title="Link to this heading">¶</a></h3>
+</section>
+<section id="girderp-in-contruction">
+<h3>GirderP In Contruction<a class="headerlink" href="#girderp-in-contruction" title="Link to this heading">¶</a></h3>
+</section>
+<section id="magneticmultipolep-bmultipoleparams">
+<h3>MagneticMultipoleP –&gt; BMultipoleParams<a class="headerlink" href="#magneticmultipolep-bmultipoleparams" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>tiltN –&gt; tiltN</p></li>
+<li><p>[BK][ns]NL? –&gt; [BK][ns]NL?</p></li>
+<li><p>BnN(L) –&gt; BnN(L)</p></li>
+<li><p>Note (Bmad): the normal component of the multipole that is an element’s own strength becomes
+that strength: <code class="docutils literal notranslate"><span class="pre">Kn1</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">K1</span></code> for a quadrupole, <code class="docutils literal notranslate"><span class="pre">Kn2</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">K2</span></code>, <code class="docutils literal notranslate"><span class="pre">Kn3</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">K3</span></code>, and <code class="docutils literal notranslate"><span class="pre">Kn0</span></code> –&gt;
+<code class="docutils literal notranslate"><span class="pre">dg</span></code> for a bend (<code class="docutils literal notranslate"><span class="pre">Bn1</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">B1_GRADIENT</span></code>, …, <code class="docutils literal notranslate"><span class="pre">Bn0</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">db_field</span></code>). Every other order stays
+a multipole, and becomes the integrated <code class="docutils literal notranslate"><span class="pre">An</span></code>/<code class="docutils literal notranslate"><span class="pre">Bn</span></code>.</p></li>
+<li><p>Note (Bmad): a Bmad bend carries a quadrupole and a sextupole component of its own besides its
+bending field, so a bend’s <code class="docutils literal notranslate"><span class="pre">Kn1</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">K1</span></code> and <code class="docutils literal notranslate"><span class="pre">Kn2</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">K2</span></code> as well (<code class="docutils literal notranslate"><span class="pre">Bn1</span></code> –&gt;
+<code class="docutils literal notranslate"><span class="pre">B1_GRADIENT</span></code>, <code class="docutils literal notranslate"><span class="pre">Bn2</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">B2_GRADIENT</span></code>). These two hold a normal field only, and are components
+added to a field the bend already has rather than the strength that makes it a bend, so an
+order with a skew part – a <code class="docutils literal notranslate"><span class="pre">Ks1</span></code>/<code class="docutils literal notranslate"><span class="pre">Ks2</span></code>, or a <code class="docutils literal notranslate"><span class="pre">tilt1</span></code>/<code class="docutils literal notranslate"><span class="pre">tilt2</span></code> that rotates one into being –
+keeps both parts in the <code class="docutils literal notranslate"><span class="pre">An</span></code>/<code class="docutils literal notranslate"><span class="pre">Bn</span></code> form instead. A bend has no attribute above order 2, so its
+higher multipoles stay <code class="docutils literal notranslate"><span class="pre">An</span></code>/<code class="docutils literal notranslate"><span class="pre">Bn</span></code> either way.</p></li>
+<li><p>Note (Bmad): PALS states a bend’s field outright, where Bmad states its departure from the
+reference bend. So <code class="docutils literal notranslate"><span class="pre">Kn0</span></code> is translated as <code class="docutils literal notranslate"><span class="pre">dg</span> <span class="pre">=</span> <span class="pre">Kn0</span> <span class="pre">-</span> <span class="pre">g_ref</span></code> – against <code class="docutils literal notranslate"><span class="pre">1/radius_ref</span></code> when
+the reference bend is given as a radius, and against <code class="docutils literal notranslate"><span class="pre">Bn0_ref</span></code> when the field is not
+normalized. A field equal to the reference bend departs from it by nothing, and no <code class="docutils literal notranslate"><span class="pre">dg</span></code> is
+written. The two flavors cannot be mixed: measuring a <code class="docutils literal notranslate"><span class="pre">Kn0</span></code> against a <code class="docutils literal notranslate"><span class="pre">Bn0_ref</span></code> (or the
+reverse) takes the reference momentum, which belongs to the branch and not to the element.</p></li>
+<li><p>Note (MAD-X): a PALS coefficient is a MAD-X coefficient outright — neither carries
+the <code class="docutils literal notranslate"><span class="pre">1/N!</span></code> of the field expansion — so the orders an element owns become:
+<code class="docutils literal notranslate"><span class="pre">KnN</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">kN</span></code> and <code class="docutils literal notranslate"><span class="pre">KsN</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">kNs</span></code> for a quadrupole (N=1), sextupole (2) and
+octupole (3); <code class="docutils literal notranslate"><span class="pre">Kn0</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">angle</span></code>, <code class="docutils literal notranslate"><span class="pre">Kn1</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">k1</span></code>, <code class="docutils literal notranslate"><span class="pre">Ks1</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">k1s</span></code>, <code class="docutils literal notranslate"><span class="pre">Kn2</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">k2</span></code>
+for a bend; <code class="docutils literal notranslate"><span class="pre">Kn0L</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">-hkick</span></code> and <code class="docutils literal notranslate"><span class="pre">Ks0L</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">vkick</span></code> for a kicker.</p></li>
+<li><p>Note (MAD-X): a <code class="docutils literal notranslate"><span class="pre">tiltN</span></code> is rotated into the normal and skew components, MAD-X’s
+own <code class="docutils literal notranslate"><span class="pre">tilt</span></code> being one roll for the whole element rather than one per order.</p></li>
+<li><p>Note (MAD-X): a length is put in or taken out to match the attribute — <code class="docutils literal notranslate"><span class="pre">angle</span></code>,
+<code class="docutils literal notranslate"><span class="pre">hkick</span></code> and <code class="docutils literal notranslate"><span class="pre">vkick</span></code> are integrated, the rest are not.</p></li>
+<li><p>Note (MAD-X): a MAD-X magnet is strictly single-order. Only a <code class="docutils literal notranslate"><span class="pre">multipole</span></code> element
+has multipole arrays, where each order becomes the integrated <code class="docutils literal notranslate"><span class="pre">knl[N]</span></code>/<code class="docutils literal notranslate"><span class="pre">ksl[N]</span></code>;
+any other order on any other magnet is reported and dropped.</p></li>
+<li><p>Note (MAD-X): a <code class="docutils literal notranslate"><span class="pre">BnN</span></code>/<code class="docutils literal notranslate"><span class="pre">BsN</span></code> is divided by the signed rigidity <code class="docutils literal notranslate"><span class="pre">pals_brho</span></code>, MAD-X
+having no field-valued strength attribute.</p></li>
+</ul>
+</section>
+<section id="metap-metaparams">
+<h3>MetaP –&gt; MetaParams<a class="headerlink" href="#metap-metaparams" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>alias –&gt; alias (Bmad: alias)</p></li>
+<li><p>label –&gt; label (Bmad: type)</p></li>
+<li><p>description –&gt; description (Bmad: descrip)</p></li>
+<li><p>ID –&gt; none</p></li>
+<li><p>location –&gt; none</p></li>
+<li><p>history –&gt; none</p></li>
+<li><p>Note: any other (non-standard) component –&gt; none</p></li>
+<li><p>Note: a component holding a structure rather than a string is not translated.</p></li>
+<li><p>Note (MAD-X): a MAD-X element holds no metadata of its own, so every component
+that is a plain string becomes a comment line above the element definition.</p></li>
+</ul>
+</section>
+<section id="particlep-create-new-bunch">
+<h3>ParticleP –&gt; Create new bunch<a class="headerlink" href="#particlep-create-new-bunch" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Note (MAD-X): MAD-X starts a particle with the <code class="docutils literal notranslate"><span class="pre">START</span></code> command of the <code class="docutils literal notranslate"><span class="pre">TRACK</span></code>
+module, which has no place in a lattice file, so the coordinates are written out
+as a comment: x, px, y, py as they stand, <code class="docutils literal notranslate"><span class="pre">z</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">=</span> <span class="pre">z</span> <span class="pre">/</span> <span class="pre">beam-&gt;beta</span></code> and
+<code class="docutils literal notranslate"><span class="pre">pz</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">pt</span> <span class="pre">=</span> <span class="pre">pz</span> <span class="pre">*</span> <span class="pre">beam-&gt;beta</span></code>. Spin has no MAD-X equivalent.</p></li>
+</ul>
+</section>
+<section id="patchp-patchparams">
+<h3>PatchP –&gt; PatchParams<a class="headerlink" href="#patchp-patchparams" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>x_offset –&gt; x_offset</p></li>
+<li><p>y_offset –&gt; y_offset</p></li>
+<li><p>z_offset –&gt; z_offset</p></li>
+<li><p>t_offset –&gt; dt (not in PALS yet)</p></li>
+<li><p>x_rot –&gt; x_rot</p></li>
+<li><p>y_rot –&gt; y_rot</p></li>
+<li><p>z_rot –&gt; z_rot</p></li>
+<li><p>flexible –&gt; none</p></li>
+<li><p>ref_coords –&gt; none</p></li>
+<li><p>user_sets_length –&gt; none</p></li>
+<li><p>Note (MAD-X): the offsets become <code class="docutils literal notranslate"><span class="pre">patch_trans</span> <span class="pre">=</span> <span class="pre">{x,</span> <span class="pre">y,</span> <span class="pre">z}</span></code> and the rotations
+<code class="docutils literal notranslate"><span class="pre">patch_ang</span> <span class="pre">=</span> <span class="pre">{x_rot,</span> <span class="pre">y_rot,</span> <span class="pre">z_rot}</span></code> of a <code class="docutils literal notranslate"><span class="pre">changeref</span></code>. MAD-X applies the three
+angles in an order of its own, so the correspondence is exact only to first order
+in the angles. A changeref has no length, and <code class="docutils literal notranslate"><span class="pre">flexible</span></code>, <code class="docutils literal notranslate"><span class="pre">ref_coords</span></code> and
+<code class="docutils literal notranslate"><span class="pre">user_sets_length</span></code> have no equivalent.</p></li>
+</ul>
+</section>
+<section id="referencep-beamline-properties">
+<h3>ReferenceP –&gt; Beamline Properties<a class="headerlink" href="#referencep-beamline-properties" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>species_ref –&gt; species_ref</p></li>
+<li><p>pc_ref –&gt; pc_ref</p></li>
+<li><p>E_tot_ref –&gt; E_ref</p></li>
+<li><p>time_ref –&gt; none</p></li>
+<li><p>location –&gt; none</p></li>
+<li><p>Note (MAD-X): the group becomes the <code class="docutils literal notranslate"><span class="pre">BEAM</span></code> command: species_ref –&gt; particle
+(positron, electron, proton, antiproton, posmuon, negmuon; anything else has to
+be given its mass and charge by hand), pc_ref –&gt; <code class="docutils literal notranslate"><span class="pre">pc</span></code> and E_tot_ref –&gt; <code class="docutils literal notranslate"><span class="pre">energy</span></code>,
+both in GeV rather than eV.</p></li>
+</ul>
+</section>
+<section id="referencechangep-beamline-properties">
+<h3>ReferenceChangeP –&gt; Beamline Properties<a class="headerlink" href="#referencechangep-beamline-properties" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>extra_dtime_ref –&gt; none</p></li>
+<li><p>dE_ref –&gt; dE_ref</p></li>
+<li><p>E_tot_ref –&gt; E_ref</p></li>
+<li><p>species_ref –&gt; species_ref</p></li>
+<li><p>Note (MAD-X): MAD-X takes the reference energy from the <code class="docutils literal notranslate"><span class="pre">BEAM</span></code> command and cannot
+change it in mid-line, so the whole group is an error.</p></li>
+</ul>
+</section>
+<section id="rfp-rfparams">
+<h3>RFP –&gt; RFParams<a class="headerlink" href="#rfp-rfparams" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>frequency –&gt; rate, rate_meaning = false</p></li>
+<li><p>harmon –&gt; rate, if rate_meaning = true</p></li>
+<li><p>if neither frequency or harmon exist, set rate_meaning = -1</p></li>
+<li><p>voltage –&gt; voltage</p></li>
+<li><p>gradient –&gt; none</p></li>
+<li><p>phase –&gt; phi0</p></li>
+<li><p>multipass_phase –&gt; none</p></li>
+<li><p>cavity_type –&gt; traveling_wave</p>
+<ul>
+<li><p>STANDING_WAVE –&gt; false</p></li>
+<li><p>TRAVELING_WAVE –&gt; true</p></li>
+</ul>
+</li>
+<li><p>num_cells –&gt; tracking_method = SaganCavity(num_cells)</p></li>
+<li><p>zero_phase –&gt; zero_phase</p>
+<ul>
+<li><p>ACCELERATING –&gt; Accelerating</p></li>
+<li><p>BELOW_TRANSITION –&gt; BelowTransition</p></li>
+<li><p>ABOVE_TRANSITION –&gt; AboveTransition</p></li>
+</ul>
+</li>
+<li><p>Note (MAD-X): frequency –&gt; <code class="docutils literal notranslate"><span class="pre">freq</span></code> in MHz, harmon –&gt; <code class="docutils literal notranslate"><span class="pre">harmon</span></code>,
+voltage –&gt; <code class="docutils literal notranslate"><span class="pre">volt</span></code> in MV, gradient –&gt; <code class="docutils literal notranslate"><span class="pre">volt</span> <span class="pre">=</span> <span class="pre">gradient</span> <span class="pre">*</span> <span class="pre">L_active</span></code>.</p></li>
+<li><p>Note (MAD-X): phase –&gt; <code class="docutils literal notranslate"><span class="pre">lag</span></code>, offset by what <code class="docutils literal notranslate"><span class="pre">zero_phase</span></code> measures from. MAD-X’s
+zero lag is the zero crossing half a period from the one Bmad and PALS call the
+stable point above transition (<code class="docutils literal notranslate"><span class="pre">phi0</span> <span class="pre">=</span> <span class="pre">lag</span> <span class="pre">+</span> <span class="pre">0.5</span></code>), so
+ABOVE_TRANSITION –&gt; <code class="docutils literal notranslate"><span class="pre">lag</span> <span class="pre">=</span> <span class="pre">phase</span> <span class="pre">-</span> <span class="pre">0.5</span></code>, BELOW_TRANSITION –&gt; <code class="docutils literal notranslate"><span class="pre">lag</span> <span class="pre">=</span> <span class="pre">phase</span></code>, and
+ACCELERATING –&gt; <code class="docutils literal notranslate"><span class="pre">lag</span> <span class="pre">=</span> <span class="pre">phase</span> <span class="pre">-</span> <span class="pre">0.25</span></code>.</p></li>
+<li><p>Note (MAD-X): a TRAVELING_WAVE cavity is MAD-X’s <code class="docutils literal notranslate"><span class="pre">twcavity</span></code>, which only PTC
+tracks, so it is translated as an <code class="docutils literal notranslate"><span class="pre">rfcavity</span></code> with a warning; <code class="docutils literal notranslate"><span class="pre">multipass_phase</span></code>,
+<code class="docutils literal notranslate"><span class="pre">num_cells</span></code>, <code class="docutils literal notranslate"><span class="pre">L_active</span></code> and <code class="docutils literal notranslate"><span class="pre">dE_ref</span></code> have no equivalent.</p></li>
+</ul>
+</section>
+<section id="solenoidp-bmultipoleparams">
+<h3>SolenoidP –&gt; BMultipoleParams<a class="headerlink" href="#solenoidp-bmultipoleparams" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Ksol –&gt; Ksol</p></li>
+<li><p>Bsol –&gt; Bsol</p></li>
+<li><p>Note (MAD-X): Ksol –&gt; <code class="docutils literal notranslate"><span class="pre">ks</span></code>, Bsol –&gt; <code class="docutils literal notranslate"><span class="pre">ks</span> <span class="pre">=</span> <span class="pre">Bsol</span> <span class="pre">/</span> <span class="pre">pals_brho</span></code>. A solenoid of zero
+length also needs MAD-X’s integrated <code class="docutils literal notranslate"><span class="pre">ksi</span></code>, which PALS does not state.</p></li>
+</ul>
+</section>
+<section id="trackingp-universalparams-tracking-method">
+<h3>TrackingP –&gt; UniversalParams.tracking_method<a class="headerlink" href="#trackingp-universalparams-tracking-method" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Note (MAD-X): tracking parameters are program specific by design and are skipped.</p></li>
+</ul>
+</section>
+<section id="twissp-initial-conditions">
+<h3>TwissP –&gt; initial conditions<a class="headerlink" href="#twissp-initial-conditions" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Note (MAD-X): the group becomes a <code class="docutils literal notranslate"><span class="pre">BETA0</span></code> block. beta_a –&gt; betx,
+beta_b –&gt; bety, alpha_a –&gt; alfx, alpha_b –&gt; alfy, phi_a –&gt; <code class="docutils literal notranslate"><span class="pre">mux</span> <span class="pre">=</span> <span class="pre">phi_a/2pi</span></code>
+(MAD-X counts the phase in turns), eta_x –&gt; <code class="docutils literal notranslate"><span class="pre">dx</span> <span class="pre">=</span> <span class="pre">eta_x</span> <span class="pre">/</span> <span class="pre">beam-&gt;beta</span></code>, and
+likewise eta_y, etap_x, etap_y.</p></li>
+<li><p>Note (MAD-X): PALS states the Twiss parameters in the a/b normal modes and MAD-X
+in the x/y planes, which are the same thing only when the lattice is uncoupled.
+The coupling itself is Bmad’s C matrix here and MAD-X’s R matrix there, which are
+different parametrizations, so <code class="docutils literal notranslate"><span class="pre">cmatNN</span></code> is not translated; nor is <code class="docutils literal notranslate"><span class="pre">deta_x_ds</span></code>,
+MAD-X having no dispersion derivative.</p></li>
+</ul>
+</section>
+<section id="lattices">
+<h3>Lattices<a class="headerlink" href="#lattices" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Beamlines –&gt; Beamlines</p></li>
+<li><p>To be added: Lattices in PALS –&gt; Lattices</p></li>
+<li><p>Note (MAD-X): a BeamLine becomes a <code class="docutils literal notranslate"><span class="pre">line</span></code> and a Lattice becomes the <code class="docutils literal notranslate"><span class="pre">use,</span> <span class="pre">period</span></code>
+statement. A leading <code class="docutils literal notranslate"><span class="pre">BeginningEle</span></code> is dropped — it carries the reference parameters,
+which become the <code class="docutils literal notranslate"><span class="pre">BEAM</span></code> command — whether the line spells it out or names it; a line
+that does not begin with one keeps every element it has. MAD-X expands one sequence at a time, so only the first branch is used
+and the rest are commented out. MAD-X has no geometry attribute — whether a branch
+closes on itself is decided by how it is used — so <code class="docutils literal notranslate"><span class="pre">periodic</span></code> becomes a comment.</p></li>
+</ul>
+</section>
+<section id="constants-and-variables-bmad-name-value-definitions">
+<h3>Constants and variables –&gt; Bmad <code class="docutils literal notranslate"><span class="pre">name</span> <span class="pre">=</span> <span class="pre">value</span></code> definitions<a class="headerlink" href="#constants-and-variables-bmad-name-value-definitions" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">constants:</span></code> / <code class="docutils literal notranslate"><span class="pre">variables:</span></code> list entry –&gt; <code class="docutils literal notranslate"><span class="pre">name</span> <span class="pre">=</span> <span class="pre">value</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">kind:</span> <span class="pre">constant</span></code> / <code class="docutils literal notranslate"><span class="pre">kind:</span> <span class="pre">variable</span></code> definition –&gt; <code class="docutils literal notranslate"><span class="pre">name</span> <span class="pre">=</span> <span class="pre">value</span></code></p></li>
+<li><p>Note: Bmad draws no constant/variable distinction, so both translate the same way.</p></li>
+<li><p>Note: definitions directly under the <code class="docutils literal notranslate"><span class="pre">PALS</span></code> node are translated as well as the facility’s own.</p></li>
+<li><p>Note: a definition with no <code class="docutils literal notranslate"><span class="pre">value</span></code> takes the PALS default of zero.</p></li>
+<li><p>Note: the definitions are written, in the order the PALS file gives them, ahead of every
+other section of the Bmad file. Bmad, unlike PALS, resolves a name against what the file
+has defined <em>above</em> the point of use.</p></li>
+<li><p>Not translated to SciBmad.</p></li>
+<li><p>Note (MAD-X): the same in every respect, MAD-X also resolving a name against what
+is defined above the point of use. A MAD-X variable is a value and nothing else, so
+<code class="docutils literal notranslate"><span class="pre">absolute_error</span></code> and <code class="docutils literal notranslate"><span class="pre">relative_error</span></code> are reported.</p></li>
+<li><p>Note (MAD-X): an expression is carried across as it stands — MAD-X’s arithmetic and
+ordinary functions are PALS’ as well — but two things in one are reported rather
+than rewritten, expression translation being an open item for all the translators:
+the particle-data functions (<code class="docutils literal notranslate"><span class="pre">mass_of</span></code>, <code class="docutils literal notranslate"><span class="pre">charge_of</span></code>, <code class="docutils literal notranslate"><span class="pre">anomalous_moment_of</span></code>), which
+MAD-X does not have, and the predefined constants MAD-X spells differently
+(<code class="docutils literal notranslate"><span class="pre">c_light</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">clight</span></code>, <code class="docutils literal notranslate"><span class="pre">e_charge</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">qelect</span></code>, <code class="docutils literal notranslate"><span class="pre">r_electron</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">erad</span></code>,
+<code class="docutils literal notranslate"><span class="pre">r_proton</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">prad</span></code>, <code class="docutils literal notranslate"><span class="pre">mu_0_vac</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">amu0</span></code>) or does not have at all (<code class="docutils literal notranslate"><span class="pre">h_planck</span></code>,
+<code class="docutils literal notranslate"><span class="pre">hbar</span></code>, <code class="docutils literal notranslate"><span class="pre">k_boltzmann</span></code>, <code class="docutils literal notranslate"><span class="pre">eps_0_vac</span></code>, <code class="docutils literal notranslate"><span class="pre">fine_structure</span></code>, <code class="docutils literal notranslate"><span class="pre">n_avogadro</span></code>,
+<code class="docutils literal notranslate"><span class="pre">classical_radius_factor</span></code>). <code class="docutils literal notranslate"><span class="pre">pi</span></code> is the one they agree on.</p></li>
+</ul>
+</section>
+<section id="controllers-mad-x-variables-and-deferred-assignments">
+<h3>Controllers –&gt; MAD-X variables and deferred assignments<a class="headerlink" href="#controllers-mad-x-variables-and-deferred-assignments" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>variables –&gt; <code class="docutils literal notranslate"><span class="pre">name</span> <span class="pre">=</span> <span class="pre">value;</span></code> (global MAD-X variables)</p></li>
+<li><p>controls –&gt; <code class="docutils literal notranslate"><span class="pre">ele-&gt;attribute</span> <span class="pre">:=</span> <span class="pre">expression;</span></code></p></li>
+<li><p>MetaP –&gt; comment lines above the definitions</p></li>
+<li><p>Note (MAD-X): a PALS controller owns its variables, so <code class="docutils literal notranslate"><span class="pre">ps1&gt;cur</span></code> and <code class="docutils literal notranslate"><span class="pre">ps2&gt;cur</span></code> are
+two independent knobs. MAD-X has one namespace for the whole file, so a variable
+whose bare name another controller or a constant also claims is written as
+<code class="docutils literal notranslate"><span class="pre">&lt;controller&gt;__&lt;variable&gt;</span></code>, and the expressions using it are rewritten to match. A
+name nobody else claims keeps its bare form.</p></li>
+<li><p>Note (MAD-X): <code class="docutils literal notranslate"><span class="pre">control_type:</span> <span class="pre">ABSOLUTE</span></code> sets the attribute outright, which is what a
+deferred assignment does. <code class="docutils literal notranslate"><span class="pre">RELATIVE</span></code> is a knob: the slave keeps the value the lattice
+gave it and moves by how far the knob has turned <em>from where it started</em>, so the
+assignment is <code class="docutils literal notranslate"><span class="pre">ele-&gt;attr</span> <span class="pre">:=</span> <span class="pre">&lt;element's</span> <span class="pre">own</span> <span class="pre">value&gt;</span> <span class="pre">+</span> <span class="pre">(expr)</span> <span class="pre">-</span> <span class="pre">(expr</span> <span class="pre">at</span> <span class="pre">the</span> <span class="pre">variables'</span> <span class="pre">initial</span> <span class="pre">settings)</span></code>. MAD-X forbids the circular <code class="docutils literal notranslate"><span class="pre">ele-&gt;k1</span> <span class="pre">:=</span> <span class="pre">ele-&gt;k1</span> <span class="pre">+</span> <span class="pre">dk</span></code>, so the
+element’s own value is read back out of the element definition; and the last term —
+which a Bmad <code class="docutils literal notranslate"><span class="pre">group</span></code> keeps track of by itself — is left out only when it can be shown
+to come to zero, which for a knob resting at zero it does.</p></li>
+<li><p>Note (MAD-X): the expression is scaled the same way the element attribute was —
+by the length when the attribute and the PALS parameter disagree about
+integration, by <code class="docutils literal notranslate"><span class="pre">1/pals_brho</span></code> when the parameter is a field, by -1 for an <code class="docutils literal notranslate"><span class="pre">hkick</span></code>.</p></li>
+<li><p>Note (MAD-X): a control target may name its element by kind, as <code class="docutils literal notranslate"><span class="pre">{kind}::{name}</span></code>;
+the qualifier is checked against the element found and then dropped. A <code class="docutils literal notranslate"><span class="pre">&gt;&gt;</span></code> or <code class="docutils literal notranslate"><span class="pre">&gt;&gt;&gt;</span></code>
+qualifier naming the BeamLine or Lattice an element is reached through has no MAD-X
+equivalent and is an error.</p></li>
+<li><p>Note (MAD-X): a control aimed at a multipole array entry has no target — MAD-X
+cannot name one entry of a <code class="docutils literal notranslate"><span class="pre">knl</span></code> — and is an error, as is one aimed at a tilted
+multipole or selecting its slaves by pattern.</p></li>
+</ul>
+</section>
+<section id="todo">
+<h3>TODO<a class="headerlink" href="#todo" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>translating expression</p></li>
+<li><p>names of fundamental constants</p></li>
+<li><p>names of functions (tan)</p></li>
+<li><p>sinc –&gt; sincu</p></li>
+<li><p>MAD-X: <code class="docutils literal notranslate"><span class="pre">ElectricMultipoleP</span></code>, <code class="docutils literal notranslate"><span class="pre">FloorP</span></code>, <code class="docutils literal notranslate"><span class="pre">ForkP</span></code>, <code class="docutils literal notranslate"><span class="pre">GirderP</span></code> and <code class="docutils literal notranslate"><span class="pre">TaylorP</span></code></p></li>
+</ul>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          <a class="prev-page" href="expressions.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Evaluating expressions</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, PALSParserJ Contributors
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Translating to SciBmad, Bmad and MAD-X</a><ul>
+<li><a class="reference internal" href="#running-the-translators">Running the translators</a></li>
+<li><a class="reference internal" href="#element-and-parameter-mapping">Element and parameter mapping</a></li>
+<li><a class="reference internal" href="#extending-a-translator">Extending a translator</a></li>
+<li><a class="reference internal" href="#what-mad-x-does-differently">What MAD-X does differently</a></li>
+<li><a class="reference internal" href="#parameter-mapping-reference">Parameter mapping reference</a><ul>
+<li><a class="reference internal" href="#element-kinds-mad-x-keywords">Element kinds –&gt; MAD-X keywords</a></li>
+<li><a class="reference internal" href="#ackickerp-none">ACKickerP –&gt; None</a></li>
+<li><a class="reference internal" href="#aperturep-apertureparams">ApertureP –&gt; ApertureParams</a></li>
+<li><a class="reference internal" href="#beambeamp-not-in-scibmad-yet">BeamBeamP –&gt; Not in SciBmad yet</a></li>
+<li><a class="reference internal" href="#bendp-bendparams">BendP –&gt; BendParams</a></li>
+<li><a class="reference internal" href="#bodyshiftp-alignmentparams">BodyShiftP –&gt; AlignmentParams</a></li>
+<li><a class="reference internal" href="#electricmultipolep-not-in-scibmad-yet">ElectricMultipoleP –&gt; Not in SciBmad yet</a></li>
+<li><a class="reference internal" href="#floorp-calculated">FloorP –&gt; Calculated</a></li>
+<li><a class="reference internal" href="#coordinatesetp-set-in-floor-shift-element-to-be-added-to-scibmad">CoordinateSetP –&gt; Set in floor shift element (to be added to scibmad)</a></li>
+<li><a class="reference internal" href="#forkp-needs-to-be-implemented-in-scibmad">ForkP –&gt; Needs to be Implemented in scibmad</a></li>
+<li><a class="reference internal" href="#girderp-in-contruction">GirderP In Contruction</a></li>
+<li><a class="reference internal" href="#magneticmultipolep-bmultipoleparams">MagneticMultipoleP –&gt; BMultipoleParams</a></li>
+<li><a class="reference internal" href="#metap-metaparams">MetaP –&gt; MetaParams</a></li>
+<li><a class="reference internal" href="#particlep-create-new-bunch">ParticleP –&gt; Create new bunch</a></li>
+<li><a class="reference internal" href="#patchp-patchparams">PatchP –&gt; PatchParams</a></li>
+<li><a class="reference internal" href="#referencep-beamline-properties">ReferenceP –&gt; Beamline Properties</a></li>
+<li><a class="reference internal" href="#referencechangep-beamline-properties">ReferenceChangeP –&gt; Beamline Properties</a></li>
+<li><a class="reference internal" href="#rfp-rfparams">RFP –&gt; RFParams</a></li>
+<li><a class="reference internal" href="#solenoidp-bmultipoleparams">SolenoidP –&gt; BMultipoleParams</a></li>
+<li><a class="reference internal" href="#trackingp-universalparams-tracking-method">TrackingP –&gt; UniversalParams.tracking_method</a></li>
+<li><a class="reference internal" href="#twissp-initial-conditions">TwissP –&gt; initial conditions</a></li>
+<li><a class="reference internal" href="#lattices">Lattices</a></li>
+<li><a class="reference internal" href="#constants-and-variables-bmad-name-value-definitions">Constants and variables –&gt; Bmad <code class="docutils literal notranslate"><span class="pre">name</span> <span class="pre">=</span> <span class="pre">value</span></code> definitions</a></li>
+<li><a class="reference internal" href="#controllers-mad-x-variables-and-deferred-assignments">Controllers –&gt; MAD-X variables and deferred assignments</a></li>
+<li><a class="reference internal" href="#todo">TODO</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>
