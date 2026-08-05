@@ -9,8 +9,8 @@
 # trees are derived from one another, so it is exact even where expansion
 # duplicates a node (a `repeat`, an `inherit`, a scalar substitution, a fork).
 
-using PALSJulia
-import PALSJulia as pj
+using PALSParserJ
+import PALSParserJ as pj
 
 ex_file = joinpath(@__DIR__, "..", "lattice_files", "ex.pals.yaml")
 

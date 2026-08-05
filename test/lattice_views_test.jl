@@ -1,6 +1,6 @@
 using Test
-using PALSJulia
-using PALSJulia: parse_and_expand_pals
+using PALSParserJ
+using PALSParserJ: parse_and_expand_pals
 
 # One element carrying enough reference data for the bookkeeper to run, so the
 # derived parameters it computes are there to tell the two expanded views apart.

@@ -1,8 +1,8 @@
 using Test
-using PALSJulia
+using PALSParserJ
 
-# yaml_wrapper.jl symbols are not exported, so bring the ones used here into scope.
-using PALSJulia: YAMLTree, YAMLNode, create_empty_tree,
+# parser_wrapper.jl symbols are not exported, so bring the ones used here into scope.
+using PALSParserJ: YAMLTree, YAMLNode, create_empty_tree,
   is_map, is_sequence, is_scalar,
   parse_string, parse_file,
   add_map!, add_sequence!, add_scalar!,

@@ -11,8 +11,8 @@
 # the `full_expanded` view; constants and variables are not part of the lattice,
 # so they are found in `adjunct`.
 
-using PALSJulia
-import PALSJulia as pj
+using PALSParserJ
+import PALSParserJ as pj
 
 ex_file = joinpath(@__DIR__, "..", "lattice_files", "ex.pals.yaml")
 lat = pj.parse_and_expand_pals(ex_file)

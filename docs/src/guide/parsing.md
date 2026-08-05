@@ -1,6 +1,6 @@
 # Parsing and writing YAML
 
-PALSJulia represents a parsed document as a tree of `YAMLNode` values. Each
+PALSParserJ represents a parsed document as a tree of `YAMLNode` values. Each
 node knows whether it is a map, a sequence, or a scalar, and supports the
 standard Julia collection idioms. The owning `YAMLTree` frees the underlying C
 tree automatically when it is garbage-collected, so you never manage memory by
@@ -8,13 +8,13 @@ hand.
 
 ## Making the functions available
 
-`using PALSJulia` on its own brings only a handful of names into scope. The
+`using PALSParserJ` on its own brings only a handful of names into scope. The
 tree-manipulation functions documented below live in the package but are not
 exported by default. Call `export_manipulators()` once to export them so they
 can be used by their bare names:
 
 ```julia
-using PALSJulia
+using PALSParserJ
 export_manipulators()
 
 root = parse_file("config.pals.yaml")
@@ -24,7 +24,7 @@ If you would rather **not** pull those extra symbols into your namespace, skip
 `export_manipulators()` and instead import the package under an alias:
 
 ```julia
-import PALSJulia as pj
+import PALSParserJ as pj
 
 root = pj.parse_file("config.pals.yaml")
 ```

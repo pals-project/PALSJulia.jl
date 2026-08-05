@@ -1,7 +1,7 @@
 # Example that reads in a PALS file and then manipulates the resulting tree structure in memory.
 
-using PALSJulia
-import PALSJulia as pj
+using PALSParserJ
+import PALSParserJ as pj
 
 lattice_dir = joinpath(@__DIR__, "..", "lattice_files")
 ex_file      = joinpath(lattice_dir, "ex.pals.yaml")

@@ -18,24 +18,24 @@ jobs:
         os: [macos-latest, ubuntu-latest]
     
     steps: 
-      - name: Checkout PALSJulia repository
+      - name: Checkout PALSParserJ repository
         uses: actions/checkout@v5
         with:
-          path: PALSJulia
+          path: PALSParserJ
 
 
-      - name: Checkout pals-cpp repository
+      - name: Checkout PALSParserCpp repository
         uses: actions/checkout@v5
         with:
-          repository: pals-project/pals-cpp
-          path: pals-cpp
+          repository: pals-project/PALSParserCpp
+          path: PALSParserCpp
 
       - name: Setup Julia
         uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.julia-version }}
 
-      # pals-cpp fetches rapidyaml (and the rest) itself via CMake FetchContent,
+      # PALSParserCpp fetches rapidyaml (and the rest) itself via CMake FetchContent,
       # so a compiler and CMake are all that is needed. Both runners ship CMake
       # preinstalled; only Linux needs a compiler pulled in explicitly.
       - name: Install system dependencies (Ubuntu)
@@ -46,7 +46,7 @@ jobs:
 
       - name: Build C++ library
         run: |
-          cd pals-cpp
+          cd PALSParserCpp
           mkdir -p build
           cd build
           cmake ..
@@ -56,7 +56,7 @@ jobs:
 
       - name: Run tests
         run: |
-          cd $GITHUB_WORKSPACE/PALSJulia
+          cd $GITHUB_WORKSPACE/PALSParserJ
 
           julia --project=. -e '
             using Pkg

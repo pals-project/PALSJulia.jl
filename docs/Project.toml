@@ -1,6 +1,6 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
-PALSJulia = "3ffa0026-5f68-41f0-beae-2f2b11b650a3"
+PALSParserJ = "3ffa0026-5f68-41f0-beae-2f2b11b650a3"
 
 [compat]
 Documenter = "1"

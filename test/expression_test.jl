@@ -1,6 +1,6 @@
 using Test
-using PALSJulia
-using PALSJulia: parse_and_expand_pals, evaluate_pals_expression
+using PALSParserJ
+using PALSParserJ: parse_and_expand_pals, evaluate_pals_expression
 
 # A lattice exercising the expression evaluator: user variables, an immediate
 # expression, an expr()-delayed expression, a particle-function constant, and a
@@ -278,7 +278,7 @@ PALS:
 
       # An initial value is a constant expression -- it may use the built-in and
       # user constants, never a variable (rejecting a variable reference is
-      # pals-cpp's business and is tested there).
+      # PALSParserCpp's business and is tested there).
       @test Float64(ps27["variables"]["cur2"]) ≈ cur2
       # Each control expression is computed and stored back in the entry.
       @test Float64(ps27["controls"][1]["expression"]) ≈ 0.075*sin(cur1) + 0.3*cur2

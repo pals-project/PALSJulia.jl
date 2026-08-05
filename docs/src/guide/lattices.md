@@ -68,7 +68,7 @@ Which to reach for:
 ## Basic use
 
 ```julia
-import PALSJulia as pj
+import PALSParserJ as pj
 
 lat = pj.parse_and_expand_pals("ex.pals.yaml")
 
@@ -127,7 +127,7 @@ than its `message`:
 - `severity` — `PROBLEM_ERROR` when the trees can no longer be trusted around
   the fault, `PROBLEM_WARNING` when expansion produced a sound result anyway.
 - `origin` — `PROBLEM_INPUT` when your lattice is what needs fixing,
-  `PROBLEM_UNSUPPORTED` when it is valid PALS that pals-cpp does not implement
+  `PROBLEM_UNSUPPORTED` when it is valid PALS that PALSParserCpp does not implement
   yet, and `PROBLEM_UNSPECIFIED` when the PALS standard does not define the
   case, so nothing was invented.
 

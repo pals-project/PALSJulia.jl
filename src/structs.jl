@@ -1,31 +1,32 @@
 using Libdl
 
-# Cached path to the pals-cpp shared library; empty until first resolved by
-# libyaml(). A Ref rather than a const String so the path is read at call time
+# Cached path to the PALSParserCpp shared library; empty until first resolved by
+# libparser(). A Ref rather than a const String so the path is read at call time
 # rather than frozen into the precompile cache, which keeps the cache valid
 # across machines and lets the environment variables below take effect without
 # a forced recompile.
-const LIBYAML = Ref{String}("")
+const LIBPARSER = Ref{String}("")
 
-# Every place the library might be. The library is built by pals-cpp and is not
-# shipped with this package, so it has to be searched for. In order:
-#   1. $PALS_CPP_LIB — full path to the shared library itself
-#   2. $PALS_CPP_DIR — a pals-cpp checkout; its build directory is searched
-#   3. a pals-cpp checkout beside this one (the layout the installation guide
-#      describes)
-function _libyaml_candidates()
+# Every place the library might be. The library is built by PALSParserCpp and is
+# not shipped with this package, so it has to be searched for. In order:
+#   1. $PALS_PARSER_CPP_LIB — full path to the shared library itself
+#   2. $PALS_PARSER_CPP_DIR — a PALSParserCpp checkout; its build directory is
+#      searched
+#   3. a PALSParserCpp checkout beside this one (the layout the installation
+#      guide describes)
+function _libparser_candidates()
   # dlext is "dylib" on macOS, "so" on Linux, "dll" on Windows. MSVC drops the
   # "lib" prefix and writes into a per-configuration subdirectory; the
   # single-config generators used elsewhere write straight into build/.
-  names = ("libyaml_c_wrapper.$(Libdl.dlext)", "yaml_c_wrapper.$(Libdl.dlext)")
+  names = ("libPALSParserCpp.$(Libdl.dlext)", "PALSParserCpp.$(Libdl.dlext)")
   subdirs = ("", "Release", "Debug")
 
   out = String[]
-  haskey(ENV, "PALS_CPP_LIB") && push!(out, ENV["PALS_CPP_LIB"])
+  haskey(ENV, "PALS_PARSER_CPP_LIB") && push!(out, ENV["PALS_PARSER_CPP_LIB"])
 
   roots = String[]
-  haskey(ENV, "PALS_CPP_DIR") && push!(roots, ENV["PALS_CPP_DIR"])
-  push!(roots, normpath(joinpath(@__DIR__, "..", "..", "pals-cpp")))
+  haskey(ENV, "PALS_PARSER_CPP_DIR") && push!(roots, ENV["PALS_PARSER_CPP_DIR"])
+  push!(roots, normpath(joinpath(@__DIR__, "..", "..", "PALSParserCpp")))
 
   for r in roots, s in subdirs, n in names
     push!(out, normpath(joinpath(r, "build", s, n)))
@@ -34,41 +35,42 @@ function _libyaml_candidates()
 end
 
 # Locate the library, or explain exactly what was looked for and how to fix it.
-function _find_libyaml()
-  candidates = _libyaml_candidates()
+function _find_libparser()
+  candidates = _libparser_candidates()
   for c in candidates
     isfile(c) && return c
   end
   error("""
-        PALSJulia could not find the pals-cpp shared library \
-        (libyaml_c_wrapper.$(Libdl.dlext)).
+        PALSParserJ could not find the PALSParserCpp shared library \
+        (libPALSParserCpp.$(Libdl.dlext)).
 
-        Build it from a pals-cpp checkout:
+        Build it from a PALSParserCpp checkout:
             cmake -S . -B build && cmake --build build
 
-        Then either clone pals-cpp next to PALSJulia, or point PALSJulia at it:
-            ENV["PALS_CPP_DIR"] = "/path/to/pals-cpp"
-            ENV["PALS_CPP_LIB"] = "/path/to/libyaml_c_wrapper.$(Libdl.dlext)"
+        Then either clone PALSParserCpp next to PALSParserJ, or point \
+        PALSParserJ at it:
+            ENV["PALS_PARSER_CPP_DIR"] = "/path/to/PALSParserCpp"
+            ENV["PALS_PARSER_CPP_LIB"] = "/path/to/libPALSParserCpp.$(Libdl.dlext)"
 
         Searched:
         """ * join("  " .* candidates, "\n"))
 end
 
 """
-    PALSJulia.libyaml() -> String
+    PALSParserJ.libparser() -> String
 
-Absolute path to the pals-cpp shared library every `@ccall` here targets,
+Absolute path to the PALSParserCpp shared library every `@ccall` here targets,
 resolved on first use and cached thereafter. Throws a descriptive error listing
 every path tried if the library cannot be found.
 
 Resolution is deliberately lazy rather than done in `__init__`: `using
-PALSJulia` must succeed without the C library present, so that documentation and
-other tooling can read the package without a C++ toolchain. The cost is that a
-missing library is reported at the first call rather than at load.
+PALSParserJ` must succeed without the C library present, so that documentation
+and other tooling can read the package without a C++ toolchain. The cost is that
+a missing library is reported at the first call rather than at load.
 """
-function libyaml()
-  isempty(LIBYAML[]) && (LIBYAML[] = _find_libyaml())
-  return LIBYAML[]
+function libparser()
+  isempty(LIBPARSER[]) && (LIBPARSER[] = _find_libparser())
+  return LIBPARSER[]
 end
 
 # ─── constants matching the C header ────────────────────────────────────────
@@ -91,7 +93,7 @@ mutable struct YAMLTree
     t = new(handle)
     finalizer(t) do tree
       if tree.handle != C_NULL
-        @ccall (libyaml()).delete_tree(tree.handle::Ptr{Cvoid})::Cvoid
+        @ccall (libparser()).delete_tree(tree.handle::Ptr{Cvoid})::Cvoid
         tree.handle = C_NULL
       end
     end
@@ -127,7 +129,7 @@ Whether a problem leaves the expanded trees trustworthy.
 - `PROBLEM_WARNING` — expansion produced a usable result; something was assumed
   or skipped, but the trees are still sound.
 
-Mirrors `enum problem_severity` in yaml_c_wrapper.h.
+Mirrors `enum problem_severity` in PALSParserCpp.h.
 """
 @enum ProblemSeverity::Cint PROBLEM_ERROR = 0 PROBLEM_WARNING = 1
 
@@ -135,16 +137,16 @@ Mirrors `enum problem_severity` in yaml_c_wrapper.h.
 Who has to act on a problem.
 
 - `PROBLEM_INPUT` — the document is wrong; the lattice author can fix it.
-- `PROBLEM_UNSUPPORTED` — valid PALS that pals-cpp does not implement yet.
+- `PROBLEM_UNSUPPORTED` — valid PALS that PALSParserCpp does not implement yet.
   Editing the lattice will not clear it.
 - `PROBLEM_UNSPECIFIED` — the PALS standard does not define the case, so nothing
   was invented. Neither the author nor the library is in the wrong.
 
-Mirrors `enum problem_origin` in yaml_c_wrapper.h.
+Mirrors `enum problem_origin` in PALSParserCpp.h.
 """
 @enum ProblemOrigin::Cint PROBLEM_INPUT = 0 PROBLEM_UNSUPPORTED = 1 PROBLEM_UNSPECIFIED = 2
 
-# Raw C struct mirroring `struct problem` from yaml_c_wrapper.h. Both strings are
+# Raw C struct mirroring `struct problem` from PALSParserCpp.h. Both strings are
 # owned by the C side and are freed with free_lattice_problems; the two enums are
 # C `int`s. Layout must match field for field and in order.
 struct ProblemC
@@ -176,8 +178,9 @@ end
 
 #---------------------------------------------------------------------------------------------------
 
-# Raw C structs for build_correspondence_map. NodeLinkC mirrors `struct node_link`
-# and CorrespondenceMapC mirrors `struct correspondence_map` from yaml_c_wrapper.h.
+# Raw C structs for build_correspondence_map. NodeLinkC mirrors `struct
+# node_link` and CorrespondenceMapC mirrors `struct correspondence_map` from
+# PALSParserCpp.h.
 struct NodeLinkC
   original::Csize_t
   combined::Csize_t
@@ -193,7 +196,7 @@ end
 #---------------------------------------------------------------------------------------------------
 
 # Raw C struct for match_names. Mirrors `struct name_matches` from
-# yaml_c_wrapper.h: a flat array of matched node ids and its length.
+# PALSParserCpp.h: a flat array of matched node ids and its length.
 struct NameMatchesC
   nodes::Ptr{Csize_t}
   count::Csize_t
@@ -202,7 +205,7 @@ end
 #---------------------------------------------------------------------------------------------------
 
 # Raw C struct returned by parameter_value. Mirrors `struct param_value`
-# from yaml_c_wrapper.h. `kind` is one of the PARAM_VALUE_* constants below;
+# from PALSParserCpp.h. `kind` is one of the PARAM_VALUE_* constants below;
 # `number` is meaningful when kind is PARAM_VALUE_NUMBER; `string` is an owning C
 # string (freed with yaml_free_string) when kind is PARAM_VALUE_STRING, else
 # NULL. The Cint/Cdouble/Cstring layout, with padding after `kind`, matches the
@@ -213,7 +216,7 @@ struct ParamValueC
   string::Cstring
 end
 
-# `enum param_value_kind` from yaml_c_wrapper.h.
+# `enum param_value_kind` from PALSParserCpp.h.
 const PARAM_VALUE_MISSING = Cint(0)
 const PARAM_VALUE_NUMBER = Cint(1)
 const PARAM_VALUE_STRING = Cint(2)
