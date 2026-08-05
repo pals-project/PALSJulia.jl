@@ -6,11 +6,11 @@
 <link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Translating to SciBmad, Bmad and MAD-X" href="translation.html"><link rel="prev" title="Reading and expanding lattices" href="lattices.html">
 
     <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
-        <title>Evaluating expressions - PALSJulia</title>
+        <title>Evaluating expressions - PALSParserJ</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
-    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=3ecf7383" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=0e3277ac" />
     
     
 
@@ -162,7 +162,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">PALSJulia</div></a>
+      <a href="../index.html"><div class="brand">PALSParserJ</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -183,7 +183,7 @@
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
   
-  <span class="sidebar-brand-text">PALSJulia</span>
+  <span class="sidebar-brand-text">PALSParserJ</span>
   
 </a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -208,7 +208,7 @@
     </li>
     <li class="toctree-l1">
       <a class="reference external"
-         href="https://github.com/pals-project/PALSJulia">GitHub ↗</a>
+         href="https://github.com/pals-project/PALSParserJ.jl">GitHub ↗</a>
     </li>
   </ul>
 </div></div>
@@ -227,12 +227,12 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="https://github.com/pals-project/PALSJulia/blob/main/docs/src/guide/expressions.md?plain=true" title="View this page">
+  <a class="muted-link" href="https://github.com/pals-project/PALSParserJ.jl/blob/main/docs/src/guide/expressions.md?plain=true" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
 </div><div class="edit-this-page">
-  <a class="muted-link" href="https://github.com/pals-project/PALSJulia/edit/main/docs/src/guide/expressions.md" rel="edit" title="Edit this page">
+  <a class="muted-link" href="https://github.com/pals-project/PALSParserJ.jl/edit/main/docs/src/guide/expressions.md" rel="edit" title="Edit this page">
     <svg><use href="#svg-pencil"></use></svg>
     <span class="visually-hidden">Edit this page</span>
   </a>
@@ -259,7 +259,7 @@ a plain number — across the expanded views (<strong><code class="docutils lite
 expanded lattice is fully numeric and ready for a simulation program to consume.
 The <code class="docutils literal notranslate"><span class="pre">original</span></code> and <code class="docutils literal notranslate"><span class="pre">combined</span></code> views always keep the expression text exactly as
 written.</p>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="n">PALSJulia</span><span class="w"> </span><span class="n">as</span><span class="w"> </span><span class="n">pj</span>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="n">PALSParserJ</span><span class="w"> </span><span class="n">as</span><span class="w"> </span><span class="n">pj</span>
 
 <span class="n">lat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">parse_and_expand_pals</span><span class="p">(</span><span class="s">&quot;ex.pals.yaml&quot;</span><span class="p">)</span>
 
@@ -505,7 +505,7 @@ non-finite result.</p>
         <div class="bottom-of-page">
           <div class="left-details">
             <div class="copyright">
-                Copyright &#169; 2026, PALSJulia Contributors
+                Copyright &#169; 2026, PALSParserJ Contributors
             </div>
             Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
             

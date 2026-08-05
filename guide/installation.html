@@ -3,14 +3,14 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Parsing and writing YAML" href="parsing.html"><link rel="prev" title="PALSJulia" href="../index.html">
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Parsing and writing YAML" href="parsing.html"><link rel="prev" title="PALSParserJ" href="../index.html">
 
     <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
-        <title>Installation - PALSJulia</title>
+        <title>Installation - PALSParserJ</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
-    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=3ecf7383" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=0e3277ac" />
     
     
 
@@ -162,7 +162,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">PALSJulia</div></a>
+      <a href="../index.html"><div class="brand">PALSParserJ</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -183,7 +183,7 @@
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
   
-  <span class="sidebar-brand-text">PALSJulia</span>
+  <span class="sidebar-brand-text">PALSParserJ</span>
   
 </a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -208,7 +208,7 @@
     </li>
     <li class="toctree-l1">
       <a class="reference external"
-         href="https://github.com/pals-project/PALSJulia">GitHub ↗</a>
+         href="https://github.com/pals-project/PALSParserJ.jl">GitHub ↗</a>
     </li>
   </ul>
 </div></div>
@@ -227,12 +227,12 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="https://github.com/pals-project/PALSJulia/blob/main/docs/src/guide/installation.md?plain=true" title="View this page">
+  <a class="muted-link" href="https://github.com/pals-project/PALSParserJ.jl/blob/main/docs/src/guide/installation.md?plain=true" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
 </div><div class="edit-this-page">
-  <a class="muted-link" href="https://github.com/pals-project/PALSJulia/edit/main/docs/src/guide/installation.md" rel="edit" title="Edit this page">
+  <a class="muted-link" href="https://github.com/pals-project/PALSParserJ.jl/edit/main/docs/src/guide/installation.md" rel="edit" title="Edit this page">
     <svg><use href="#svg-pencil"></use></svg>
     <span class="visually-hidden">Edit this page</span>
   </a>
@@ -251,59 +251,60 @@
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h1>
-<p>PALSJulia is a Julia wrapper around the <code class="docutils literal notranslate"><span class="pre">yaml_c_wrapper</span></code> C library that ships
-with <a class="reference external" href="https://github.com/pals-project/pals-cpp">pals-cpp</a>. The library is built
-from that repository rather than shipped with this package, so PALSJulia has to
-be told where it is. By default it looks for a pals-cpp checkout beside its own,
-which is the layout below; if you keep pals-cpp somewhere else, see
-<a class="reference internal" href="#pointing-at-a-pals-cpp-elsewhere">Pointing at a pals-cpp elsewhere</a> instead.</p>
+<p>PALSParserJ is a Julia wrapper around the C library built by
+<a class="reference external" href="https://github.com/pals-project/PALSParserCpp">PALSParserCpp</a>. That library is
+compiled from that repository rather than shipped with this package, so
+PALSParserJ has to be told where it is. By default it looks for a PALSParserCpp
+checkout beside its own, which is the layout below; if you keep PALSParserCpp
+somewhere else, see <a class="reference internal" href="#pointing-at-a-palsparsercpp-elsewhere">Pointing at a PALSParserCpp
+elsewhere</a> instead.</p>
 <p>macOS, Linux, and Windows are all supported — the correct library extension for
 the platform (<code class="docutils literal notranslate"><span class="pre">.dylib</span></code>, <code class="docutils literal notranslate"><span class="pre">.so</span></code>, <code class="docutils literal notranslate"><span class="pre">.dll</span></code>) is worked out at load time.</p>
 <section id="clone-the-repositories">
 <h2>1. Clone the repositories<a class="headerlink" href="#clone-the-repositories" title="Link to this heading">¶</a></h2>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">git clone https://github.com/pals-project/pals-cpp.git</span>
-<span class="go">git clone https://github.com/pals-project/PALSJulia.git</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">git clone https://github.com/pals-project/PALSParserCpp.git</span>
+<span class="go">git clone https://github.com/pals-project/PALSParserJ.jl.git</span>
 </pre></div>
 </div>
-<p>The default layout looks like this — PALSJulia locates the compiled library
-relative to its own source tree, at <code class="docutils literal notranslate"><span class="pre">../pals-cpp/build/</span></code>:</p>
+<p>The default layout looks like this — PALSParserJ locates the compiled library
+relative to its own source tree, at <code class="docutils literal notranslate"><span class="pre">../PALSParserCpp/build/</span></code>:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>some-directory/
-├── pals-cpp/
+├── PALSParserCpp/
 │   └── build/
-│       └── libyaml_c_wrapper.dylib   (or .so / .dll)
-└── PALSJulia/
+│       └── libPALSParserCpp.dylib   (or .so / .dll)
+└── PALSParserJ/
 </pre></div>
 </div>
 </section>
 <section id="build-the-c-library">
 <h2>2. Build the C library<a class="headerlink" href="#build-the-c-library" title="Link to this heading">¶</a></h2>
-<p>From the <code class="docutils literal notranslate"><span class="pre">pals-cpp</span></code> directory, configure and build with CMake (this needs CMake
-and a C++17 compiler — Apple Clang on macOS, GCC or Clang on Linux, MSVC on
-Windows):</p>
+<p>From the <code class="docutils literal notranslate"><span class="pre">PALSParserCpp</span></code> directory, configure and build with CMake (this needs
+CMake and a C++17 compiler — Apple Clang on macOS, GCC or Clang on Linux, MSVC
+on Windows):</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">cmake -S . -B build</span>
 <span class="go">cmake --build build</span>
 </pre></div>
 </div>
 <p>CMake fetches the <a class="reference external" href="https://github.com/biojppm/rapidyaml">rapidyaml</a> backend
-automatically. The result is the shared library <code class="docutils literal notranslate"><span class="pre">libyaml_c_wrapper.dylib</span></code>
-(macOS), <code class="docutils literal notranslate"><span class="pre">.so</span></code> (Linux), or <code class="docutils literal notranslate"><span class="pre">.dll</span></code> (Windows) under <code class="docutils literal notranslate"><span class="pre">pals-cpp/build/</span></code>. Rebuild
-with <code class="docutils literal notranslate"><span class="pre">cmake</span> <span class="pre">--build</span> <span class="pre">build</span></code> after changing any pals-cpp source. See the pals-cpp
-<code class="docutils literal notranslate"><span class="pre">README</span></code> for more detail.</p>
+automatically. The result is the shared library <code class="docutils literal notranslate"><span class="pre">libPALSParserCpp.dylib</span></code>
+(macOS), <code class="docutils literal notranslate"><span class="pre">.so</span></code> (Linux), or <code class="docutils literal notranslate"><span class="pre">.dll</span></code> (Windows) under <code class="docutils literal notranslate"><span class="pre">PALSParserCpp/build/</span></code>.
+Rebuild with <code class="docutils literal notranslate"><span class="pre">cmake</span> <span class="pre">--build</span> <span class="pre">build</span></code> after changing any PALSParserCpp source. See
+the PALSParserCpp <code class="docutils literal notranslate"><span class="pre">README</span></code> for more detail.</p>
 </section>
 <section id="activate-the-julia-project">
 <h2>3. Activate the Julia project<a class="headerlink" href="#activate-the-julia-project" title="Link to this heading">¶</a></h2>
-<p>From the <code class="docutils literal notranslate"><span class="pre">PALSJulia</span></code> directory:</p>
+<p>From the <code class="docutils literal notranslate"><span class="pre">PALSParserJ</span></code> directory:</p>
 <div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">Pkg</span>
 <span class="n">Pkg</span><span class="o">.</span><span class="n">activate</span><span class="p">(</span><span class="s">&quot;.&quot;</span><span class="p">)</span>
 <span class="n">Pkg</span><span class="o">.</span><span class="n">instantiate</span><span class="p">()</span>
 
-<span class="k">import</span><span class="w"> </span><span class="n">PALSJulia</span><span class="w"> </span><span class="n">as</span><span class="w"> </span><span class="n">pj</span>
+<span class="k">import</span><span class="w"> </span><span class="n">PALSParserJ</span><span class="w"> </span><span class="n">as</span><span class="w"> </span><span class="n">pj</span>
 </pre></div>
 </div>
 </section>
 <section id="check-the-installation">
 <h2>Check the installation<a class="headerlink" href="#check-the-installation" title="Link to this heading">¶</a></h2>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="n">PALSJulia</span><span class="w"> </span><span class="n">as</span><span class="w"> </span><span class="n">pj</span>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="n">PALSParserJ</span><span class="w"> </span><span class="n">as</span><span class="w"> </span><span class="n">pj</span>
 
 <span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pj</span><span class="o">.</span><span class="n">create_empty_tree</span><span class="p">()</span>
 <span class="n">root</span><span class="p">[</span><span class="s">&quot;hello&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;world&quot;</span>
@@ -313,11 +314,11 @@ with <code class="docutils literal notranslate"><span class="pre">cmake</span> <
 <p>If that prints <code class="docutils literal notranslate"><span class="pre">hello:</span> <span class="pre">world</span></code>, the Julia package and the underlying C library
 are wired up correctly.</p>
 </section>
-<section id="pointing-at-a-pals-cpp-elsewhere">
-<h2>Pointing at a pals-cpp elsewhere<a class="headerlink" href="#pointing-at-a-pals-cpp-elsewhere" title="Link to this heading">¶</a></h2>
+<section id="pointing-at-a-palsparsercpp-elsewhere">
+<h2>Pointing at a PALSParserCpp elsewhere<a class="headerlink" href="#pointing-at-a-palsparsercpp-elsewhere" title="Link to this heading">¶</a></h2>
 <p>The side-by-side layout is only the default. Two environment variables override
-it, read the first time PALSJulia calls into the library — so setting either one
-any time before that first call works, including after <code class="docutils literal notranslate"><span class="pre">using</span> <span class="pre">PALSJulia</span></code>:</p>
+it, read the first time PALSParserJ calls into the library — so setting either
+one any time before that first call works, including after <code class="docutils literal notranslate"><span class="pre">using</span> <span class="pre">PALSParserJ</span></code>:</p>
 <div class="table-wrapper colwidths-auto docutils container">
 <table class="docutils align-default">
 <thead>
@@ -326,27 +327,27 @@ any time before that first call works, including after <code class="docutils lit
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PALS_CPP_DIR</span></code></p></td>
-<td><p>Path to a pals-cpp checkout; its <code class="docutils literal notranslate"><span class="pre">build/</span></code> directory is searched.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PALS_PARSER_CPP_DIR</span></code></p></td>
+<td><p>Path to a PALSParserCpp checkout; its <code class="docutils literal notranslate"><span class="pre">build/</span></code> directory is searched.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PALS_CPP_LIB</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PALS_PARSER_CPP_LIB</span></code></p></td>
 <td><p>Full path to the shared library itself, wherever it lives.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="nb">ENV</span><span class="p">[</span><span class="s">&quot;PALS_CPP_DIR&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;/opt/src/pals-cpp&quot;</span>
-<span class="k">using</span><span class="w"> </span><span class="n">PALSJulia</span>
+<div class="highlight-julia notranslate"><div class="highlight"><pre><span></span><span class="nb">ENV</span><span class="p">[</span><span class="s">&quot;PALS_PARSER_CPP_DIR&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;/opt/src/PALSParserCpp&quot;</span>
+<span class="k">using</span><span class="w"> </span><span class="n">PALSParserJ</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">PALS_CPP_LIB</span></code> wins if both are set. <code class="docutils literal notranslate"><span class="pre">PALSJulia.libyaml()</span></code> returns the resolved
-path, which is worth checking first if calls behave unexpectedly — it is
-resolved per session rather than baked in when the package is precompiled, so a
-stale precompile cache is never the cause.</p>
+<p><code class="docutils literal notranslate"><span class="pre">PALS_PARSER_CPP_LIB</span></code> wins if both are set. <code class="docutils literal notranslate"><span class="pre">PALSParserJ.libparser()</span></code> returns
+the resolved path, which is worth checking first if calls behave unexpectedly —
+it is resolved per session rather than baked in when the package is precompiled,
+so a stale precompile cache is never the cause.</p>
 <p>If the library cannot be found, the first call fails with an error listing every
 path that was tried, which is usually enough to spot a missing build or a typo
-in the variable. Note that <code class="docutils literal notranslate"><span class="pre">using</span> <span class="pre">PALSJulia</span></code> itself always succeeds: the library
-is looked up lazily so that tooling which only reads the package — building
+in the variable. Note that <code class="docutils literal notranslate"><span class="pre">using</span> <span class="pre">PALSParserJ</span></code> itself always succeeds: the
+library is looked up lazily so that tooling which only reads the package — building
 these docs, for one — does not need a C++ toolchain.</p>
 </section>
 </section>
@@ -380,7 +381,7 @@ these docs, for one — does not need a C++ toolchain.</p>
         <div class="bottom-of-page">
           <div class="left-details">
             <div class="copyright">
-                Copyright &#169; 2026, PALSJulia Contributors
+                Copyright &#169; 2026, PALSParserJ Contributors
             </div>
             Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
             
@@ -411,7 +412,7 @@ these docs, for one — does not need a C++ toolchain.</p>
 <li><a class="reference internal" href="#build-the-c-library">2. Build the C library</a></li>
 <li><a class="reference internal" href="#activate-the-julia-project">3. Activate the Julia project</a></li>
 <li><a class="reference internal" href="#check-the-installation">Check the installation</a></li>
-<li><a class="reference internal" href="#pointing-at-a-pals-cpp-elsewhere">Pointing at a pals-cpp elsewhere</a></li>
+<li><a class="reference internal" href="#pointing-at-a-palsparsercpp-elsewhere">Pointing at a PALSParserCpp elsewhere</a></li>
 </ul>
 </li>
 </ul>

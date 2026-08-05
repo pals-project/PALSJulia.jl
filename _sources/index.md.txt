@@ -1,17 +1,16 @@
-# PALSJulia
+# PALSParserJ
 
-**PALSJulia** is a Julia parser for the Particle Accelerator Lattice Standard
+**PALSParserJ** is a Julia parser for the Particle Accelerator Lattice Standard
 ([PALS](https://github.com/campa-consortium/pals)). It reads PALS-format lattice
 files, performs lattice expansion, and translates lattices into
 [SciBmad](https://github.com/bmad-sim/SciBmad.jl),
 [Bmad](https://www.classe.cornell.edu/bmad/) and
 [MAD-X](https://mad.web.cern.ch/mad/) formats.
 
-Under the hood, the package is a thin Julia wrapper around the
-`yaml_c_wrapper` C library (a [rapidyaml](https://github.com/biojppm/rapidyaml)
-backend) shipped with
-[pals-cpp](https://github.com/pals-project/pals-cpp). A parsed document is a
-tree of `YAMLNode` values that you index and mutate with familiar Julia idioms
+Under the hood, the package is a thin Julia wrapper around the C library built
+by [PALSParserCpp](https://github.com/pals-project/PALSParserCpp) (a
+[rapidyaml](https://github.com/biojppm/rapidyaml) backend). A parsed document is
+a tree of `YAMLNode` values that you index and mutate with familiar Julia idioms
 (`node["key"]`, `node[i]`, `haskey`, `keys`, `length`, iteration).
 
 ```{toctree}
@@ -43,7 +42,7 @@ sidebar).
 ## Quick example
 
 ```julia
-import PALSJulia as pj
+import PALSParserJ as pj
 
 # Read a lattice file and expand it.
 lat = pj.parse_and_expand_pals("ex.pals.yaml")

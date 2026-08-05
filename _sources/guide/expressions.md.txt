@@ -10,7 +10,7 @@ The `original` and `combined` views always keep the expression text exactly as
 written.
 
 ```julia
-import PALSJulia as pj
+import PALSParserJ as pj
 
 lat = pj.parse_and_expand_pals("ex.pals.yaml")
 
